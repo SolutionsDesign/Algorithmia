@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -69,7 +69,7 @@ namespace SD.Tools.Algorithmia.UtilityClasses
 		/// <param name="formattedError">The formatted error message.</param>
 		public static void ShouldBeTrue<T>(Func<T, bool> checkFunc, T argument, string formattedError)
 		{
-			ArgumentVerifier.CantBeNull(checkFunc, "checkFunc");
+			CantBeNull(checkFunc, "checkFunc");
 			if(!checkFunc(argument))
 			{
 				throw new ArgumentException(formattedError);

@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -60,7 +60,7 @@ namespace SD.Tools.Algorithmia.Sorting
 		void ISortAlgorithm.Sort<T>(IList<T> toSort, SortDirection direction, int startIndex, int endIndex, Comparison<T> compareFunc)
 		{
 			// create a lambda which will produce the proper boolean value to use in our if statement based on the direction specified.
-			Func<T, T, bool> valueComparerTest = null;
+			Func<T, T, bool> valueComparerTest;
 			switch(direction)
 			{
 				case SortDirection.Ascending:
@@ -69,17 +69,17 @@ namespace SD.Tools.Algorithmia.Sorting
 				case SortDirection.Descending:
 					valueComparerTest = (a, b) => (compareFunc(a, b) < 0);
 					break;
+				default:
+					throw new ArgumentOutOfRangeException("direction", "Invalid direction specified, can't craete value comparer func");
 			}
 
-			int j; 
-			T currentValue;
-			int[] increments = new int[16]{ 1391376, 463792, 198768, 86961, 33936, 13776, 4592, 1968, 861, 336,	112, 48, 21, 7, 3, 1 };
-			for(int incrementIndex = 0; incrementIndex < 16; incrementIndex++)
+			int[] increments = new[]{ 1391376, 463792, 198768, 86961, 33936, 13776, 4592, 1968, 861, 336,	112, 48, 21, 7, 3, 1 };
+			for(int incrementIndex = 0; incrementIndex < increments.Length; incrementIndex++)
 			{
 				for(int intervalIndex = increments[incrementIndex], i = startIndex + intervalIndex; i <= endIndex; i++)
 				{
-					currentValue = toSort[i]; 
-					j = i;
+					T currentValue = toSort[i]; 
+					int j = i;
 					while((j >= intervalIndex) && valueComparerTest(toSort[j - intervalIndex], currentValue))
 					{ 
 						toSort[j] = toSort[j - intervalIndex]; 

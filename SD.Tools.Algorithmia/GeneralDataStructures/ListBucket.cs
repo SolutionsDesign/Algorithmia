@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -146,15 +146,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </returns>
 		public override string ToString()
 		{
-			string toReturn = string.Empty;
-			if(this.Contents == null)
-			{
-				toReturn = "<null>";
-			}
-			else
-			{
-				toReturn = this.Contents.ToString();
-			}
+			string toReturn = (object)this.Contents == null ? "<null>" : this.Contents.ToString();
 			return "Contents: " + toReturn;
 		}
 

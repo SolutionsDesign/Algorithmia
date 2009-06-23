@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -49,8 +49,8 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	public class ReadOnlyPair<TVal1, TVal2>
 	{
 		#region Class Member Declarations
-		private TVal1 _value1;
-		private TVal2 _value2;
+		private readonly TVal1 _value1;
+		private readonly TVal2 _value2;
 		#endregion
 
 		/// <summary>

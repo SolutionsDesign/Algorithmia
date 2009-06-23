@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -44,6 +44,9 @@ using SD.Tools.Algorithmia.Commands;
 using SD.Tools.Algorithmia.GeneralDataStructures;
 using SD.Tools.Algorithmia.Sorting;
 using SD.Tools.Algorithmia.Graphs;
+using SD.Tools.BCLExtensions.CollectionsRelated;
+using SD.Tools.Algorithmia.GeneralDataStructures.EventArguments;
+using System.ComponentModel;
 
 namespace SD.Tools.Algorithmia.Tests
 {
@@ -165,6 +168,50 @@ namespace SD.Tools.Algorithmia.Tests
 			Assert.AreEqual("Foo", h.Name);
 			CQManager.UndoLastCommand();
 			Assert.AreEqual(string.Empty, h.Name);
+
+			CQManager.ActivateCommandQueueStack(Guid.Empty);
+		}
+
+
+
+		[Test]
+		public void MultiUndoRedoOfMultiCommandLevelWithBeforeAfterActionCallsTest()
+		{
+			// set up our session.
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			HelperClass h = new HelperClass();
+
+			int beforeDoCounter = 0;
+			int afterDoCounter = 0;
+			int beforeUndoCounter = 0;
+			int afterUndoCounter = 0;
+
+			// set the property through a command. As the property name change also spawns a command, it will create a 2-level command set.
+			// it doesn't use an undo function, as it doesn't change state itself, that's delegated to another command. Typically one wouldn't do it this way,
+			// as this would assume knowledge of how e.Name's setter works, however for the test it's ok. 
+			Command<string> nameSetter = new Command<string>(() => h.Name = "Foo")
+				{
+					AfterDoAction = () => afterDoCounter++,
+					AfterUndoAction = () => afterUndoCounter++,
+					BeforeDoAction = () => beforeDoCounter++,
+					BeforeUndoAction = () => beforeUndoCounter++
+				};
+			CQManager.EnqueueAndRunCommand(nameSetter);
+			Assert.AreEqual("Foo", h.Name);
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(string.Empty, h.Name);
+
+			CQManager.RedoLastCommand();
+			CQManager.UndoLastCommand();
+			CQManager.RedoLastCommand();
+			CQManager.UndoLastCommand();
+			// we called do 3 times, and undo also 3 times
+			Assert.AreEqual(3, beforeDoCounter);
+			Assert.AreEqual(3, beforeUndoCounter);
+			Assert.AreEqual(3, afterDoCounter);
+			Assert.AreEqual(3, afterUndoCounter);
 
 			CQManager.ActivateCommandQueueStack(Guid.Empty);
 		}
@@ -497,6 +544,81 @@ namespace SD.Tools.Algorithmia.Tests
 		}
 
 
+		[Test]
+		public void CancelableEventsOnCommandifiedListTests()
+		{
+			CommandifiedList<int> list = new CommandifiedList<int>() { 1, 2, 3 };
+			EventHandler<CancelableListModificationEventArgs<int>> cancelableHandler = delegate(object sender, CancelableListModificationEventArgs<int> e) { e.Cancel = true; };
+			list.ElementAdding += cancelableHandler;
+			list.ElementRemoving += cancelableHandler;
+			list.ListClearing += cancelableHandler;
+			// reset command queue manager, so it will only undo commands issued after this reset
+			CommandQueueManagerSingleton.GetInstance().ResetActiveCommandQueue();
+
+			list.Add(4);
+			Assert.AreEqual(3, list.Count);
+			Assert.IsFalse(list.Contains(4));
+			// undo shouldn't have any effect
+			CommandQueueManagerSingleton.GetInstance().UndoLastCommand();
+			Assert.AreEqual(3, list.Count);
+			Assert.IsFalse(list.Contains(4));
+
+			list.Clear();
+			Assert.AreEqual(3, list.Count);
+			// undo shouldn't have any effect
+			CommandQueueManagerSingleton.GetInstance().UndoLastCommand();
+			Assert.AreEqual(3, list.Count);
+
+			list.Remove(1);
+			Assert.AreEqual(3, list.Count);
+			Assert.IsTrue(list.Contains(1));
+
+			// undo shouldn't have any effect
+			CommandQueueManagerSingleton.GetInstance().UndoLastCommand();
+			Assert.AreEqual(3, list.Count);
+			Assert.IsTrue(list.Contains(1));
+
+			list.ElementAdding -= cancelableHandler;
+			list.ElementRemoving -= cancelableHandler;
+			list.ListClearing -= cancelableHandler;
+
+			list.Add(4);
+			Assert.AreEqual(4, list.Count);
+			Assert.IsTrue(list.Contains(4));
+
+			list.Remove(1);
+			Assert.AreEqual(3, list.Count);
+			Assert.IsFalse(list.Contains(1));
+
+			list.Clear();
+			Assert.AreEqual(0, list.Count);
+		}
+
+
+		[Test]
+		public void MoveItemInCommandifiedListTest()
+		{
+			CommandifiedList<int> list = new CommandifiedList<int> { 1, 2, 3, 4 };
+			int oldIndexInEvent = -1;
+			int newIndexInEvent = -1;
+			bool eventRaised = false;
+			list.ListChanged += (sender, e) =>
+			                    	{
+										eventRaised = true;
+										oldIndexInEvent = e.OldIndex;
+										newIndexInEvent = e.NewIndex;
+			                    	};
+
+			// move item at position 0 to position 1
+			list.MoveElement(0, 1);
+			Assert.IsTrue(eventRaised);
+			Assert.AreEqual(0, oldIndexInEvent);
+			Assert.AreEqual(1, newIndexInEvent);
+			Assert.AreEqual(2, list[0]);
+			Assert.AreEqual(1, list[1]);
+		}
+
+
 		#region properties
 		/// <summary>
 		/// Gets the CQ manager.
@@ -510,38 +632,72 @@ namespace SD.Tools.Algorithmia.Tests
 
 
 	/// <summary>
-	/// Simple helper class which produces commands to set inner data. 
+	/// Simple helper class which produces commands to set inner data. This is all wrapped inside CommandifiedMember. 
 	/// </summary>
 	public class HelperClass
 	{
-		private string _name;
+		private enum HelperChangeType
+		{
+			Name
+		}
+
+		private CommandifiedMember<string, HelperChangeType> _name;
 
 		public HelperClass()
 		{
-			_name = string.Empty;
+			_name = new CommandifiedMember<string, HelperChangeType>("Name", HelperChangeType.Name, string.Empty);
 		}
 
-		private void SetName(string newName)
+		public string Name
 		{
-			if(_name != newName)
+			get { return _name.MemberValue; }
+			set { _name.MemberValue = value; }
+		}
+	}
+
+
+
+	public class BindableHelperClass : INotifyPropertyChanged
+	{
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		private enum HelperChangeType
+		{
+			Name
+		}
+
+		private readonly CommandifiedMember<string, HelperChangeType> _name;
+
+		public BindableHelperClass()
+		{
+			_name = new CommandifiedMember<string, HelperChangeType>("Name", HelperChangeType.Name, string.Empty);
+			_name.ValueChanged += new EventHandler<MemberChangedEventArgs<HelperChangeType, string>>(_name_ValueChanged);
+		}
+
+		private void OnPropertyChanged(string propertyName)
+		{
+			if(this.PropertyChanged!=null)
 			{
-				_name = newName;
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+
+		private void _name_ValueChanged(object sender, 
+				MemberChangedEventArgs<HelperChangeType, string> e)
+		{
+			switch(e.TypeOfChange)
+			{
+				case HelperChangeType.Name:
+					OnPropertyChanged("Name");
+					break;
 			}
 		}
 
 		public string Name
 		{
-			get { return _name; }
-			set
-			{
-				if(_name != value)
-				{
-					// create a command which sets the name through an internal method and also can obtain the value for state reset during an undo.
-					// then enqueue and run it. This will automatically make it undoable. Because the command is created inside the class, the 
-					// undo/redo feature is completely transparent for the user of this class. 
-					CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<string>(() => this.SetName(value), () => _name, v => this.SetName(v)));
-				}
-			}
+			get { return _name.MemberValue; }
+			set { _name.MemberValue = value; }
 		}
 	}
+
 }

@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -33,8 +33,11 @@
 //////////////////////////////////////////////////////////////////////
 // Contributers to the code:
 //		- Jeroen van den Bos [JB]
+//		- Frans Bouma [FB]
+//		- Walaa Atef [WA]
 //////////////////////////////////////////////////////////////////////
 using System;
+using System.Linq;
 using NUnit.Framework;
 using SD.Tools.Algorithmia.Graphs;
 using System.Collections.Generic;
@@ -135,7 +138,9 @@ namespace SD.Tools.Algorithmia.Tests
 		{
 			// create an integer graph and set the edge producer func
 			DirectedGraph<int, DirectedEdge<int>> g = new DirectedGraph<int, DirectedEdge<int>>((a, b) => new DirectedEdge<int>(a, b));
-			g.Add(new DirectedEdge<int>(1, 2));
+			DirectedEdge<int> toAdd = new DirectedEdge<int>(1, 2);
+			g.Add(toAdd);
+			Assert.IsTrue(g.Contains(toAdd));
 			g.Add(new DirectedEdge<int>(2, 3));
 			g.Add(new DirectedEdge<int>(3, 4));
 			DirectedGraph<int, DirectedEdge<int>> h = g.TransitiveClosure();
@@ -338,6 +343,139 @@ namespace SD.Tools.Algorithmia.Tests
 			Assert.IsFalse(graph.Contains("F"));			
 		}
 
+        /// <summary>
+        /// Test the logic of the IsConnected method.
+        /// </summary>
+        [Test]
+        public void IsConnectedTest()
+        {
+            DirectedGraph<string, DirectedEdge<string>> graph = new DirectedGraph<string, DirectedEdge<string>>();
+            graph.Add(new DirectedEdge<string>("A", "B"));	// A->B
+            graph.Add(new DirectedEdge<string>("A", "C"));	// A->C
+            graph.Add(new DirectedEdge<string>("B", "D"));	// B->D
+            graph.Add(new DirectedEdge<string>("C", "D"));	// C->D
+            graph.Add(new DirectedEdge<string>("D", "E"));	// D->E
+
+            Assert.IsTrue(graph.IsConnected());
+
+            // Add an un-connected edge.
+            DirectedEdge<string> toAdd = new DirectedEdge<string>("G", "F");
+            graph.Add(toAdd);
+
+            Assert.IsFalse(graph.IsConnected());
+
+            // Add a directed edge from F to A.
+            toAdd = new DirectedEdge<string>("F", "A");
+            graph.Add(toAdd);
+
+            Assert.IsTrue(graph.IsConnected());
+        }
+
+
+		/// <summary>
+		/// Tests the logic of the IsConnected method with a simple graph which uses Edge(Of T) instances to see if the logic internally can deal 
+		/// with graphs which are non-directed but don't use NonDirectedEdge(Of T). 
+		/// </summary>
+		[Test]
+		public void IsConnectedTestUsingSimpleNonDirectedGraph()
+		{
+			SimpleGraph<string, Edge<string>> graph = new SimpleGraph<string, Edge<string>>(false);
+			graph.Add(new Edge<string>("A", "B", false));	// A->B
+			graph.Add(new Edge<string>("A", "C", false));	// A->C
+			graph.Add(new Edge<string>("B", "D", false));	// B->D
+			graph.Add(new Edge<string>("C", "D", false));	// C->D
+			graph.Add(new Edge<string>("D", "E", false));	// D->E
+
+			Assert.IsTrue(graph.IsConnected());
+
+			// Add an un-connected edge.
+			Edge<string> toAdd = new Edge<string>("G", "F", false);
+			graph.Add(toAdd);
+
+			Assert.IsFalse(graph.IsConnected());
+
+			// Add a directed edge from F to A.
+			toAdd = new Edge<string>("F", "A", false);
+			graph.Add(toAdd);
+
+			Assert.IsTrue(graph.IsConnected());
+		}
+
+
+		[Test]
+		public void FindDisconnectedSubGraphsTest()
+		{
+			SimpleGraph<string, Edge<string>> graph = new SimpleGraph<string, Edge<string>>(false);
+			graph.Add(new Edge<string>("A", "B", false));	// A->B
+			graph.Add(new Edge<string>("A", "C", false));	// A->C
+			graph.Add(new Edge<string>("B", "D", false));	// B->D
+			graph.Add(new Edge<string>("C", "D", false));	// C->D
+			graph.Add(new Edge<string>("D", "E", false));	// D->E
+			graph.Add(new Edge<string>("G", "F", false));	// G->F, different subgraph
+
+			Assert.IsFalse(graph.IsConnected());
+
+			DisconnectedGraphsFinder<string, Edge<string>> finder = new DisconnectedGraphsFinder<string, Edge<string>>(
+							() => new SubGraphView<string, Edge<string>>(graph), graph);
+
+			finder.FindDisconnectedGraphs();
+			Assert.AreEqual(2, finder.FoundDisconnectedGraphs.Count);
+			Assert.AreEqual(5, finder.FoundDisconnectedGraphs[0].Vertices.Count());
+			Assert.AreEqual(2, finder.FoundDisconnectedGraphs[1].Vertices.Count());
+			Assert.AreEqual(5, finder.FoundDisconnectedGraphs[0].Edges.Count());
+			Assert.AreEqual(1, finder.FoundDisconnectedGraphs[1].Edges.Count());
+
+			finder.FindDisconnectedGraphs("A", true);
+			Assert.AreEqual(1, finder.FoundDisconnectedGraphs.Count);
+			Assert.AreEqual(5, finder.FoundDisconnectedGraphs[0].Vertices.Count());
+			Assert.AreEqual(5, finder.FoundDisconnectedGraphs[0].Edges.Count());
+		}
+
+
+        /// <summary>
+        /// Test the GetNonDirectedCopy method.
+        /// </summary>
+        [Test]
+        public void AsNonDirectedGraphTest()
+        {
+            DirectedGraph<string, DirectedEdge<string>> graph = new DirectedGraph<string, DirectedEdge<string>>();
+            graph.Add(new DirectedEdge<string>("A", "B"));	// A->B
+            graph.Add(new DirectedEdge<string>("A", "C"));	// A->C
+            graph.Add(new DirectedEdge<string>("B", "D"));	// B->D
+            graph.Add(new DirectedEdge<string>("C", "D"));	// C->D
+            graph.Add(new DirectedEdge<string>("D", "E"));	// D->E
+
+            Assert.IsTrue(graph.IsDirected);
+            Assert.IsTrue(graph.EdgeCount == 5);
+
+            NonDirectedGraph<string, NonDirectedEdge<string>> nonDirectedGraph = (NonDirectedGraph<string, NonDirectedEdge<string>>)graph.GetAsNonDirectedCopy();
+
+            Assert.IsFalse(nonDirectedGraph.IsDirected);
+
+            Assert.IsTrue(nonDirectedGraph.ContainsEdge("A", "B"));
+            Assert.IsTrue(nonDirectedGraph.ContainsEdge("B", "A"));
+
+            Assert.IsTrue(nonDirectedGraph.ContainsEdge("A", "C"));
+            Assert.IsTrue(nonDirectedGraph.ContainsEdge("C", "A"));
+
+            Assert.IsTrue(nonDirectedGraph.ContainsEdge("B", "D")); 
+            Assert.IsTrue(nonDirectedGraph.ContainsEdge("D", "B"));
+
+            Assert.IsTrue(nonDirectedGraph.ContainsEdge("C", "D"));
+            Assert.IsTrue(nonDirectedGraph.ContainsEdge("D", "C"));
+
+            Assert.IsTrue(nonDirectedGraph.ContainsEdge("D", "E"));
+            Assert.IsTrue(nonDirectedGraph.ContainsEdge("E", "D"));
+
+            foreach (Edge<string> edge in nonDirectedGraph.Edges)
+            {
+                Console.Write("\n\nEdge Start index: " + edge.StartVertex + "\tEdge End index:" + edge.EndVertex + "\n\t");
+
+                Assert.IsFalse(edge.IsDirected);
+            }
+
+            //Assert.IsTrue(nonDirectedGraph.EdgeCount == 10);
+        }
 	}
 
 
@@ -416,5 +554,20 @@ namespace SD.Tools.Algorithmia.Tests
 		/// </summary>
 		public List<TVertex> VerticesLoggedInOnVisited { get; private set; }
 		#endregion
+	}
+
+
+	/// <summary>
+	/// Simple graph class which is used to test isconnected code with Edge(Of T) instances
+	/// </summary>
+	/// <typeparam name="TVertex"></typeparam>
+	/// <typeparam name="TEdge"></typeparam>
+	public class SimpleGraph<TVertex, TEdge> : GraphBase<TVertex, TEdge>
+		where TEdge : class, IEdge<TVertex>
+	{
+		public SimpleGraph(bool isDirected)
+			: base(isDirected)
+		{
+		}
 	}
 }

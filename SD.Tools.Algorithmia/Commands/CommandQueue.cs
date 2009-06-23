@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -57,7 +57,7 @@ namespace SD.Tools.Algorithmia.Commands
 	public class CommandQueue : IEnumerable<CommandBase>
 	{
 		#region Class Member Declarations
-		private LinkedBucketList<CommandBase> _commands;
+		private readonly LinkedBucketList<CommandBase> _commands;
 		private ListBucket<CommandBase> _currentCommandBucket;
 		#endregion
 
@@ -74,9 +74,21 @@ namespace SD.Tools.Algorithmia.Commands
 		/// Enqueues the command specified and makes it the current command.
 		/// </summary>
 		/// <param name="toEnqueue">To enqueue.</param>
-		public void EnqueueCommand(CommandBase toEnqueue)
+		/// <returns>true if enqueue action succeeded, false otherwise</returns>
+		public bool EnqueueCommand(CommandBase toEnqueue)
 		{
 			ArgumentVerifier.CantBeNull(toEnqueue, "toEnqueue");
+			if(this.UndoInProgress)
+			{
+				if(CommandQueueManager.ThrowExceptionOnDoDuringUndo)
+				{
+					// can't add new commands to a queue of a command which executed an undoFunc. This happens through bugs in the using code so we have to 
+					// thrown an exception to illustrate that there's a problem with the code using this library.
+					throw new DoDuringUndoException();
+				}
+				// ignore
+				return false;
+			}
 
 			// clear queue from the active index
 			if(_currentCommandBucket == null)
@@ -89,6 +101,7 @@ namespace SD.Tools.Algorithmia.Commands
 				_commands.RemoveAfter(_currentCommandBucket);
 			}
 			_commands.InsertAfter(new ListBucket<CommandBase>(toEnqueue), _currentCommandBucket);
+			return true;
 		}
 
 
@@ -100,7 +113,16 @@ namespace SD.Tools.Algorithmia.Commands
 			if(this.CanDo)
 			{
 				MoveNext();
-				_currentCommandBucket.Contents.Do();
+				CommandBase commandToExecute = _currentCommandBucket.Contents;
+				if(commandToExecute.BeforeDoAction != null)
+				{
+					commandToExecute.BeforeDoAction();
+				}
+				commandToExecute.Do();
+				if(commandToExecute.AfterDoAction != null)
+				{
+					commandToExecute.AfterDoAction();
+				}
 			}
 		}
 
@@ -112,7 +134,16 @@ namespace SD.Tools.Algorithmia.Commands
 		{
 			if(this.CanUndo)
 			{
-				_currentCommandBucket.Contents.Undo();
+				CommandBase commandToExecute = _currentCommandBucket.Contents;
+				if(commandToExecute.BeforeUndoAction != null)
+				{
+					commandToExecute.BeforeUndoAction();
+				}
+				commandToExecute.Undo();
+				if(commandToExecute.AfterUndoAction != null)
+				{
+					commandToExecute.AfterUndoAction();
+				}
 				MovePrevious();
 			}
 		}
@@ -160,14 +191,7 @@ namespace SD.Tools.Algorithmia.Commands
 		/// </summary>
 		private void MoveNext()
 		{
-			if(_currentCommandBucket == null)
-			{
-				_currentCommandBucket = _commands.Head;
-			}
-			else
-			{
-				_currentCommandBucket = _currentCommandBucket.Next;
-			}
+			_currentCommandBucket = _currentCommandBucket == null ? _commands.Head : _currentCommandBucket.Next;
 		}
 
 
@@ -194,12 +218,19 @@ namespace SD.Tools.Algorithmia.Commands
 		/// </returns>
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return (IEnumerator)this.GetEnumerator();
+			return this.GetEnumerator();
 		}
 		#endregion
 		
 
 		#region Class Property Declarations
+		/// <summary>
+		/// Gets or sets a value indicating whether an undo action is in progress. If an undo action is in progress, no commands can be added to this queue, as 
+		/// those commands will never be undoable nor processable in a normal way: undo actions should restore state with direct actions. Adding commands to a queue
+		/// which is in an undo action will cause an exception. 
+		/// </summary>
+		internal bool UndoInProgress { get; set;}
+		
 		/// <summary>
 		/// Gets a value indicating whether this command queue can undo the last executed command (so there are commands left to undo) (true), or false if no more
 		/// commands can be undone in this queue.
@@ -232,10 +263,7 @@ namespace SD.Tools.Algorithmia.Commands
 				{
 					return null;
 				}
-				else
-				{
-					return _currentCommandBucket.Contents;
-				}
+				return _currentCommandBucket.Contents;
 			}
 		}
 
@@ -244,14 +272,7 @@ namespace SD.Tools.Algorithmia.Commands
 		/// </summary>
 		public int Count
 		{
-			get
-			{
-				if(_commands == null)
-				{
-					return 0;
-				}
-				return _commands.Count;
-			}
+			get { return _commands == null ? 0 : _commands.Count; }
 		}
 		#endregion
 	}

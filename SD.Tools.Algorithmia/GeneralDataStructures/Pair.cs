@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -48,6 +48,8 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	/// </summary>
 	/// <typeparam name="TVal1">The type of value 1.</typeparam>
 	/// <typeparam name="TVal2">The type of value 2.</typeparam>
+	/// <remarks>Pair implements Equals and GetHashCode. The implementation is oriented towards C# null behavior (null==null is true), so if you're using 
+	/// VB.NET, you've to take this into account.</remarks>
 	public class Pair<TVal1, TVal2>
 	{
 		/// <summary>
@@ -67,6 +69,56 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		{
 			this.Value1 = value1;
 			this.Value2 = value2;
+		}
+
+
+		/// <summary>
+		/// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:System.Object"/>.</param>
+		/// <returns>
+		/// true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>; otherwise, false.
+		/// </returns>
+		/// <exception cref="T:System.NullReferenceException">
+		/// The <paramref name="obj"/> parameter is null.
+		/// </exception>
+		/// <remarks>null == null is considered true. If TVal1 or TVal2 is an array type, the values are considered equal if the values in the array are
+		/// equal</remarks>
+		public override bool Equals(object obj)
+		{
+			Pair<TVal1, TVal2> toCompareWith = obj as Pair<TVal1, TVal2>;
+			if(toCompareWith == null)
+			{
+				return false;
+			}
+			return (GeneralUtils.ValuesAreEqual(this.Value1, toCompareWith.Value1) && GeneralUtils.ValuesAreEqual(this.Value2, toCompareWith.Value2));
+		}
+
+
+		/// <summary>
+		/// Returns the hashcode of this instance. 
+		/// </summary>
+		/// <returns>
+		/// The XOR result of the hashcode of Value1 and Value2. If one of the values is null, that value is ignored. If both are null, the hashcode of this instance
+		/// is returned. 
+		/// </returns>
+		public override int GetHashCode()
+		{
+			bool value1IsNull = ((object)this.Value1 == null);
+			bool value2IsNull = ((object)this.Value2 == null);
+			if(value1IsNull && value2IsNull)
+			{
+				return base.GetHashCode();
+			}
+			if(value1IsNull)
+			{
+				return this.Value2.GetHashCode();
+			}
+			if(value2IsNull)
+			{
+				return this.Value1.GetHashCode();
+			}
+			return this.Value1.GetHashCode() ^ this.Value2.GetHashCode();
 		}
 
 

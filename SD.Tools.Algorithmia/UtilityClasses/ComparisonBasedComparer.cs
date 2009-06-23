@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -48,7 +48,7 @@ namespace SD.Tools.Algorithmia.UtilityClasses
 	public class ComparisonBasedComparer<T> : Comparer<T>
 	{
 		#region Class Member Declarations
-		private Comparison<T> _compareFunc;
+		private readonly Comparison<T> _compareFunc;
 		#endregion
 
 		/// <summary>

@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -53,10 +53,12 @@ namespace SD.Tools.Algorithmia.Commands
 	{
 		#region Class Member Declarations
 		private TState _originalState;
-		private bool _commandQueuePushed, _useParameterLessUndo;
-		private Action<TState> _undoFunc1;		// _undoFunc1 is the undo func for single parameter commands
-		private Func<TState> _getStateFunc;
-		private Action _doFunc, _undoFunc0;		// _undoFunc0 is the undo func for parameter less commands
+		private bool _commandQueuePushed;
+		private readonly bool _useParameterLessUndo;
+		private readonly Action<TState> _undoFunc1;		// _undoFunc1 is the undo func for single parameter commands
+		private readonly Func<TState> _getStateFunc;
+		private readonly Action _doFunc;		// _undoFunc0 is the undo func for parameter less commands
+		private readonly Action _undoFunc0;		// _undoFunc0 is the undo func for parameter less commands
 		#endregion
 
 
@@ -125,6 +127,39 @@ namespace SD.Tools.Algorithmia.Commands
 			_doFunc = doFunc;
 			_getStateFunc = getStateFunc;
 			_undoFunc1 = undoFunc;
+		}
+
+
+		/// <summary>
+		/// Enqueues and runs a new command by passing the function specified. Use this shortcut to wrap several statements into a single undo block.
+		/// </summary>
+		/// <param name="doFunc">The do func.</param>
+		public static void DoNow(Action doFunc)
+		{
+			DoNow(doFunc, null, string.Empty);
+		}
+
+
+		/// <summary>
+		/// Enqueues and runs a new command by passing the function specified. Use this shortcut to wrap several statements into a single undo block.
+		/// </summary>
+		/// <param name="doFunc">The do func.</param>
+		/// <param name="undoFunc">The undo func.</param>
+		public static void DoNow(Action doFunc, Action undoFunc)
+		{
+			DoNow(doFunc, undoFunc, string.Empty);
+		}
+
+
+		/// <summary>
+		/// Enqueues and runs a new command by passing the function specified. Use this shortcut to wrap several statements into a single undo block.
+		/// </summary>
+		/// <param name="doFunc">The do func.</param>
+		/// <param name="undoFunc">The undo func.</param>
+		/// <param name="description">The description.</param>
+		public static void DoNow(Action doFunc, Action undoFunc, string description)
+		{
+			CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<TState>(doFunc, undoFunc, description));
 		}
 
 

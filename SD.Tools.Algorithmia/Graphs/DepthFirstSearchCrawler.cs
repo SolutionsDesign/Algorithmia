@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -34,10 +34,8 @@
 // Contributers to the code:
 //		- Frans  Bouma [FB]
 //////////////////////////////////////////////////////////////////////
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using SD.Tools.Algorithmia.UtilityClasses;
 using SD.Tools.Algorithmia.GeneralDataStructures;
 
@@ -76,8 +74,9 @@ namespace SD.Tools.Algorithmia.Graphs
 		#endregion
 
 		#region Class Member Declarations
-		private GraphBase<TVertex, TEdge> _graphToCrawl;
-		private bool _detectCycles;
+		private readonly GraphBase<TVertex, TEdge> _graphToCrawl;
+		private readonly bool _detectCycles;
+		private bool _abortCrawl;
 		#endregion
 
 		/// <summary>
@@ -100,6 +99,11 @@ namespace SD.Tools.Algorithmia.Graphs
 		protected void Crawl()
 		{
 			TVertex vertexToStart = _graphToCrawl.Vertices.FirstOrDefault();
+			if((object)vertexToStart==null)
+			{
+				// nothing to crawl
+				return;
+			}
 			Crawl(vertexToStart);
 		}
 
@@ -108,9 +112,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// Crawls the graph set as the graphToCrawl in the constructor, starting with the vertex specified. If the vertex isn't in the graph, the routine is a no-op
 		/// </summary>
 		/// <param name="vertexToStart">The vertex to start the crawl operation.</param>
+		/// <remarks>vertexToStart can't be null, as a graph can't contain null vertices</remarks>
 		protected void Crawl(TVertex vertexToStart)
 		{
-			if((vertexToStart == null) || !_graphToCrawl.Contains(vertexToStart))
+			if(((object)vertexToStart==null) || (!_graphToCrawl.Contains(vertexToStart)))
 			{
 				return;
 			}
@@ -119,6 +124,10 @@ namespace SD.Tools.Algorithmia.Graphs
 			bool firstRun = true;
 			foreach(TVertex vertex in _graphToCrawl.Vertices)
 			{
+				if(_abortCrawl)
+				{
+					break;
+				}
 				TVertex vertexToProcess = vertex;
 				if(firstRun)
 				{
@@ -127,13 +136,30 @@ namespace SD.Tools.Algorithmia.Graphs
 					vertexToProcess = vertexToStart;
 					firstRun = false;
 				}
-				if(verticesProcessed[vertexToProcess] == VertexColor.NotVisited)
+				if(verticesProcessed[vertexToProcess] != VertexColor.NotVisited)
 				{
-					// we only get back to this level for tree roots. 
-					Visit(vertexToProcess, verticesProcessed, null);
+					continue;
 				}
+				// we only get back to this level for tree roots if it's a non-directed graph. If it's a directed graph, we can end up here as well if we moved
+				// into a path to a vertex which has no out-going edges.
+				if(!_graphToCrawl.IsDirected)
+				{
+					RootDetected(vertexToProcess);
+				}
+				Visit(vertexToProcess, verticesProcessed, null);
 			}
 		}
+
+
+        /// <summary>
+        /// Signal the detection of a root vertex that has been visited by the crawler.
+        /// </summary>
+        /// <param name="vertex">The detected root vertex</param>
+		/// <remarks>Only called in non-directed graphs, as root detection isn't possible with a DFS crawler in directed graphs without additional algorithm code</remarks>
+        protected virtual void RootDetected(TVertex vertex)
+        { 
+            //nop
+        }
 
 
 		/// <summary>
@@ -185,6 +211,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <param name="edges">The edges usable to visit the vertex.</param>
 		private void Visit(TVertex vertex, Dictionary<TVertex, VertexColor> verticesProcessed, HashSet<TEdge> edges)
 		{
+			if(_abortCrawl)
+			{
+				return;
+			}
 			if(verticesProcessed[vertex]==VertexColor.Visiting)
 			{
 				// check if we run into a cycle, in the case of a directed graph
@@ -220,9 +250,13 @@ namespace SD.Tools.Algorithmia.Graphs
 			MultiValueDictionary<TVertex, TEdge> adjacencyList = _graphToCrawl.GetAdjacencyListForVertex(vertex);
 			OnVisiting(vertex, edges);
 
-			// crawl to all this vertex' related vertices, if they've not yet been processed. The first edge in the list of edges is picked. 
+			// crawl to all this vertex' related vertices, if they've not yet been processed. 
 			foreach(KeyValuePair<TVertex, HashSet<TEdge>> relatedVertexEdgesTuple in adjacencyList)
 			{
+				if(_abortCrawl)
+				{
+					break;
+				}
 				// recurse to the related vertex, over the edges in the list of edges. We simply pass the whole hashset as it doesn't matter which edge is picked
 				// to crawl the graph, but an algorithm might want to know which edges to pick from, so it's better to pass them as a whole than to pass them one by
 				// one in a non-sequential order (through backtracking)
@@ -232,5 +266,16 @@ namespace SD.Tools.Algorithmia.Graphs
 			OnVisited(vertex, edges);
 			verticesProcessed[vertex] = VertexColor.Visited;
 		}
+
+
+		#region Class Property Declarations
+		/// <summary>
+		/// Sets the abortCrawl flag which will abort the crawl of the graph. 
+		/// </summary>
+		protected bool AbortCrawl
+		{
+			set { _abortCrawl = value; }
+		}
+		#endregion
 	}
 }

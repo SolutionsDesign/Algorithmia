@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -60,9 +60,9 @@ namespace SD.Tools.Algorithmia.Heaps
 		where TElement : class
 	{
 		#region Class Member Declarations
-		private Comparison<TElement> _keyCompareFunc;
-		private bool _isMinHeap;
-		private Func<TElement, TElement, bool> _elementCompareFunc;
+		private readonly Comparison<TElement> _keyCompareFunc;
+		private readonly bool _isMinHeap;
+		private readonly Func<TElement, TElement, bool> _elementCompareFunc;
 		#endregion
 
 
@@ -90,8 +90,6 @@ namespace SD.Tools.Algorithmia.Heaps
 				// a max heap has the element with the higher key value as the parent of the element with the lower key value. 
 				_elementCompareFunc = (a, b) => (_keyCompareFunc(a, b) >= 0);
 			}
-
-			InitDataStructures();
 		}
 
 
@@ -132,11 +130,6 @@ namespace SD.Tools.Algorithmia.Heaps
 		/// <param name="element">The element.</param>
 		/// <returns>true if the heap contains the element specified, false otherwise</returns>
 		public abstract bool Contains(TElement element);
-
-		/// <summary>
-		/// Inits the data structures for this heap.
-		/// </summary>
-		protected abstract void InitDataStructures();
 
 
 		#region Class Property Declarations

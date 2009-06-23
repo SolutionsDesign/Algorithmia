@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -32,16 +32,18 @@
 //
 //////////////////////////////////////////////////////////////////////
 // Contributers to the code:
-//		- Jeroen van den Bos [JB]
 //		- Frans  Bouma [FB]
+//		- Jeroen van den Bos [JB]
 //////////////////////////////////////////////////////////////////////
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using SD.Tools.Algorithmia;
 using SD.Tools.Algorithmia.GeneralDataStructures;
 using SD.Tools.Algorithmia.UtilityClasses;
 using SD.Tools.Algorithmia.Commands;
+using SD.Tools.BCLExtensions.CollectionsRelated;
+using SD.Tools.BCLExtensions.SystemRelated;
+using SD.Tools.Algorithmia.Graphs.Algorithms;
 
 namespace SD.Tools.Algorithmia.Graphs
 {
@@ -52,7 +54,7 @@ namespace SD.Tools.Algorithmia.Graphs
 	/// <typeparam name="TVertex">The type of the vertices in this graph.</typeparam>
 	/// <typeparam name="TEdge">The type of the edges in the graph</typeparam>
 	public abstract class GraphBase<TVertex, TEdge>
-		where TEdge : IEdge<TVertex>
+		where TEdge : class, IEdge<TVertex>
 	{
 		#region Class Member Declarations
 		// Adjacency lists: per vertex a list of vertex-edge list combinations is stored, to quickly traverse the graph for algorithms.
@@ -179,7 +181,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </returns>
 		public override string ToString()
 		{
-			return string.Format("{0}. Vertex count: {0}. Edge count: {1}.", _graphDescription, this.VertexCount, this.EdgeCount);
+			return string.Format("{0}. Vertex count: {0}. Edge count: {1}.", _graphDescription, this.VertexCount);
 		}
 
 
@@ -356,7 +358,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		
 
 		/// <summary>
-		/// Returns whether an edge exists in this graph.
+		/// Returns whether an edge exists in this graph between the start vertex and the end vertex specified. 
 		/// </summary>
 		/// <param name="startVertex">The start vertex.</param>
 		/// <param name="endVertex">The end vertex.</param>
@@ -370,6 +372,22 @@ namespace SD.Tools.Algorithmia.Graphs
 			ArgumentVerifier.CantBeNull(endVertex, "endVertex");
 
 			return _graph.ContainsKey(startVertex) && _graph[startVertex].ContainsKey(endVertex);
+		}
+
+
+		/// <summary>
+		/// Determines whether this graph contains the edge object specified. 
+		/// </summary>
+		/// <param name="edge">The edge.</param>
+		/// <returns>true if the edge object is present. False otherwise. Also returns false if there is an edge between the start/end vertices of the edge specified
+		/// but the edge object known to this graph is different from the edge specified. 
+		/// </returns>
+		public bool Contains(TEdge edge)
+		{
+			ArgumentVerifier.CantBeNull(edge, "edge");
+			// true if there's an edge between start vertex and end vertex (which automatically returns false if the vertices aren't part of this graph etc.)
+			// and if this particular edge object is part of the adjacency list.
+			return (ContainsEdge(edge.StartVertex, edge.EndVertex) && _graph[edge.StartVertex][edge.EndVertex].Contains(edge));
 		}
 
 
@@ -395,16 +413,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			ArgumentVerifier.CantBeNull(startVertex, "startVertex");
 			ArgumentVerifier.CantBeNull(endVertex, "endVertex");
-			HashSet<TEdge> toReturn = null;
-			if(this.Contains(startVertex) && this.Contains(endVertex))
-			{
-				toReturn = _graph[startVertex][endVertex];
-			}
-			else
-			{
-				toReturn = new HashSet<TEdge>();
-			}
-			return toReturn;
+			return this.ContainsEdge(startVertex, endVertex) ? _graph[startVertex][endVertex] : new HashSet<TEdge>();
 		}
 
 
@@ -418,7 +427,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		public MultiValueDictionary<TVertex, TEdge> GetAdjacencyListForVertex(TVertex vertex)
 		{
 			ArgumentVerifier.CantBeNull(vertex, "vertex");
-			MultiValueDictionary<TVertex, TEdge> toReturn = null;
+			MultiValueDictionary<TVertex, TEdge> toReturn;
 			_graph.TryGetValue(vertex, out toReturn);
 			return toReturn;
 		}
@@ -463,7 +472,7 @@ namespace SD.Tools.Algorithmia.Graphs
 				{
 					foreach(HashSet<TEdge> edges in adjacencyList.Values)
 					{
-						toReturn.AddRange(edges);
+						toReturn.AddRange(edges.Where(e=>e.StartVertex.Equals(endVertex) || e.EndVertex.Equals(endVertex)));
 					}
 				}
 			}
@@ -562,7 +571,6 @@ namespace SD.Tools.Algorithmia.Graphs
 			return result;
 		}
 
-
 		/// <summary>
 		/// Validates if the edge passed in is addable to this graph structure. The start vertex and the end vertex for the are given as well. The same edge
 		/// is present between startVertex and endVertex and also between endVertex and startVertex if the graph is a nondirected graph, hence the necessity of these two
@@ -632,7 +640,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>Raises VertexAdded</remarks>
 		protected virtual void OnVertexAdded(TVertex vertexAdded)
 		{
-			this.VertexAdded.RaiseEvent(this, new GraphChangeEventArgs<TVertex>(vertexAdded));
+			if(!this.SuppressEvents)
+			{
+				this.VertexAdded.RaiseEvent(this, new GraphChangeEventArgs<TVertex>(vertexAdded));
+			}
 		}
 
 
@@ -643,7 +654,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>Raises VertexRemoved</remarks>
 		protected virtual void OnVertexRemoved(TVertex vertexRemoved)
 		{
-			this.VertexRemoved.RaiseEvent(this, new GraphChangeEventArgs<TVertex>(vertexRemoved));
+			if(!this.SuppressEvents)
+			{
+				this.VertexRemoved.RaiseEvent(this, new GraphChangeEventArgs<TVertex>(vertexRemoved));
+			}
 		}
 
 
@@ -654,7 +668,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>Raises EdgeAdded</remarks>
 		protected virtual void OnEdgeAdded(TEdge edgeAdded)
 		{
-			this.EdgeAdded.RaiseEvent(this, new GraphChangeEventArgs<TEdge>(edgeAdded));
+			if(!this.SuppressEvents)
+			{
+				this.EdgeAdded.RaiseEvent(this, new GraphChangeEventArgs<TEdge>(edgeAdded));
+			}
 		}
 
 
@@ -665,7 +682,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>Raises EdgeRemoved</remarks>
 		protected virtual void OnEdgeRemoved(TEdge edgeRemoved)
 		{
-			this.EdgeRemoved.RaiseEvent(this, new GraphChangeEventArgs<TEdge>(edgeRemoved));
+			if(!this.SuppressEvents)
+			{
+				this.EdgeRemoved.RaiseEvent(this, new GraphChangeEventArgs<TEdge>(edgeRemoved));
+			}
 		}
 
 		/// <summary>
@@ -675,7 +695,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>Raises VertexAdding</remarks>
 		protected virtual void OnVertexAdding(TVertex vertexToBeAdded)
 		{
-			this.VertexAdding.RaiseEvent(this, new GraphChangeEventArgs<TVertex>(vertexToBeAdded));
+			if(!this.SuppressEvents)
+			{
+				this.VertexAdding.RaiseEvent(this, new GraphChangeEventArgs<TVertex>(vertexToBeAdded));
+			}
 		}
 
 
@@ -686,7 +709,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>Raises VertexRemoving</remarks>
 		protected virtual void OnVertexRemoving(TVertex vertexToBeRemoved)
 		{
-			this.VertexRemoving.RaiseEvent(this, new GraphChangeEventArgs<TVertex>(vertexToBeRemoved));
+			if(!this.SuppressEvents)
+			{
+				this.VertexRemoving.RaiseEvent(this, new GraphChangeEventArgs<TVertex>(vertexToBeRemoved));
+			}
 		}
 
 
@@ -697,7 +723,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>Raises EdgeAdding</remarks>
 		protected virtual void OnEdgeAdding(TEdge edgeToBeAdded)
 		{
-			this.EdgeAdding.RaiseEvent(this, new GraphChangeEventArgs<TEdge>(edgeToBeAdded));
+			if(!this.SuppressEvents)
+			{
+				this.EdgeAdding.RaiseEvent(this, new GraphChangeEventArgs<TEdge>(edgeToBeAdded));
+			}
 		}
 
 
@@ -708,7 +737,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>Raises EdgeRemoving</remarks>
 		protected virtual void OnEdgeRemoving(TEdge edgeToBeRemoved)
 		{
-			this.EdgeRemoving.RaiseEvent(this, new GraphChangeEventArgs<TEdge>(edgeToBeRemoved));
+			if(!this.SuppressEvents)
+			{
+				this.EdgeRemoving.RaiseEvent(this, new GraphChangeEventArgs<TEdge>(edgeToBeRemoved));
+			}
 		}
 
 
@@ -739,7 +771,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		private void BuildCachedCommandDescriptions()
 		{
-			_cachedCommandDescriptions = new Dictionary<GraphBase<TVertex, TEdge>.GraphCommandType, string>();
+			_cachedCommandDescriptions = new Dictionary<GraphCommandType, string>();
 			_cachedCommandDescriptions.Add(GraphCommandType.AddGraph, string.Format("Add graph to {0} instance", _graphDescription));
 			_cachedCommandDescriptions.Add(GraphCommandType.AddEdge, string.Format("Add new edge to {0} instance", _graphDescription));
 			_cachedCommandDescriptions.Add(GraphCommandType.AddVertex, string.Format("Add new vertex to {0} instance", _graphDescription));
@@ -765,7 +797,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			ArgumentVerifier.CantBeNull(vertex, "vertex");
 			if(!this.Contains(vertex))
 			{
-				throw new ArgumentException(string.Format("'{0}' isn't part of the graph"), argumentName);
+				throw new ArgumentException(string.Format("'{0}' isn't part of the graph", vertex), argumentName);
 			}
 		}
 
@@ -782,6 +814,51 @@ namespace SD.Tools.Algorithmia.Graphs
 				throw new ArgumentException(string.Format("The edge isn't compatible with this graph: The graph's IsDirected flag is {0}, while the edge's IsDirected flag is {1}", _isDirected, edge.IsDirected));
 			}
 		}
+
+
+        /// <summary>
+        /// A graph is called connected if every pair of distinct vertices in the graph is connected (directly or indirectly). 
+        /// A connected component is a maximal connected subgraph of G. Each vertex belongs to exactly one connected component, as does each edge.
+        /// A directed graph is called weakly connected if replacing all of its directed edges with undirected edges produces a connected (undirected) graph. 
+        /// It is strongly connected or strong if it contains a directed path from u to v and a directed path from v to u for every pair of vertices u,v. 
+        /// The strong components are the maximal strongly connected subgraphs.
+        /// See http://en.wikipedia.org/wiki/Connectivity_(graph_theory)
+        /// 
+        /// We will only check for a connected un-directed graph or a weakly connected directed graph (same logic).
+        /// </summary>
+        /// <returns>True if the graph is considered connected, false otherwise</returns>
+        public virtual bool IsConnected()
+        {
+			IRootDetector rootDetector;
+            if(this.IsDirected)
+            {
+				// create non-directed copy. 
+				rootDetector = new RootDetector<TVertex, NonDirectedEdge<TVertex>>(GetAsNonDirectedCopy());
+            }
+            else
+            {
+				// use this instance directly. 
+                rootDetector = new RootDetector<TVertex, TEdge>(this);
+            }
+
+            // Use the DepthFirstCrawler to detect the number of roots of this graph. If the number of roots is higher than 1, the graph isn't connected. 
+			return !(rootDetector.SearchForRoots() > 1);
+        }
+
+
+		/// <summary>
+		/// Creates a NonDirectedGraph version of this graph. Always creates a copy, even if this graph is a non-directed graph.
+		/// </summary>
+		/// <returns>this graph as a nondirected copy, even if this graph is a non-directed graph</returns>
+		public NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>> GetAsNonDirectedCopy()
+        {            
+            NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>> toReturn = new NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>>();
+            foreach(TEdge edge in this.Edges)
+            {
+				toReturn.Add(new NonDirectedEdge<TVertex>(edge.StartVertex, edge.EndVertex));
+            }
+            return toReturn;
+        }
 
 
 		#region Perform methods for actions on graph state
@@ -861,11 +938,11 @@ namespace SD.Tools.Algorithmia.Graphs
 			Add(edgeToAdd.StartVertex);
 			Add(edgeToAdd.EndVertex);
 			AddEdgeToGraphStructure(edgeToAdd, edgeToAdd.StartVertex, edgeToAdd.EndVertex);
-			if(!edgeToAdd.IsDirected)
-			{
-				// not directed, the endvertex also has a connection with startvertex.
-				AddEdgeToGraphStructure(edgeToAdd, edgeToAdd.EndVertex, edgeToAdd.StartVertex);
-			}
+            if (!edgeToAdd.IsDirected)
+            {
+                // not directed, the endvertex also has a connection with startvertex.
+                AddEdgeToGraphStructure(edgeToAdd, edgeToAdd.EndVertex, edgeToAdd.StartVertex);
+            }
 		}
 
 
@@ -876,13 +953,33 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>If you want to undo actions performed by this method, call this method using a Command object.</remarks>
 		private void PerformRemoveVertex(TVertex vertexToRemove)
 		{
-			// Remove the vertex itself...
+			// First collect all edges and remove these first. Code observing this graph will get notified and the vertex is still there. 
+			HashSet<TEdge> edgesToRemove = GetEdgesFromStartVertex(vertexToRemove);
+			edgesToRemove.AddRange(GetEdgesToEndVertex(vertexToRemove));
+			foreach(TEdge edge in edgesToRemove)
+			{
+				if(_isDirected)
+				{
+					RemoveEdgeFromGraphStructure(edge, edge.StartVertex, edge.EndVertex);
+				}
+				else
+				{
+					// an undirected edge is added to both sides, but as there's just 1 edge instance, the startvertex is the same for both sides.
+					RemoveEdgeFromGraphStructure(edge, edge.StartVertex, edge.EndVertex);
+					RemoveEdgeFromGraphStructure(edge, edge.EndVertex, edge.StartVertex);
+				}
+			}
+
+			// Then remove the vertex itself...
 			RemoveVertexFromGraphStructure(vertexToRemove);
 			// ...and also all edges to it.
 			foreach(TVertex key in _graph.Keys)
 			{
 				RemoveVertexFromAdjacencyList(vertexToRemove, key);
 			}
+
+			// And finally remove orphaned vertices if removal of the edges made them orphaned. 
+			RemoveOrphanedVertices();
 		}
 		
 
@@ -899,6 +996,23 @@ namespace SD.Tools.Algorithmia.Graphs
 			if(bothSides)
 			{
 				RemoveVertexFromAdjacencyList(startVertex, endVertex);
+			}
+		}
+
+
+		/// <summary>
+		/// Removes the orphaned vertices.
+		/// </summary>
+		/// <remarks>Do not call this method directly if this is a commandified graph, call this through a command if no caller is called by a command</remarks>
+		private void RemoveOrphanedVertices()
+		{
+			if(this.RemoveOrphanedVerticesOnEdgeRemoval)
+			{
+				HashSet<TVertex> orphanedVertices = GetOrphanedVertices();
+				foreach(TVertex vertex in orphanedVertices)
+				{
+					RemoveVertexFromGraphStructure(vertex);
+				}
 			}
 		}
 
@@ -932,7 +1046,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		private void AddVertexToGraphStructure(TVertex vertexToAdd)
 		{
 			if(ValidateVertexForAddition(vertexToAdd))
-			{
+			{                
 				if(_isCommandified)
 				{
 					CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(
@@ -970,7 +1084,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		private void AddEdgeToGraphStructure(TEdge edgeToAdd, TVertex startVertex, TVertex endVertex)
 		{
 			if(ValidateEdgeForAddition(edgeToAdd, startVertex, endVertex))
-			{
+			{                
 				if(_isCommandified)
 				{
 					CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(
@@ -989,7 +1103,7 @@ namespace SD.Tools.Algorithmia.Graphs
 								}, _cachedCommandDescriptions[GraphCommandType.AddEdgeToGraphStructure]));
 				}
 				else
-				{
+				{                    
 					OnEdgeAdding(edgeToAdd);
 					_graph[startVertex].Add(endVertex, edgeToAdd);
 					OnEdgeAdded(edgeToAdd);
@@ -1110,11 +1224,10 @@ namespace SD.Tools.Algorithmia.Graphs
 				}
 			}
 		}
-
 		#endregion
 
-
 		#region Class Property Declarations
+        
 		/// <summary>if true, the graph is directed and only EdgeBase instances which have IsDirected set to true are allowed,
 		/// otherwise it's a non-directed graph and EdgeBase instances which have IsDirected set to false are accepted.
 		/// </summary>
@@ -1158,7 +1271,7 @@ namespace SD.Tools.Algorithmia.Graphs
 					}
 				}
 			}
-		}
+		}        
 
 		/// <summary>
 		/// Returns the number of vertices in this graph.
@@ -1178,15 +1291,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		public int EdgeCount
 		{
-			get
-			{
-				int toReturn = 0;
-				foreach(TEdge edge in this.Edges)
-				{
-					toReturn++;
-				}
-				return toReturn;
-			}
+			get { return this.Edges.Count(); }
 		}
 		
 
@@ -1200,6 +1305,12 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// of is removed from the graph (so they effectively are orphaned). Default is false.
 		/// </summary>
 		public bool RemoveOrphanedVerticesOnEdgeRemoval { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating whether events are blocked from being raised (true) or not (false, default)
+		/// </summary>
+		protected bool SuppressEvents { get; set; }
 		#endregion
-	}
+    }
+
 }

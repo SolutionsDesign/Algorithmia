@@ -10,8 +10,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration(".NET 3.5")]
 [assembly: AssemblyCompany("Solutions Design")]
 [assembly: AssemblyProduct("SD.Tools.Algorithmia")]
-[assembly: AssemblyCopyright("Copyright © Solutions Design 2007-2008")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCopyright("Copyright © Solutions Design 2007-2009")]
+[assembly: AssemblyTrademark("Algorithmia is a trademark of Solutions Design")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
@@ -19,5 +19,6 @@ using System.Runtime.InteropServices;
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
 
+
 [assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.08.0819")]
+[assembly: AssemblyFileVersion("1.0.09.0623")]

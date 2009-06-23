@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -67,6 +67,7 @@ namespace SD.Tools.Algorithmia.PriorityQueues
 		/// <param name="priorityComparison">The priority comparison.</param>
 		public BinaryHeapPriorityQueue(Comparison<TElement> priorityComparison) : base(priorityComparison)
 		{
+			InitDataStructures();
 		}
 
 
@@ -127,21 +128,21 @@ namespace SD.Tools.Algorithmia.PriorityQueues
 
 
 		/// <summary>
-		/// Inits the data structures of this priority queue
-		/// </summary>
-		protected override void InitDataStructures()
-		{
-			_heap = new BinaryHeap<TElement>(this.PriorityComparison, false);		
-		}
-
-
-		/// <summary>
 		/// Throws a NotSupportException, as binary heaps can't be enumerated.
 		/// </summary>
 		/// <returns></returns>
 		protected override IEnumerator<TElement> GetEnumerator()
 		{
 			throw new NotSupportedException("A binary heap can't be enumerated");
+		}
+
+
+		/// <summary>
+		/// Inits the data structures of this priority queue
+		/// </summary>
+		private void InitDataStructures()
+		{
+			_heap = new BinaryHeap<TElement>(this.PriorityComparison, false);		
 		}
 
 

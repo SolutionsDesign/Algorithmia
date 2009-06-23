@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -35,9 +35,6 @@
 //		- Frans Bouma [FB]
 //////////////////////////////////////////////////////////////////////
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace SD.Tools.Algorithmia.Commands
 {
@@ -83,6 +80,22 @@ namespace SD.Tools.Algorithmia.Commands
 		/// Gets or sets the description of the command. This description can be used to show the commands in a queue visually on a screen. 
 		/// </summary>
 		public string Description { get; set; }
+		/// <summary>
+		/// Gets or sets the before Do action, which is an action executed right before Do is called on this command
+		/// </summary>
+		public Action BeforeDoAction { get; set; }
+		/// <summary>
+		/// Gets or sets the after Do action, which is an action executed right after Do has been called on this command
+		/// </summary>
+		public Action AfterDoAction { get; set; }
+		/// <summary>
+		/// Gets or sets the before Undo action, which is an action executed right before Undo is called on this command
+		/// </summary>
+		public Action BeforeUndoAction { get; set; }
+		/// <summary>
+		/// Gets or sets the after Undo action, which is an action executed right after Undo has been called on this command
+		/// </summary>
+		public Action AfterUndoAction { get; set; }
 		#endregion
 	}
 }

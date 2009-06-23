@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -155,7 +155,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			{
 				throw new InvalidOperationException("To be able to produce a Transitive Closure of this graph, the graph has to have its EdgeProducerFunc set to produce new edges. It's currently not set (null).");
 			}
-#warning REFACTOR with a crawler based on Floyd Warshall
+
 		    foreach(TVertex i in this.Vertices)
 		    {
 		        foreach(TVertex j in this.Vertices)

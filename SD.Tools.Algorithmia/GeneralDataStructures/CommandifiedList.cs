@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -39,8 +39,10 @@ using System.ComponentModel;
 using System.Collections.ObjectModel;
 
 using SD.Tools.Algorithmia.Commands;
-using SD.Tools.Algorithmia.UtilityClasses;
 using System.Collections.Generic;
+using SD.Tools.BCLExtensions.SystemRelated;
+using SD.Tools.Algorithmia.UtilityClasses;
+using SD.Tools.Algorithmia.GeneralDataStructures.EventArguments;
 
 namespace SD.Tools.Algorithmia.GeneralDataStructures
 {
@@ -54,7 +56,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	public class CommandifiedList<T> : Collection<T>, IBindingList
 	{
 		#region Class Member Declarations
-		private string _listDescription;
+		private readonly string _listDescription;
 		private Dictionary<ListCommandType, string> _cachedCommandDescriptions;
 		#endregion
 
@@ -69,6 +71,18 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// index of a removed element isn't valid after it's been removed from the list. 
 		/// </summary>
 		public event EventHandler<CollectionElementRemovedEventArgs<T>> ElementRemoved;
+		/// <summary>
+		/// Raised when an element is about to be added. The addition of the element can be cancelled through the event arguments. 
+		/// </summary>
+		public event EventHandler<CancelableListModificationEventArgs<T>> ElementAdding;
+		/// <summary>
+		/// Raised when an element is about to be removed. The removal of the element can be cancelled through the event arguments. 
+		/// </summary>
+		public event EventHandler<CancelableListModificationEventArgs<T>> ElementRemoving;
+		/// <summary>
+		/// Raised when this list is about to be cleared completely. The clearing of the list can be cancelled through the event arguments. 
+		/// </summary>
+		public event EventHandler<CancelableListModificationEventArgs<T>> ListClearing;
 		#endregion
 
 		#region Enums
@@ -108,10 +122,71 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 
 
 		/// <summary>
+		/// Resets the bindings. Raises a ListChanged.Reset event
+		/// </summary>
+		public void ResetBindings()
+		{
+			NotifyChange(ListChangedType.Reset, -1, -1);
+		}
+
+
+		/// <summary>
+		/// Moves the element at index currentIndex to the indexToMoveTo index. 
+		/// </summary>
+		/// <param name="currentIndex">Index of the current.</param>
+		/// <param name="indexToMoveTo">The index to move to.</param>
+		public void MoveElement(int currentIndex, int indexToMoveTo)
+		{
+			if((currentIndex<0) || (currentIndex>=this.Count))
+			{
+				throw new IndexOutOfRangeException("currentIndex is located outside the collection");
+			}
+			if((indexToMoveTo < 0) || (indexToMoveTo >= this.Count))
+			{
+				throw new IndexOutOfRangeException("indexToMoveTo is located outside the collection");
+			}
+			if(currentIndex==indexToMoveTo)
+			{
+				// nothing to do
+				return;
+			}
+			T item = this[currentIndex];
+			Command<T>.DoNow(() =>
+			                 	{
+									this.SuppressEvents = true;
+									RemoveItem(currentIndex);
+			                 		InsertItem(indexToMoveTo, item);
+									this.SuppressEvents = false;
+									NotifyChange(ListChangedType.ItemMoved, currentIndex, indexToMoveTo);
+			                 	},
+								() =>
+								{
+									this.SuppressEvents = true;
+									RemoveItem(indexToMoveTo);
+									InsertItem(currentIndex, item);
+									this.SuppressEvents = false;
+									NotifyChange(ListChangedType.ItemMoved, indexToMoveTo, currentIndex);
+								}
+								, string.Format("Move element from index '{0}' to index '{1}'", currentIndex, indexToMoveTo)
+				);
+		}
+
+
+		/// <summary>
 		/// Removes all elements from the <see cref="T:System.Collections.ObjectModel.Collection`1"/>.
 		/// </summary>
 		protected override void ClearItems()
 		{
+			if(!this.SuppressEvents)
+			{
+				CancelableListModificationEventArgs<T> eventArgs = new CancelableListModificationEventArgs<T>();
+				this.ListClearing.RaiseEvent(this, eventArgs);
+				if(eventArgs.Cancel)
+				{
+					// clearing is cancelled, return
+					return;
+				}
+			}
 			// create a command which stores the current state into a temp collection and then clears this collection.
 			Command<Collection<T>> clearCmd = new Command<Collection<T>>(() => this.PerformClearItems(), () => this.GetCurrentState(), c=>this.SetCurrentState(c), 
 													_cachedCommandDescriptions[ListCommandType.ClearItems]);
@@ -128,6 +203,17 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// 	<paramref name="index"/> is less than zero.-or-<paramref name="index"/> is greater than <see cref="P:System.Collections.ObjectModel.Collection`1.Count"/>.</exception>
 		protected override void InsertItem(int index, T item)
 		{
+			// index isn't verified as index can be invalid (in the case of an append).
+			if(!this.SuppressEvents)
+			{
+				CancelableListModificationEventArgs<T> eventArgs = new CancelableListModificationEventArgs<T>(item);
+				this.ElementAdding.RaiseEvent(this, eventArgs);
+				if(eventArgs.Cancel)
+				{
+					// addition is cancelled, return
+					return;
+				}
+			}
 			// create a command which simply inserts the item at the given index and as undo function removes the item at the index specified.
 			Command<T> insertCmd = new Command<T>(() => this.PerformInsertItem(index, item), () => this.PerformRemoveItem(index), 
 													_cachedCommandDescriptions[ListCommandType.InsertItem]);
@@ -143,6 +229,18 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// 	<paramref name="index"/> is less than zero.-or-<paramref name="index"/> is equal to or greater than <see cref="P:System.Collections.ObjectModel.Collection`1.Count"/>.</exception>
 		protected override void RemoveItem(int index)
 		{
+			VerifyIndex(index);
+			T item = this[index];
+			if(!this.SuppressEvents)
+			{
+				CancelableListModificationEventArgs<T> eventArgs = new CancelableListModificationEventArgs<T>(item);
+				this.ElementRemoving.RaiseEvent(this, eventArgs);
+				if(eventArgs.Cancel)
+				{
+					// removal is cancelled, return
+					return;
+				}
+			}
 			// create a command which simply removes the item at the given index and as undo function it re-inserts the item at the index specified.
 			// The command created passes the current item at the index specified, but it's not really used, as there's no state to set. The command however has to
 			// keep track of the item removed, so the state inside it has to be of type T.
@@ -161,6 +259,23 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// 	<paramref name="index"/> is less than zero.-or-<paramref name="index"/> is greater than <see cref="P:System.Collections.ObjectModel.Collection`1.Count"/>.</exception>
 		protected override void SetItem(int index, T item)
 		{
+			VerifyIndex(index);
+			if(!this.SuppressEvents)
+			{
+				CancelableListModificationEventArgs<T> eventArgs = new CancelableListModificationEventArgs<T>(item);
+				this.ElementRemoving.RaiseEvent(this, eventArgs);
+				if(eventArgs.Cancel)
+				{
+					// removal is cancelled, return
+					return;
+				}
+				this.ElementAdding.RaiseEvent(this, eventArgs);
+				if(eventArgs.Cancel)
+				{
+					// addition is cancelled, return
+					return;
+				}
+			}
 			// Create a command which stores the current item at index and sets item as the new item at index. 
 			Command<T> setCmd = new Command<T>(() => this.PerformSetItem(index, item), () => this[index], i => this.PerformSetItem(index, i),
 												_cachedCommandDescriptions[ListCommandType.SetItem]);
@@ -182,7 +297,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		/// <param name="item">The item which is about to be removed.</param>
 		protected virtual void OnRemovingItem(T item)
-		{ 
+		{
 			// nop
 		}
 
@@ -192,21 +307,78 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		/// <param name="item">The item which is about to be added.</param>
 		protected virtual void OnAddingItem(T item)
-		{ 
-			// nop 
+		{
+			// nop
 		}
-		
+
+
+		/// <summary>
+		/// Called right after the item passed in has been removed from this list. 
+		/// </summary>
+		/// <param name="item">The item.</param>
+		protected virtual void OnRemovingItemComplete(T item)
+		{
+			// nop
+		}
+
+
+		/// <summary>
+		/// Called right after the item passed in has been added to the list
+		/// </summary>
+		/// <param name="item">The item.</param>
+		protected virtual void OnAddingItemComplete(T item)
+		{
+			// nop
+		}
+
+
+		/// <summary>
+		/// Called right after the clear action has been completed. 
+		/// </summary>
+		protected virtual void OnClearingComplete()
+		{
+			// nop
+		}
+
+
+		/// <summary>
+		/// Called when the PropertyChanged event was raised by an element in this list.
+		/// </summary>
+		/// <param name="sender">The source of the event.</param>
+		/// <param name="e">The event arguments instance containing the event data.</param>
+		protected virtual void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			this.NotifyChange(ListChangedType.ItemChanged, -1, this.IndexOf((T)sender));
+		}
+
 
 		/// <summary>
 		/// Notifies a list change to observers with the parameters passed in.
 		/// </summary>
 		/// <param name="changeType">Type of the change.</param>
-		/// <param name="index">The index of the item involved (can be -1 or 0 or higher).</param>
-		protected void NotifyChange(ListChangedType changeType, int index)
+		/// <param name="oldIndex">The old index.</param>
+		/// <param name="newIndex">The new index.</param>
+		protected void NotifyChange(ListChangedType changeType, int oldIndex, int newIndex)
 		{
-			if(ListChanged != null)
+			if(!this.SuppressEvents)
 			{
-				ListChanged(this, new ListChangedEventArgs(changeType, index));
+				if(ListChanged != null)
+				{
+					ListChanged(this, new ListChangedEventArgs(changeType, newIndex, oldIndex));
+				}
+			}
+		}
+
+
+		/// <summary>
+		/// Notifies observers that an element has been removed.
+		/// </summary>
+		/// <param name="itemRemoved">The item removed.</param>
+		private void NotifyElementRemoved(T itemRemoved)
+		{
+			if(!this.SuppressEvents)
+			{
+				this.ElementRemoved.RaiseEvent(this, new CollectionElementRemovedEventArgs<T>(itemRemoved));
 			}
 		}
 
@@ -244,7 +416,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// Sets the state of this collection to the passed in state. This means: removing all elements and then setting it back to the state passed in.
 		/// </summary>
 		/// <param name="state">The state.</param>
-		private void SetCurrentState(Collection<T> state)
+		private void SetCurrentState(IList<T> state)
 		{
 			ArgumentVerifier.CantBeNull(state, "state");
 
@@ -256,8 +428,9 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				T itemToAdd = state[i];
 				OnAddingItem(itemToAdd);
 				base.InsertItem(0, itemToAdd);
+				OnAddingItemComplete(itemToAdd);
 			}
-			NotifyChange(ListChangedType.Reset, -1);
+			NotifyChange(ListChangedType.Reset, -1, -1);
 		}
 		
 
@@ -274,6 +447,34 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		}
 
 
+		/// <summary>
+		/// Binds to INotifyPropertyChanged on the item specified
+		/// </summary>
+		/// <param name="item">The item.</param>
+		private void BindToINotifyPropertyChanged(T item)
+		{
+			INotifyPropertyChanged itemAsINotifyPropertyChanged = item as INotifyPropertyChanged;
+			if(itemAsINotifyPropertyChanged != null)
+			{
+				itemAsINotifyPropertyChanged.PropertyChanged += new PropertyChangedEventHandler(OnElementPropertyChanged);
+			}
+		}
+
+
+		/// <summary>
+		/// Unbinds from INotifyPropertyChanged on the item specified
+		/// </summary>
+		/// <param name="item">The item.</param>
+		private void UnbindFromINotifyPropertyChanged(T item)
+		{
+			INotifyPropertyChanged itemAsINotifyPropertyChanged = item as INotifyPropertyChanged;
+			if(itemAsINotifyPropertyChanged != null)
+			{
+				itemAsINotifyPropertyChanged.PropertyChanged -= new PropertyChangedEventHandler(OnElementPropertyChanged);
+			}
+		}
+
+
 		#region Methods which perform the actual actions
 		/// <summary>
 		/// Performs the ClearItems call.
@@ -281,8 +482,16 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		private void PerformClearItems()
 		{
 			OnClearing();
+			if((typeof(T) as INotifyPropertyChanged) != null)
+			{
+				foreach(T item in this)
+				{
+					UnbindFromINotifyPropertyChanged(item);
+				}
+			}
 			base.ClearItems();
-			NotifyChange(ListChangedType.Reset, -1);
+			OnClearingComplete();
+			NotifyChange(ListChangedType.Reset, -1, -1);
 		}
 
 
@@ -293,9 +502,12 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="item">The item.</param>
 		private void PerformInsertItem(int index, T item)
 		{
+			// index isn't verified as index can be invalid (in the case of an append).
+			BindToINotifyPropertyChanged(item);
 			OnAddingItem(item);
 			base.InsertItem(index, item);
-			NotifyChange(ListChangedType.ItemAdded, index);
+			OnAddingItemComplete(item);
+			NotifyChange(ListChangedType.ItemAdded, -1, index);
 		}
 
 
@@ -308,10 +520,13 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			VerifyIndex(index);
 			T itemToRemove = this[index];
 			OnRemovingItem(itemToRemove);
+			UnbindFromINotifyPropertyChanged(itemToRemove);
 			base.RemoveItem(index);
-			this.ElementRemoved.RaiseEvent(this, new CollectionElementRemovedEventArgs<T>(itemToRemove));
-			NotifyChange(ListChangedType.ItemDeleted, index);
+			OnRemovingItemComplete(itemToRemove);
+			NotifyElementRemoved(itemToRemove);
+			NotifyChange(ListChangedType.ItemDeleted, -1, index);
 		}
+
 
 		/// <summary>
 		/// Performs the SetItem call
@@ -321,13 +536,17 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		private void PerformSetItem(int index, T item)
 		{
 			VerifyIndex(index);
-			OnRemovingItem(this[index]);
+			T itemToRemove = this[index];
+			OnRemovingItem(itemToRemove);
+			UnbindFromINotifyPropertyChanged(itemToRemove);
+			BindToINotifyPropertyChanged(item);
 			OnAddingItem(item);
 			base.SetItem(index, item);
-			NotifyChange(ListChangedType.ItemChanged, index);
+			OnRemovingItemComplete(itemToRemove);
+			OnAddingItemComplete(item);
+			NotifyChange(ListChangedType.ItemChanged, -1, index);
 		}
 		#endregion
-
 
 		#region IBindingList Members
 		/// <summary>
@@ -503,6 +722,13 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		{
 			get { return false; }
 		}
+		#endregion
+
+		#region Class Property Declarations
+		/// <summary>
+		/// Gets or sets a value indicating whether events are blocked from being raised (true) or not (false, default)
+		/// </summary>
+		public bool SuppressEvents { get; set; }
 		#endregion
 	}
 }

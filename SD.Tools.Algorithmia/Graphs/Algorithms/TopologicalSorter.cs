@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -46,7 +46,7 @@ namespace SD.Tools.Algorithmia.Graphs.Algorithms
 	/// Implementation of the Topological Sort algorithm for directed graphs. Topological sorting is a way to determine which vertex is relying on which vertices
 	/// so it has to be processed first. Topological sorting relies on Depth first search (Tarjan 1976: http://www.springerlink.com/content/k5633403j221763p/)
 	/// The algorithm implementation here has two choices for direction interpretation, which is controlled by a flag passed to the constructor: if the directed
-	/// edge A to B means A has to done before B, pass true for the flag <i>directionMeansOrder</i>, otherwise false. Default is false (A to B means A is depending on
+	/// edge A to B means A has to be done before B, pass true for the flag <i>directionMeansOrder</i>, otherwise false. Default is false (A to B means A is depending on
 	/// B, so B should be done before A).
 	/// See for more information: http://en.wikipedia.org/wiki/Topological_sorting
 	/// </summary>
@@ -58,7 +58,7 @@ namespace SD.Tools.Algorithmia.Graphs.Algorithms
 		where TEdge : class, IEdge<TVertex>
 	{
 		#region Class Member Declarations
-		private bool _directionMeansOrder;
+		private readonly bool _directionMeansOrder;
 		#endregion
 
 		/// <summary>
@@ -109,7 +109,17 @@ namespace SD.Tools.Algorithmia.Graphs.Algorithms
 		/// <remarks>It's recommended you throw an exception to quit the operation entirely if your algorithm can't deal with cycles.</remarks>
 		protected override bool CycleDetected(TVertex relatedVertex, HashSet<TEdge> edges)
 		{
-			throw new InvalidOperationException("Cycle detected. Topological sorting can't be applied on a directed graph with one or more cycles");
+			StringBuilder builder = new StringBuilder();
+			if(edges != null)
+			{
+				foreach(TEdge edge in edges)
+				{
+					builder.AppendFormat("{0}{1}", edge, Environment.NewLine);
+				}
+			}
+			throw new InvalidOperationException(
+				string.Format("Cycle detected. Topological sorting can't be applied on a directed graph with one or more cycles. Related vertex: {0}. Edge(s) followed to this vertex: {1}", 
+					relatedVertex, builder));
 		}
 
 

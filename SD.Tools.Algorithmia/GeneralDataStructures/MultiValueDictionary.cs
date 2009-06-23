@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -39,6 +39,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SD.Tools.Algorithmia.UtilityClasses;
+using System.Collections;
 
 namespace SD.Tools.Algorithmia.GeneralDataStructures
 {
@@ -69,13 +70,32 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		{
 			ArgumentVerifier.CantBeNull(key, "key");
 
-			HashSet<TValue> container = null;
+			HashSet<TValue> container;
 			if(!this.TryGetValue(key, out container))
 			{
 				container = new HashSet<TValue>();
-				base.Add(key, container);
+				this.Add(key, container);
 			}
 			container.Add(value);
+		}
+
+
+		/// <summary>
+		/// Adds the range of values under the key specified.
+		/// </summary>
+		/// <param name="key">The key.</param>
+		/// <param name="values">The values.</param>
+		public void AddRange(TKey key, IEnumerable<TValue> values)
+		{
+			if(values==null)
+			{
+				return;
+			}
+
+			foreach(TValue value in values)
+			{
+				this.Add(key, value);
+			}
 		}
 
 
@@ -89,7 +109,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		{
 			ArgumentVerifier.CantBeNull(key, "key");
 			bool toReturn = false;
-			HashSet<TValue> values = null;
+			HashSet<TValue> values;
 			if(this.TryGetValue(key, out values))
 			{
 				toReturn = values.Contains(value);
@@ -107,7 +127,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		{
 			ArgumentVerifier.CantBeNull(key, "key");
 
-			HashSet<TValue> container = null;
+			HashSet<TValue> container;
 			if(this.TryGetValue(key, out container))
 			{
 				container.Remove(value);
@@ -152,8 +172,8 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </returns>
 		public HashSet<TValue> GetValues(TKey key, bool returnEmptySet)
 		{
-			HashSet<TValue> toReturn = null;
-			if(!base.TryGetValue(key, out toReturn) && returnEmptySet)
+			HashSet<TValue> toReturn;
+			if(!this.TryGetValue(key, out toReturn) && returnEmptySet)
 			{
 				toReturn = new HashSet<TValue>();
 			}

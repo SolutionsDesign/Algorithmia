@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -42,6 +42,7 @@ using System.Reflection;
 using SD.Tools.Algorithmia.GeneralDataStructures;
 using SD.Tools.Algorithmia.UtilityClasses;
 using System.Threading;
+using SD.Tools.BCLExtensions.SystemRelated;
 
 namespace SD.Tools.Algorithmia.Commands
 {
@@ -81,17 +82,24 @@ namespace SD.Tools.Algorithmia.Commands
 	{
 		#region Class Member Declarations
 		private CommandQueueStack _activeCommandQueueStack;
-		private Dictionary<Guid, CommandQueueStack> _commandQueueStackPerID;
-		private object _semaphore;
+		private readonly Dictionary<Guid, CommandQueueStack> _commandQueueStackPerID;
+		private readonly object _semaphore;
 		private readonly Guid _ownStackId;
+		private bool _raiseEvents;
 
 		// Per thread, store the active command queue stack id, so a thread context switch can make the thread's active command queue stack again the active one
 		// without code / housekeeping inside the thread.
 		[ThreadStatic]
 		private static Guid _threadActiveCommandQueueStackId = Guid.Empty;
-		// Per thread store a flag which signals if the command manager is in an undoable period, which means commands are dequeued after they've executed. 
+		// Per thread store a flag which signals if the command manager is in a non-undoable period, which means commands are dequeued after they've executed. 
 		[ThreadStatic]
-		private static bool _inUndoablePeriod = false;
+		private static bool _inNonUndoablePeriod;
+
+		/// <summary>
+		/// Flag to signal the CommandQueueManager and command objects whether to throw a DoDuringUndoException if a Do action is detected during an Undo action.
+		/// When set to false, the Do action is ignored. Default is true. Leave to true to easily detect bugs in code which utilizes Do/Undo functionality.
+		/// </summary>
+		public static bool ThrowExceptionOnDoDuringUndo = true;
 		#endregion
 
 		#region Events
@@ -107,6 +115,7 @@ namespace SD.Tools.Algorithmia.Commands
 		/// </summary>
 		internal CommandQueueManager()
 		{
+			_raiseEvents = true;
 			_semaphore = new object();
 			_commandQueueStackPerID = new Dictionary<Guid, CommandQueueStack>();
 			_ownStackId = Guid.NewGuid();
@@ -152,6 +161,24 @@ namespace SD.Tools.Algorithmia.Commands
 
 
 		/// <summary>
+		/// Resets the active command queue stack. This means that the stack will get all its commands be removed and an empty queue is the result.
+		/// </summary>
+		public void ResetActiveCommandQueue()
+		{
+			try
+			{
+				ThreadEnter();
+				_activeCommandQueueStack.Clear();
+				_activeCommandQueueStack.Push(new CommandQueue());
+			}
+			finally
+			{
+				ThreadExit();
+			}
+		}
+
+
+		/// <summary>
 		/// Starts a period of command execution which aren't undoable. 
 		/// </summary>
 		public void BeginNonUndoablePeriod()
@@ -159,7 +186,7 @@ namespace SD.Tools.Algorithmia.Commands
 			try
 			{
 				ThreadEnter();
-				_inUndoablePeriod = true;
+				_inNonUndoablePeriod = true;
 			}
 			finally
 			{
@@ -176,7 +203,45 @@ namespace SD.Tools.Algorithmia.Commands
 			try
 			{
 				ThreadEnter();
-				_inUndoablePeriod = false;
+				_inNonUndoablePeriod = false;
+			}
+			finally
+			{
+				ThreadExit();
+			}
+		}
+
+
+		/// <summary>
+		/// Determines whether the commandqueuestack with the id passed in can perform a Do operation (or redo)
+		/// </summary>
+		/// <param name="stackId">The stack id.</param>
+		/// <returns>true if the stack contains a command which can be performed, false otherwise.</returns>
+		public bool CanDo(Guid stackId)
+		{
+			try
+			{
+				ThreadEnter();
+				return GetCommandQueueStackForId(stackId).Peek().CanDo;
+			}
+			finally
+			{
+				ThreadExit();
+			}
+		}
+
+
+		/// <summary>
+		/// Determines whether the commandqueuestack with the id passed in can perform an Undo operation
+		/// </summary>
+		/// <param name="stackId">The stack id.</param>
+		/// <returns>true if the stack contains a command which can be undone, false otherwise.</returns>
+		public bool CanUndo(Guid stackId)
+		{
+			try
+			{
+				ThreadEnter();
+				return GetCommandQueueStackForId(stackId).Peek().CanUndo;
 			}
 			finally
 			{
@@ -190,15 +255,19 @@ namespace SD.Tools.Algorithmia.Commands
 		/// one belonging to this manager, which owns its own main queue. 
 		/// </summary>
 		/// <param name="toEnqueue">The command to enqueue.</param>
-		public void EnqueueCommand(CommandBase toEnqueue)
+		/// <returns>true if enqueue action succeeded, false otherwise</returns>
+		public bool EnqueueCommand(CommandBase toEnqueue)
 		{
 			try
 			{
 				ThreadEnter();
 				ArgumentVerifier.CantBeNull(toEnqueue, "toEnqueue");
-				_activeCommandQueueStack.Peek().EnqueueCommand(toEnqueue);
-				this.CommandQueueActionPerformed.RaiseEvent(this, 
-						new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandEnqueued, _activeCommandQueueStack.StackId));
+				bool enqueueSucceeded = _activeCommandQueueStack.Peek().EnqueueCommand(toEnqueue);
+				if(enqueueSucceeded)
+				{
+					RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandEnqueued, _activeCommandQueueStack.StackId));
+				}
+				return enqueueSucceeded;
 			}
 			finally
 			{
@@ -212,24 +281,27 @@ namespace SD.Tools.Algorithmia.Commands
 		/// the callee, it's the one belonging to this manager, which owns its own main queue. 
 		/// </summary>
 		/// <param name="toEnqueueAndRun">The command to enqueue and run.</param>
-		public void EnqueueAndRunCommand(CommandBase toEnqueueAndRun)
+		/// <remarks>If enqueue action fails due to an undo action that's in progress and ThrowExceptionOnDoDuringUndo is set to false, this routine is a no-op</remarks>
+		/// <returns>true if enqueue and Do succeeded, false otherwise</returns>
+		public bool EnqueueAndRunCommand(CommandBase toEnqueueAndRun)
 		{
 			try
 			{
 				ThreadEnter();
 				ArgumentVerifier.CantBeNull(toEnqueueAndRun, "toEnqueue");
-				_activeCommandQueueStack.Peek().EnqueueCommand(toEnqueueAndRun);
-				this.CommandQueueActionPerformed.RaiseEvent(this,
-						new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandEnqueued, _activeCommandQueueStack.StackId));
-				_activeCommandQueueStack.Peek().DoCurrentCommand();
-				this.CommandQueueActionPerformed.RaiseEvent(this,
-						new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandExecuted, _activeCommandQueueStack.StackId));
-				if(_inUndoablePeriod)
+				bool enqueueResult = _activeCommandQueueStack.Peek().EnqueueCommand(toEnqueueAndRun);
+				if(enqueueResult)
 				{
-					_activeCommandQueueStack.Peek().DequeueLastExecutedCommand();
-					this.CommandQueueActionPerformed.RaiseEvent(this,
-							new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandDequeued, _activeCommandQueueStack.StackId));
+					RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandEnqueued, _activeCommandQueueStack.StackId));
+					_activeCommandQueueStack.Peek().DoCurrentCommand();
+					RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandExecuted, _activeCommandQueueStack.StackId));
+					if(_inNonUndoablePeriod)
+					{
+						_activeCommandQueueStack.Peek().DequeueLastExecutedCommand();
+						RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandDequeued, _activeCommandQueueStack.StackId));
+					}
 				}
+				return enqueueResult;
 			}
 			finally
 			{
@@ -246,12 +318,16 @@ namespace SD.Tools.Algorithmia.Commands
 			try
 			{
 				ThreadEnter();
+				// set the flag that an undo action is in progress to prevent new commands being added to the top command queue on the active stack. We do this here 
+				// as commands which are added through code which is called (indirectly) by the undoFunc of a command undone by this routine (directly or indirectly), 
+				// are always added to the command queue at the top of the active stack.
+				_activeCommandQueueStack.Peek().UndoInProgress = true;
 				_activeCommandQueueStack.Peek().UndoPreviousCommand();
-				this.CommandQueueActionPerformed.RaiseEvent(this,
-						new CommandQueueActionPerformedEventArgs(CommandQueueActionType.UndoPerformed, _activeCommandQueueStack.StackId));
+				RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.UndoPerformed, _activeCommandQueueStack.StackId));
 			}
 			finally
 			{
+				_activeCommandQueueStack.Peek().UndoInProgress = false;
 				ThreadExit();
 			}
 		}
@@ -266,8 +342,27 @@ namespace SD.Tools.Algorithmia.Commands
 			{
 				ThreadEnter();
 				_activeCommandQueueStack.Peek().DoCurrentCommand();
-				this.CommandQueueActionPerformed.RaiseEvent(this,
-						new CommandQueueActionPerformedEventArgs(CommandQueueActionType.RedoPerformed, _activeCommandQueueStack.StackId));
+				RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.RedoPerformed, _activeCommandQueueStack.StackId));
+			}
+			finally
+			{
+				ThreadExit();
+			}
+		}
+
+
+		/// <summary>
+		/// Gets the command queue stack currently active in the manager for the active thread
+		/// </summary>
+		/// <returns>The active command queue stack or null if no stack was active</returns>
+		/// <remarks>'Active' is relative to a thread. This means that the returned stack is the active stack for the active thread and should not be passed
+		/// to other threads as being the active stack as for every thread a different stack could be active</remarks>
+		public CommandQueueStack GetActiveCommandQueueStack()
+		{
+			try
+			{
+				ThreadEnter();
+				return _activeCommandQueueStack;
 			}
 			finally
 			{
@@ -287,12 +382,12 @@ namespace SD.Tools.Algorithmia.Commands
 			try
 			{
 				ThreadEnter();
-				CommandQueueStack toReturn = null;
 				Guid idToUse = stackId;
 				if(idToUse == Guid.Empty)
 				{
 					idToUse = _ownStackId;
 				}
+				CommandQueueStack toReturn;
 				_commandQueueStackPerID.TryGetValue(idToUse, out toReturn);
 				return toReturn;
 			}
@@ -313,8 +408,7 @@ namespace SD.Tools.Algorithmia.Commands
 			{
 				ThreadEnter();
 				_activeCommandQueueStack.Push(toPush);
-				this.CommandQueueActionPerformed.RaiseEvent(this,
-						new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandQueuePushed, _activeCommandQueueStack.StackId));
+				RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandQueuePushed, _activeCommandQueueStack.StackId));
 			}
 			finally
 			{
@@ -333,8 +427,7 @@ namespace SD.Tools.Algorithmia.Commands
 			{
 				ThreadEnter();
 				CommandQueue toReturn = _activeCommandQueueStack.Pop();
-				this.CommandQueueActionPerformed.RaiseEvent(this,
-						new CommandQueueActionPerformedEventArgs(CommandQueueActionType.RedoPerformed, _activeCommandQueueStack.StackId));
+				RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.RedoPerformed, _activeCommandQueueStack.StackId));
 				return toReturn;
 			}
 			finally
@@ -345,11 +438,25 @@ namespace SD.Tools.Algorithmia.Commands
 
 
 		/// <summary>
+		/// Raises the CommandQueueActionPerformed event.
+		/// </summary>
+		/// <param name="eventArgs">The <see cref="SD.Tools.Algorithmia.Commands.CommandQueueActionPerformedEventArgs"/> instance containing the event data.</param>
+		private void RaiseCommandQueueActionPerformed(CommandQueueActionPerformedEventArgs eventArgs)
+		{
+			if(_raiseEvents)
+			{
+				this.CommandQueueActionPerformed.RaiseEvent(this, eventArgs);
+			}
+		}
+
+
+		/// <summary>
 		/// Entrance routine for a thread call to this class. Called from every public method at the very beginning.
 		/// </summary>
 		private void ThreadEnter()
 		{
 			Monitor.Enter(_semaphore);
+			// if this thread has an active command queue stack, it should be activated, if it's not already active.
 			if(_threadActiveCommandQueueStackId != Guid.Empty)
 			{
 				if((_activeCommandQueueStack == null) ||
@@ -368,5 +475,40 @@ namespace SD.Tools.Algorithmia.Commands
 		{
 			Monitor.Exit(_semaphore);
 		}
+
+
+		#region Class Property Declarations
+		/// <summary>
+		/// Gets/ sets the RaiseEvents flag. By default, events are raised when an action is performed. To stop this from happening, call this method and pass false.
+		/// This flag is for all threads. 
+		/// </summary>
+		public bool RaiseEvents
+		{
+			get 
+			{
+				try
+				{
+					ThreadEnter();
+					return _raiseEvents;
+				}
+				finally
+				{
+					ThreadExit();
+				}
+			}
+			set
+			{
+				try
+				{
+					ThreadEnter();
+					_raiseEvents = value;
+				}
+				finally
+				{
+					ThreadExit();
+				}
+			}
+		}
+		#endregion
 	}
 }

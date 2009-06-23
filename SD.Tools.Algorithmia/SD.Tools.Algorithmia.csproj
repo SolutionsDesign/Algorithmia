@@ -34,6 +34,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="SD.Tools.BCLExtensions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=a3f87088dcb994e1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\ReferencedLibraries\SD.Tools.BCLExtensions.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -54,20 +58,41 @@
     <Compile Include="Commands\CommandQueueActionPerformedEventArgs.cs" />
     <Compile Include="Commands\CommandQueueManager.cs" />
     <Compile Include="Commands\CommandQueueStack.cs" />
+    <Compile Include="Commands\DoDuringUndoException.cs" />
     <Compile Include="ConstantsEnums.cs" />
-    <Compile Include="GeneralDataStructures\CollectionElementRemovedEventArgs.cs" />
+    <Compile Include="GeneralDataStructures\ChangeAwareKeyedCommandifiedList.cs" />
+    <Compile Include="GeneralDataStructures\CommandifiedMember.cs" />
+    <Compile Include="GeneralDataStructures\EventArguments\ContainerEventArgs.cs" />
+    <Compile Include="GeneralDataStructures\EventArguments\CancelableListModificationEventArgs.cs" />
+    <Compile Include="GeneralDataStructures\EventArguments\CollectionElementRemovedEventArgs.cs" />
     <Compile Include="GeneralDataStructures\CommandifiedList.cs" />
+    <Compile Include="GeneralDataStructures\EditableObjectDataContainer.cs" />
+    <Compile Include="GeneralDataStructures\ErrorContainer.cs" />
+    <Compile Include="GeneralDataStructures\EventArguments\MemberChangedEventArgs.cs" />
+    <Compile Include="GeneralDataStructures\EventArguments\ElementChangedEventArgs.cs" />
+    <Compile Include="GeneralDataStructures\EventArguments\ElementInListChangedEventArgs.cs" />
+    <Compile Include="GeneralDataStructures\ExtensionMethods.cs" />
+    <Compile Include="GeneralDataStructures\Grouping.cs" />
+    <Compile Include="GeneralDataStructures\KeyedCommandifiedList.cs" />
+    <Compile Include="GeneralDataStructures\ObserverAwareBindingList.cs" />
     <Compile Include="GeneralDataStructures\ReadOnlyPair.cs" />
     <Compile Include="GeneralDataStructures\LinkedBucketList.cs" />
     <Compile Include="GeneralDataStructures\ListBucket.cs" />
     <Compile Include="GeneralDataStructures\MultiValueDictionary.cs" />
     <Compile Include="GeneralDataStructures\Pair.cs" />
-    <Compile Include="GeneralExtensionMethods.cs" />
+    <Compile Include="GeneralInterfaces\IDetailedNotifyElementChanged.cs" />
+    <Compile Include="GeneralInterfaces\IEventBasedObserver.cs" />
+    <Compile Include="GeneralInterfaces\INotifyAsRemoved.cs" />
+    <Compile Include="GeneralInterfaces\INotifyAsChanged.cs" />
+    <Compile Include="Graphs\Algorithms\DisconnectedGraphsFinder.cs" />
+    <Compile Include="Graphs\Algorithms\RootDetector.cs" />
     <Compile Include="Graphs\Algorithms\TopologicalSorter.cs" />
     <Compile Include="Graphs\DepthFirstSearchCrawler.cs" />
     <Compile Include="Graphs\GraphChangeEventArgs.cs" />
+    <Compile Include="Graphs\IRootDetector.cs" />
     <Compile Include="Graphs\NonDirectedEdge.cs" />
     <Compile Include="Graphs\NonDirectedGraph.cs" />
+    <Compile Include="Graphs\SubGraphView.cs" />
     <Compile Include="UtilityClasses\GeneralUtils.cs" />
     <Compile Include="Graphs\DirectedEdge.cs" />
     <Compile Include="Graphs\DirectedGraph.cs" />

@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -36,9 +36,8 @@
 //////////////////////////////////////////////////////////////////////
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using SD.Tools.Algorithmia.UtilityClasses;
+using SD.Tools.BCLExtensions.CollectionsRelated;
 
 namespace SD.Tools.Algorithmia.Sorting
 {
@@ -84,7 +83,7 @@ namespace SD.Tools.Algorithmia.Sorting
 		/// <param name="comparer">The comparer to use. If set to null, the default comparer for T is used.</param>
 		public static void Sort<T>(this IList<T> toSort, SortAlgorithm algorithm, SortDirection direction, IComparer<T> comparer)
 		{
-			toSort.Sort(algorithm, direction, -1, -1, GeneralUtils.GetUsableComparison<T>(comparer));
+			toSort.Sort(algorithm, direction, -1, -1, GeneralUtils.GetUsableComparison(comparer));
 		}
 
 
@@ -115,7 +114,7 @@ namespace SD.Tools.Algorithmia.Sorting
 		/// <param name="comparer">The comparer to use. If set to null, the default comparer for T is used.</param>
 		public static void Sort<T>(this IList<T> toSort, SortAlgorithm algorithm, SortDirection direction, int startIndex, int endIndex, IComparer<T> comparer)
 		{
-			toSort.Sort(algorithm, direction, startIndex, endIndex, GeneralUtils.GetUsableComparison<T>(comparer));
+			toSort.Sort(algorithm, direction, startIndex, endIndex, GeneralUtils.GetUsableComparison(comparer));
 		}
 
 

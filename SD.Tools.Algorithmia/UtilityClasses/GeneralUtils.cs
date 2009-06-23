@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -36,8 +36,6 @@
 //////////////////////////////////////////////////////////////////////
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace SD.Tools.Algorithmia.UtilityClasses
 {
@@ -63,6 +61,81 @@ namespace SD.Tools.Algorithmia.UtilityClasses
 			}
 			// create a comparison func based on the default comparer.
 			return (a, b) => (comparerToUse.Compare(a, b));
+		}
+
+
+		/// <summary>
+		/// Compares the two values passed in and checks if they're value-wise the same. This extends 'Equals' in the sense that if the values are
+		/// arrays it considers them the same if the values of the arrays are the same as well and the length is the same. 
+		/// </summary>
+		/// <remarks>It assumes the types of value1 and value2 are the same</remarks>
+		/// <param name="value1">The first value to compare</param>
+		/// <param name="value2">The second value to compare</param>
+		/// <returns>true if the values should be considered equal. If value1 or value2 are null and the other isn't, false is returned. If both are null,
+		/// true is returned.</returns>
+		public static bool ValuesAreEqual(object value1, object value2)
+		{
+			if(((value1 == null) && (value2 != null)) || ((value1 != null) && (value2 == null)))
+			{
+				return false;
+			}
+			if(value1 == null)		// test on value1, if value1 is null at this spot, value2 also has to be null, otherwise we'd have been caught by the previous expression.
+			{
+				return true;
+			}
+
+			// not null, proceed with checks on values.
+			Type value1Type = value1.GetType();
+			Type value2Type = value2.GetType();
+
+			if(value1Type != value2Type)
+			{
+				return false;
+			}
+
+			if(value1Type.IsArray)
+			{
+				return CheckArraysAreEqual((Array)value1, (Array)value2);
+			}
+			return value1.Equals(value2);
+		}
+		
+
+		/// <summary>
+		/// Performs a per-value compare on the arrays passed in and returns true if the arrays are of the same length and contain the same values.
+		/// </summary>
+		/// <param name="arr1"></param>
+		/// <param name="arr2"></param>
+		/// <returns>true if the arrays contain the same values and are of the same length</returns>
+		public static bool CheckArraysAreEqual(Array arr1, Array arr2)
+		{
+			if(((arr1 == null) && (arr2 != null)) || ((arr1 != null) && (arr2 == null)))
+			{
+				return false;
+			}
+
+			if(arr1 == null)	// test on arr1, if arr1 is null at this spot, arr2 also has to be null, otherwise we'd have been caught by the previous expression.
+			{
+				return true;
+			}
+
+			// non-null arrays.
+			if(arr1.Length != arr2.Length)
+			{
+				return false;
+			}
+
+			bool areEqual = true;
+			for(int i = 0; i < arr1.Length; i++)
+			{
+				areEqual &= arr1.GetValue(i).Equals(arr2.GetValue(i));
+				if(!areEqual)
+				{
+					break;
+				}
+			}
+
+			return areEqual;
 		}
 	}
 }

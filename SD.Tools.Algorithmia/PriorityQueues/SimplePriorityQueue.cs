@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -64,6 +64,7 @@ namespace SD.Tools.Algorithmia.PriorityQueues
 		public SimplePriorityQueue(Comparison<TElement> priorityComparison) :
 			base(priorityComparison)
 		{
+			InitDataStructures();
 		}
 
 
@@ -156,15 +157,6 @@ namespace SD.Tools.Algorithmia.PriorityQueues
 
 
 		/// <summary>
-		/// Inits the data structures of this priority queue
-		/// </summary>
-		protected override void InitDataStructures()
-		{
-			_elements = new List<TElement>();
-		}
-
-
-		/// <summary>
 		/// Gets the enumerator for this queue
 		/// </summary>
 		/// <returns>the enumerator to use over this queue</returns>
@@ -175,6 +167,15 @@ namespace SD.Tools.Algorithmia.PriorityQueues
 			List<TElement> elementsAsList = new List<TElement>(_elements);
 			elementsAsList.Sort(SortAlgorithm.ShellSort, SortDirection.Descending, this.PriorityComparison);
 			return ((IEnumerable<TElement>)elementsAsList).GetEnumerator();
+		}
+
+
+		/// <summary>
+		/// Inits the data structures of this priority queue
+		/// </summary>
+		private void InitDataStructures()
+		{
+			_elements = new List<TElement>();
 		}
 
 

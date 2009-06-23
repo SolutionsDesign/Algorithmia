@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -68,6 +68,7 @@ namespace SD.Tools.Algorithmia.PriorityQueues
 		public SortedPriorityQueue(Comparison<TElement> priorityComparison) :
 			base(priorityComparison)
 		{
+			InitDataStructures();
 		}
 
 
@@ -105,9 +106,8 @@ namespace SD.Tools.Algorithmia.PriorityQueues
 				_elements.Add(element);
 				return;
 			}
-			ComparisonBasedComparer<TElement> comparer = new ComparisonBasedComparer<TElement>(this.PriorityComparison);
+			ComparisonBasedComparer<TElement> comparer = new ComparisonBasedComparer<TElement>(this.PriorityComparison) { FlipCompareResult = true };
 			// as the list has to be sorted descending, we have to flip the comparer's result
-			comparer.FlipCompareResult=true;
 			int indexToUse = _elements.BinarySearch(element, comparer);
 			if(indexToUse < 0)
 			{
@@ -162,21 +162,21 @@ namespace SD.Tools.Algorithmia.PriorityQueues
 
 
 		/// <summary>
-		/// Inits the data structures of this priority queue
-		/// </summary>
-		protected override void InitDataStructures()
-		{
-			_elements = new List<TElement>();
-		}
-
-
-		/// <summary>
 		/// Gets the enumerator for this queue
 		/// </summary>
 		/// <returns>the enumerator to use over this queue</returns>
 		protected override IEnumerator<TElement> GetEnumerator()
 		{
 			return ((IEnumerable<TElement>)_elements).GetEnumerator();
+		}
+
+
+		/// <summary>
+		/// Inits the data structures of this priority queue
+		/// </summary>
+		private void InitDataStructures()
+		{
+			_elements = new List<TElement>();
 		}
 
 

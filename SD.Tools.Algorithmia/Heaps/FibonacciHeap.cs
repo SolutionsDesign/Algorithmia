@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -80,7 +80,7 @@ namespace SD.Tools.Algorithmia.Heaps
 		/// <param name="isMinHeap">Flag to signal if this heap is a min heap or a max heap</param>
 		public FibonacciHeap(Comparison<TElement> keyCompareFunc, bool isMinHeap) : base(keyCompareFunc, isMinHeap)
 		{
-			// datastructures are initialized in InitializeDataStructures, as with all heaps.
+			InitDataStructures();
 		}
 
 
@@ -195,7 +195,7 @@ namespace SD.Tools.Algorithmia.Heaps
 		public override void Insert(TElement element)
 		{
 			ArgumentVerifier.CantBeNull(element, "element");
-			ArgumentVerifier.ShouldBeTrue<TElement>(e => !this.Contains(e), element, "element to insert already exists in this heap.");
+			ArgumentVerifier.ShouldBeTrue(e => !this.Contains(e), element, "element to insert already exists in this heap.");
 
 			FibonacciHeapNode<TElement> newNode = new FibonacciHeapNode<TElement>(element);
 			// new element is the root of a new tree. We'll add it as the first node.
@@ -297,7 +297,7 @@ namespace SD.Tools.Algorithmia.Heaps
 		/// <summary>
 		/// Inits the data structures for this heap.
 		/// </summary>
-		protected override void InitDataStructures()
+		private void InitDataStructures()
 		{
 			_trees = new LinkedBucketList<FibonacciHeapNode<TElement>>();
 			_elementToHeapNodeMappings = new List<Dictionary<TElement,FibonacciHeapNode<TElement>>>();
@@ -331,7 +331,7 @@ namespace SD.Tools.Algorithmia.Heaps
 			if(toReturn)
 			{
 				// already violates heap
-				return toReturn;
+				return true;
 			}
 			// check with each child (if any)
 			foreach(FibonacciHeapNode<TElement> child in elementNode.Children)
@@ -364,7 +364,7 @@ namespace SD.Tools.Algorithmia.Heaps
 			ListBucket<FibonacciHeapNode<TElement>> currentTreeNode = _trees.Head;
 			while(currentTreeNode != null)
 			{
-				ListBucket<FibonacciHeapNode<TElement>> treeNodeWithSameDegree = null;
+				ListBucket<FibonacciHeapNode<TElement>> treeNodeWithSameDegree;
 				if(treeNodePerDegree.TryGetValue(currentTreeNode.Contents.Degree, out treeNodeWithSameDegree))
 				{
 					// there's a tree with the same node. Merge this tree with that tree till there's no tree with the same degree for this current tree
@@ -455,7 +455,7 @@ namespace SD.Tools.Algorithmia.Heaps
 		{
 			// add to first mapping dictionary. It can be there are more, every merge operation adds new mappings, however for adding new nodes, we add
 			// them to the first, so the find routine doesn't have to traverse all mapping dictionaries. 
-			Dictionary<TElement, FibonacciHeapNode<TElement>> mappings = null;
+			Dictionary<TElement, FibonacciHeapNode<TElement>> mappings;
 			if(_elementToHeapNodeMappings.Count <= 0)
 			{
 				mappings = new Dictionary<TElement, FibonacciHeapNode<TElement>>();
@@ -623,15 +623,7 @@ namespace SD.Tools.Algorithmia.Heaps
 		/// </returns>
 		public override string ToString()
 		{
-			string toReturn = string.Empty;
-			if(this.Contents == null)
-			{
-				toReturn = "<null>";
-			}
-			else
-			{
-				toReturn = this.Contents.ToString();
-			}
+			string toReturn = (object)this.Contents == null ? "<null>" : this.Contents.ToString();
 			return "Contents: " + toReturn;
 		}
 	

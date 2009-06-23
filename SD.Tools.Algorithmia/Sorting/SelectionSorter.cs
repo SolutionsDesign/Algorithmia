@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -38,6 +38,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SD.Tools.BCLExtensions.CollectionsRelated;
 
 namespace SD.Tools.Algorithmia.Sorting
 {
@@ -58,7 +59,7 @@ namespace SD.Tools.Algorithmia.Sorting
 		void ISortAlgorithm.Sort<T>(IList<T> toSort, SortDirection direction, int startIndex, int endIndex, Comparison<T> compareFunc)
 		{
 			// create a lambda which will produce the proper boolean value to use in our if statement based on the direction specified.
-			Func<T, T, bool> valueComparerTest = null;
+			Func<T, T, bool> valueComparerTest;
 			switch(direction)
 			{
 				case SortDirection.Ascending:
@@ -67,12 +68,13 @@ namespace SD.Tools.Algorithmia.Sorting
 				case SortDirection.Descending:
 					valueComparerTest = (a, b) => (compareFunc(a, b) < 0);
 					break;
+				default:
+					throw new ArgumentOutOfRangeException("direction", "Invalid direction specified, can't craete value comparer func");
 			}
 
-			int indexValueToSwap;
 			for(int i = startIndex; i < endIndex; i++)
 			{
-				indexValueToSwap = i;
+				int indexValueToSwap = i;
 				for(int j = i+1; j <= endIndex; j++)
 				{
 					if(valueComparerTest(toSort[indexValueToSwap], toSort[j]))

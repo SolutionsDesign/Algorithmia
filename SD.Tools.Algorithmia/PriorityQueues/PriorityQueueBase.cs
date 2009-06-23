@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2008 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2008 Solutions Design. All rights reserved.
+// Copyright (c) 2009 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -53,7 +53,7 @@ namespace SD.Tools.Algorithmia.PriorityQueues
 	public abstract class PriorityQueueBase<TElement> : IEnumerable<TElement>
 	{
 		#region Class Member Declarations
-		private Comparison<TElement> _priorityComparison;
+		private readonly Comparison<TElement> _priorityComparison;
 		#endregion
 
 		/// <summary>
@@ -63,8 +63,6 @@ namespace SD.Tools.Algorithmia.PriorityQueues
 		protected PriorityQueueBase(Comparison<TElement> priorityComparison)
 		{
 			_priorityComparison = priorityComparison;
-
-			InitDataStructures();
 		}
 
 		/// <summary>
@@ -117,10 +115,6 @@ namespace SD.Tools.Algorithmia.PriorityQueues
 		/// <returns>true if elementToCheck is in the queue, false otherwise</returns>
 		public abstract bool Contains(TElement element);
 
-		/// <summary>
-		/// Inits the data structures of this priority queue
-		/// </summary>
-		protected abstract void InitDataStructures();
 		/// <summary>
 		/// Gets the enumerator for this queue
 		/// </summary>
