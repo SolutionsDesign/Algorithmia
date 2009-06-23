@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{46A021F5-5EB9-42B2-9334-724870C4BE45}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SD.Tools.Algorithmia</RootNamespace>
+    <AssemblyName>SD.Tools.Algorithmia</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>AlgorithmiaStrongKey.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\SD.Tools.Algorithmia.XML</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Commands\Command.cs" />
+    <Compile Include="Commands\CommandBase.cs" />
+    <Compile Include="Commands\CommandQueue.cs" />
+    <Compile Include="Commands\CommandQueueActionPerformedEventArgs.cs" />
+    <Compile Include="Commands\CommandQueueManager.cs" />
+    <Compile Include="Commands\CommandQueueStack.cs" />
+    <Compile Include="ConstantsEnums.cs" />
+    <Compile Include="GeneralDataStructures\CollectionElementRemovedEventArgs.cs" />
+    <Compile Include="GeneralDataStructures\CommandifiedList.cs" />
+    <Compile Include="GeneralDataStructures\ReadOnlyPair.cs" />
+    <Compile Include="GeneralDataStructures\LinkedBucketList.cs" />
+    <Compile Include="GeneralDataStructures\ListBucket.cs" />
+    <Compile Include="GeneralDataStructures\MultiValueDictionary.cs" />
+    <Compile Include="GeneralDataStructures\Pair.cs" />
+    <Compile Include="GeneralExtensionMethods.cs" />
+    <Compile Include="Graphs\Algorithms\TopologicalSorter.cs" />
+    <Compile Include="Graphs\DepthFirstSearchCrawler.cs" />
+    <Compile Include="Graphs\GraphChangeEventArgs.cs" />
+    <Compile Include="Graphs\NonDirectedEdge.cs" />
+    <Compile Include="Graphs\NonDirectedGraph.cs" />
+    <Compile Include="UtilityClasses\GeneralUtils.cs" />
+    <Compile Include="Graphs\DirectedEdge.cs" />
+    <Compile Include="Graphs\DirectedGraph.cs" />
+    <Compile Include="Graphs\GraphBase.cs" />
+    <Compile Include="Graphs\Edge.cs" />
+    <Compile Include="Graphs\IEdge.cs" />
+    <Compile Include="Heaps\BinaryHeap.cs" />
+    <Compile Include="Heaps\FibonacciHeap.cs" />
+    <Compile Include="Heaps\HeapBase.cs" />
+    <Compile Include="PriorityQueues\BinaryHeapPriorityQueue.cs" />
+    <Compile Include="PriorityQueues\SortedPriorityQueue.cs" />
+    <Compile Include="PriorityQueues\SimplePriorityQueue.cs" />
+    <Compile Include="PriorityQueues\PriorityQueueBase.cs" />
+    <Compile Include="Sorting\QuickSorter.cs" />
+    <Compile Include="Sorting\ShellSorter.cs" />
+    <Compile Include="Sorting\SortingExtensionMethods.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sorting\ISortAlgorithm.cs" />
+    <Compile Include="Sorting\SelectionSorter.cs" />
+    <Compile Include="Sorting\SortAlgorithmFactory.cs" />
+    <Compile Include="UtilityClasses\ComparisonBasedComparer.cs" />
+    <Compile Include="UtilityClasses\ArgumentVerifier.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="AlgorithmiaStrongKey.snk" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
