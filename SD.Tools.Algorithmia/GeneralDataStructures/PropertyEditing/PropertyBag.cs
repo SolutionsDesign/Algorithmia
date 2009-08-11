@@ -227,38 +227,43 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 			// which ends up in this class' OnSetValue method. The value retrieval follows the same route, but then via GetValue -> this class' OnGetValue. 
 
 			var toReturn = new List<PropertySpecificationDescriptor>();
-			foreach(var property in PropertySpecifications)
+			foreach(var specification in PropertySpecifications)
 			{
 				List<Attribute> additionalAttributes = new List<Attribute>();
 
 				// If a category, description, editor, or type converter are specified
 				// in the PropertySpecification, create attributes to define that relationship.
-				if(property.Category != null)
+				if(specification.Category != null)
 				{
-					additionalAttributes.Add(new CategoryAttribute(property.Category));
+					additionalAttributes.Add(new CategoryAttribute(specification.Category));
 				}
 
-				if(property.Description != null)
+				if(specification.Description != null)
 				{
-					additionalAttributes.Add(new DescriptionAttribute(property.Description));
+					additionalAttributes.Add(new DescriptionAttribute(specification.Description));
 				}
 
-				if(property.EditorTypeName != null)
+				if(specification.EditorTypeName != null)
 				{
-					additionalAttributes.Add(new EditorAttribute(property.EditorTypeName, typeof(UITypeEditor)));
+					additionalAttributes.Add(new EditorAttribute(specification.EditorTypeName, typeof(UITypeEditor)));
 				}
 
-				if(property.ConverterTypeName != null)
+				if(specification.ConverterTypeName != null)
 				{
-					additionalAttributes.Add(new TypeConverterAttribute(property.ConverterTypeName));
+					additionalAttributes.Add(new TypeConverterAttribute(specification.ConverterTypeName));
+				}
+
+				if(specification.DefaultValue!=null)
+				{
+					additionalAttributes.Add(new DefaultValueAttribute(specification.DefaultValue));
 				}
 
 				// Additionally, append the custom attributes associated with the PropertySpecification, if any.
-				if(property.Attributes != null)
+				if(specification.Attributes != null)
 				{
-					additionalAttributes.AddRange(property.Attributes);
+					additionalAttributes.AddRange(specification.Attributes);
 				}
-				toReturn.Add(new PropertySpecificationDescriptor(property, this, additionalAttributes.ToArray()));
+				toReturn.Add(new PropertySpecificationDescriptor(specification, this, additionalAttributes.ToArray()));
 			}
 			return new PropertyDescriptorCollection(toReturn.ToArray());
 		}

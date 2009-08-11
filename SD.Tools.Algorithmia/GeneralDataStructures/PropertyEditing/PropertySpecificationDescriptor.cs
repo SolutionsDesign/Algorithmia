@@ -97,6 +97,11 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 			// Have the property bag raise an event to get the current value of the property.
 			PropertySpecificationEventArgs e = new PropertySpecificationEventArgs(_specification, null);
 			_containingBag.OnGetValue(e);
+			if((e.Value==null) && (_specification!=null) && (_specification.DefaultValue!=null))
+			{
+				// value is null, return the default value as that's set in the specification.
+				e.Value = _specification.DefaultValue;
+			}
 			return e.Value;
 		}
 
@@ -136,6 +141,14 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 
 
 		#region Class Property Declarations
+		/// <summary>
+		/// Gets the PropertySpecification which was the source of this descriptor
+		/// </summary>
+		internal PropertySpecification Specification
+		{
+			get { return _specification; }
+		}
+
 		/// <summary>
 		/// When overridden in a derived class, gets the type of the component this property is bound to.
 		/// </summary>

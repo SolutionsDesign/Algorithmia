@@ -80,6 +80,7 @@
     <Compile Include="GeneralDataStructures\PropertyEditing\PropertySpecification.cs" />
     <Compile Include="GeneralDataStructures\PropertyEditing\PropertySpecificationDescriptor.cs" />
     <Compile Include="GeneralDataStructures\PropertyEditing\PropertySpecificationEventArgs.cs" />
+    <Compile Include="GeneralDataStructures\PropertyEditing\PropertySpecificationValuesListTypeConverter.cs" />
     <Compile Include="GeneralDataStructures\PropertyEditing\PropertyTable.cs" />
     <Compile Include="GeneralDataStructures\ReadOnlyPair.cs" />
     <Compile Include="GeneralDataStructures\LinkedBucketList.cs" />

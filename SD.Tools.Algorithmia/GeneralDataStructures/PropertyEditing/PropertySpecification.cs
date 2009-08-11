@@ -43,6 +43,8 @@
 //////////////////////////////////////////////////////////////////////
 using System;
 using System.Linq;
+using System.Collections.Generic;
+using SD.Tools.Algorithmia.UtilityClasses;
 
 namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 {
@@ -268,16 +270,39 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 			this.Category = category;
 			this.Description = description;
 			this.DefaultValue = defaultValue;
-			this.Attributes = null;
+			this.Attributes = new List<Attribute>();
+			this.ValueList = new List<string>();
 		}
+
+
+		/// <summary>
+		/// Sets the type converter type to use for this specification
+		/// </summary>
+		/// <param name="typeConverterType">Type of the type converter.</param>
+		public void SetTypeConverterType(Type typeConverterType)
+		{
+			ArgumentVerifier.CantBeNull(typeConverterType, "typeConverterType");
+			this.ConverterTypeName = typeConverterType.AssemblyQualifiedName;
+		}
+
+
+		/// <summary>
+		/// Sets the editor type to use for this specification
+		/// </summary>
+		/// <param name="editorType">Type of the editor.</param>
+		public void SetEditorType(Type editorType)
+		{
+			ArgumentVerifier.CantBeNull(editorType, "editorType");
+			this.EditorTypeName = editorType.AssemblyQualifiedName;
+		}
+
 
 		#region Class Property Declarations
 		/// <summary>
-		/// Gets or sets a collection of additional Attributes for this property.  This can
-		/// be used to specify attributes beyond those supported intrinsically by the
-		/// PropertySpec class, such as ReadOnly and Browsable.
+		/// Gets or sets a collection of additional Attributes for this property.  This can be used to specify attributes beyond those supported intrinsically
+		/// by the PropertySpecification class, such as ReadOnly and Browsable.
 		/// </summary>
-		public Attribute[] Attributes { get; set; }
+		public List<Attribute> Attributes { get; set; }
 
 		/// <summary>
 		/// Gets or sets the category name of this property.
@@ -285,8 +310,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 		public string Category { get; set; }
 
 		/// <summary>
-		/// Gets or sets the fully qualified name of the type converter
-		/// type for this property.
+		/// Gets or sets the fully qualified name of the type converter type for this property.
 		/// </summary>
 		public string ConverterTypeName { get; set; }
 
@@ -301,8 +325,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 		public string Description { get; set; }
 
 		/// <summary>
-		/// Gets or sets the fully qualified name of the editor type for
-		/// this property.
+		/// Gets or sets the fully qualified name of the editor type for this property.
 		/// </summary>
 		public string EditorTypeName { get; set; }
 
@@ -316,6 +339,12 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 		/// property.
 		/// </summary>
 		public string TypeName { get; set; }
+
+		/// <summary>
+		/// Gets or sets the values list to use for properties which have to have their value picked from a pre-fabricated list. 
+		/// To use a ValueList, specify a string-typed property and use the PropertySpecificationValuesListTypeConverter as type converter.
+		/// </summary>
+		public List<string> ValueList { get; set; }
 		#endregion
 	}
 }
