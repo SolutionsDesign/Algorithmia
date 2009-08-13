@@ -79,22 +79,36 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 
 
 		/// <summary>
-		/// Raises the GetValue event.
+		/// Raises the GetValue event, if ValueGetterFunc is left null, otherwise it will call ValueGetterFunc instead. 
 		/// </summary>
 		/// <param name="e">A PropertySpecEventArgs that contains the event data.</param>
 		protected internal virtual void OnGetValue(PropertySpecificationEventArgs e)
 		{
-			this.GetValue.RaiseEvent(this, e);
+			if(this.ValueGetterFunc == null)
+			{
+				this.GetValue.RaiseEvent(this, e);
+			}
+			else
+			{
+				e.Value = this.ValueGetterFunc(e.Property.Name);
+			}
 		}
 
 
 		/// <summary>
-		/// Raises the SetValue event.
+		/// Raises the SetValue event, if ValueGetterFunc is left null, otherwise it will call ValueGetterFunc instead. 
 		/// </summary>
 		/// <param name="e">A PropertySpecEventArgs that contains the event data.</param>
 		protected internal virtual void OnSetValue(PropertySpecificationEventArgs e)
 		{
-			this.SetValue.RaiseEvent(this, e);
+			if(this.ValueSetterFunc == null)
+			{
+				this.SetValue.RaiseEvent(this, e);
+			}
+			else
+			{
+				this.ValueSetterFunc(e.Property.Name, e.Value);
+			}
 		}
 
 
@@ -243,14 +257,14 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 					additionalAttributes.Add(new DescriptionAttribute(specification.Description));
 				}
 
-				if(specification.EditorTypeName != null)
+				if(specification.EditorType != null)
 				{
-					additionalAttributes.Add(new EditorAttribute(specification.EditorTypeName, typeof(UITypeEditor)));
+					additionalAttributes.Add(new EditorAttribute(specification.EditorType, typeof(UITypeEditor)));
 				}
 
-				if(specification.ConverterTypeName != null)
+				if(specification.TypeConverterType != null)
 				{
-					additionalAttributes.Add(new TypeConverterAttribute(specification.ConverterTypeName));
+					additionalAttributes.Add(new TypeConverterAttribute(specification.TypeConverterType));
 				}
 
 				if(specification.DefaultValue!=null)
@@ -291,6 +305,20 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 		/// Gets the collection of properties contained within this PropertyBag.
 		/// </summary>
 		public List<PropertySpecification> PropertySpecifications { get; private set; }
+
+		/// <summary>
+		/// Gets or sets the value setter func, which is a Func used in OnSetValue, when set, instead of raising an event. Use this func instead of
+		/// the event to avoid memory leaks due to event handlers which keep the property bag in memory as long as the creating code is kept in memory: this func
+		/// has a reference to the value container instead of to the property bag. 
+		/// </summary>
+		public Action<string, object> ValueSetterFunc { get; set; }
+
+		/// <summary>
+		/// Gets or sets the value getter func, which is a Func used in OnGetValue, when set, instead of raising an event. Use this func instead of
+		/// the event to avoid memory leaks due to event handlers which keep the property bag in memory as long as the creating code is kept in memory: this func
+		/// has a reference to the value container instead of to the property bag. 
+		/// </summary>
+		public Func<string, object> ValueGetterFunc { get; set; }
 		#endregion
 	}
 }

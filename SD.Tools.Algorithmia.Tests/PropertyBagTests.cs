@@ -73,7 +73,7 @@ namespace SD.Tools.Algorithmia.Tests
 		}
 
 		[Test]
-		public void AdvancedPropertyDescriptorConstructionTest()
+		public void AdvancedPropertyDescriptorConstructionTestWithEvents()
 		{
 			PropertyBag bag = new PropertyBag();
 			// add some property specifications. 
@@ -94,7 +94,7 @@ namespace SD.Tools.Algorithmia.Tests
 
 			// use value list
 			var property4 = new PropertySpecification("PickAValue", typeof(string), "Cat1", "A property which value has to be picked from a list");
-			property4.SetTypeConverterType(typeof(PropertySpecificationValuesListTypeConverter));
+			property4.TypeConverterType = typeof(PropertySpecificationValuesListTypeConverter);
 			property4.ValueList.AddRange(new[] { "One", "Two", "Three", "Many" });
 			bag.PropertySpecifications.Add(property4);
 
@@ -105,6 +105,59 @@ namespace SD.Tools.Algorithmia.Tests
 			bag.GetValue += (sender, e) => { e.Value = values.GetValue(e.Property.Name); };
 			bag.SetValue += (sender, e) => { values[e.Property.Name] = e.Value; };
             
+			// open a testform which binds the bag to the propertygrid. Editing values will store the values in the dictionary, default values are
+			// not in the dictionary.
+			using(TestForm f = new TestForm(bag))
+			{
+				f.ShowDialog();
+			}
+		}
+
+	
+		[Test]
+		public void AdvancedPropertyDescriptorConstructionTestWithFuncs()
+		{
+			PropertyBag bag = new PropertyBag();
+			// add some property specifications. 
+			var property1 = new PropertySpecification("Property 1", typeof(string), "Cat1", "Prop1 desc", "Foo");
+			// make readonly
+			property1.Attributes.Add(ReadOnlyAttribute.Yes);
+			bag.PropertySpecifications.Add(property1);
+
+			// add expanding property
+			var property2 = new PropertySpecification("Picture", typeof(Image), "Some Category", "This is a sample description.");
+			property2.Attributes.Add(new TypeConverterAttribute(typeof(ExpandableObjectConverter)));
+			bag.PropertySpecifications.Add(property2);
+
+			// custom editor
+			var property3 = new PropertySpecification("Source folder", typeof(string), "OutputFolders", "The output folder for the sourcecode", "c:\\temp");
+			property3.Attributes.Add(new EditorAttribute(typeof(System.Windows.Forms.Design.FolderNameEditor), typeof(System.Drawing.Design.UITypeEditor)));
+			property3.ConvertEmptyStringToNull = true;
+			bag.PropertySpecifications.Add(property3);
+
+			// use value list
+			var property4 = new PropertySpecification("PickAValue", typeof(string), "Cat1", "A property which value has to be picked from a list", "One");
+			property4.TypeConverterType = typeof(PropertySpecificationValuesListTypeConverter);
+			property4.ValueList.AddRange(new[] { "One", "Two", "Three", "Many" });
+			bag.PropertySpecifications.Add(property4);
+
+			// value list to store values in
+			Dictionary<string, object> values = new Dictionary<string, object>();
+
+			// func setting so values get store inside the dictionary and also retrieved from it. Console write added to see what happens when you bind
+			// a windows forms propertygrid to a bag: many many redundant calls to the getters/setters occur.
+			bag.ValueGetterFunc = (s) =>
+									{
+										var v = values.GetValue(s);
+										Console.WriteLine("Get: {0} : {1}", s, v ?? "<null>");
+										return v;
+									};
+			bag.ValueSetterFunc = (s, v) =>
+			                      	{
+										values[s] = v;
+										Console.WriteLine("Set: {0} : {1}", s, v ?? "<null>");
+									};
+
 			// open a testform which binds the bag to the propertygrid. Editing values will store the values in the dictionary, default values are
 			// not in the dictionary.
 			using(TestForm f = new TestForm(bag))

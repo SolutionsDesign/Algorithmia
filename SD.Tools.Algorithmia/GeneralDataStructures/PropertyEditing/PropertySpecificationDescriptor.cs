@@ -122,7 +122,13 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 		public override void SetValue(object component, object value)
 		{
 			// Have the property bag raise an event to set the current value of the property.
-			PropertySpecificationEventArgs e = new PropertySpecificationEventArgs(_specification, value);
+			object valueToUse = value;
+			if((_specification!=null) && (_specification.PropertyType==typeof(string)) && _specification.ConvertEmptyStringToNull &&
+				((valueToUse as string) == string.Empty))
+			{
+				valueToUse = null;
+			}
+			PropertySpecificationEventArgs e = new PropertySpecificationEventArgs(_specification, valueToUse);
 			_containingBag.OnSetValue(e);
 		}
 
@@ -181,7 +187,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 		/// </returns>
 		public override Type PropertyType
 		{
-			get { return Type.GetType(_specification.TypeName); }
+			get { return _specification.PropertyType; }
 		}
 		#endregion
 	}
