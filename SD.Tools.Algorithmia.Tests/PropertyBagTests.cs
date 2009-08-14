@@ -141,6 +141,9 @@ namespace SD.Tools.Algorithmia.Tests
 			property4.ValueList.AddRange(new[] { "One", "Two", "Three", "Many" });
 			bag.PropertySpecifications.Add(property4);
 
+			var property5 = new PropertySpecification("EnumValue", typeof(ConsoleColor), "Cat1", "Enum property to see that values are converted back/forth to int");
+			bag.PropertySpecifications.Add(property5);
+
 			// value list to store values in
 			Dictionary<string, object> values = new Dictionary<string, object>();
 

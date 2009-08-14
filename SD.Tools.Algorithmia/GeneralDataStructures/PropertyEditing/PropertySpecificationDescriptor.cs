@@ -97,13 +97,28 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 			// Have the property bag raise an event to get the current value of the property.
 			PropertySpecificationEventArgs e = new PropertySpecificationEventArgs(_specification, null);
 			_containingBag.OnGetValue(e);
-			if((e.Value==null) && (_specification!=null) && (_specification.DefaultValue!=null))
+			if(_specification != null)
 			{
-				// value is null, return the default value as that's set in the specification.
-				e.Value = _specification.DefaultValue;
+				if(e.Value == null)
+				{
+					if(_specification.DefaultValue != null)
+					{
+						// value is null, return the default value as that's set in the specification.
+						e.Value = _specification.DefaultValue;
+					}
+				}
+				else
+				{
+					if(_specification.PropertyType.IsEnum)
+					{
+						// convert value from numeric to real enum object value. 
+						e.Value = Enum.ToObject(_specification.PropertyType, e.Value);
+					}
+				}
 			}
 			return e.Value;
 		}
+
 
 		/// <summary>
 		/// When overridden in a derived class, resets the value for this property of the component to the default value.
@@ -114,6 +129,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 			SetValue(component, _specification.DefaultValue);
 		}
 
+
 		/// <summary>
 		/// When overridden in a derived class, sets the value of the component to a different value.
 		/// </summary>
@@ -123,10 +139,23 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 		{
 			// Have the property bag raise an event to set the current value of the property.
 			object valueToUse = value;
-			if((_specification!=null) && (_specification.PropertyType==typeof(string)) && _specification.ConvertEmptyStringToNull &&
-				((valueToUse as string) == string.Empty))
+			if(_specification!=null)
 			{
-				valueToUse = null;
+				if(_specification.PropertyType == typeof(string))
+				{
+					if(_specification.ConvertEmptyStringToNull && ((valueToUse as string) == string.Empty))
+					{
+						valueToUse = null;
+					}
+				}
+				else
+				{
+					if(_specification.PropertyType.IsEnum)
+					{
+						// convert enum values to int
+						valueToUse = Convert.ToInt32(valueToUse);
+					}
+				}
 			}
 			PropertySpecificationEventArgs e = new PropertySpecificationEventArgs(_specification, valueToUse);
 			_containingBag.OnSetValue(e);
