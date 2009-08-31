@@ -122,6 +122,26 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 
 
 		/// <summary>
+		/// Adds the elements in the range specified to this list in one command
+		/// </summary>
+		/// <param name="elementsToAdd">The elements to add.</param>
+		public void AddRange(IEnumerable<T> elementsToAdd)
+		{
+			if(elementsToAdd==null)
+			{
+				return;
+			}
+			Command<T>.DoNow(() =>
+								{
+									foreach(var elementToAdd in elementsToAdd)
+									{
+										this.Add(elementToAdd);
+									}
+								});
+		}
+
+
+		/// <summary>
 		/// Resets the bindings. Raises a ListChanged.Reset event
 		/// </summary>
 		public void ResetBindings()
