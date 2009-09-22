@@ -372,6 +372,24 @@ namespace SD.Tools.Algorithmia.Tests
         }
 
 
+		[Test]
+		public void IsConnected2Test()
+		{
+			DirectedGraph<string, DirectedEdge<string>> graph = new DirectedGraph<string, DirectedEdge<string>>();
+			graph.Add(new DirectedEdge<string>("A", "B"));	// A->B
+			graph.Add("C");		// lonely, non-connected vertex
+
+			Assert.IsFalse(graph.IsConnected());
+
+			// Add a connected edge.
+			DirectedEdge<string> toAdd = new DirectedEdge<string>("C", "B");
+			graph.Add(toAdd);
+
+			Assert.IsTrue(graph.IsConnected());
+		}
+
+
+
 		/// <summary>
 		/// Tests the logic of the IsConnected method with a simple graph which uses Edge(Of T) instances to see if the logic internally can deal 
 		/// with graphs which are non-directed but don't use NonDirectedEdge(Of T). 

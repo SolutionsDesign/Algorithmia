@@ -119,14 +119,17 @@ namespace SD.Tools.Algorithmia.Graphs
 			{
 				return;
 			}
-			// create a dictionary with all vertices as keys and for all vertices the initial color, NotVisited.
-			Dictionary<TVertex, VertexColor> verticesProcessed = _graphToCrawl.Vertices.ToDictionary(v => v, v => VertexColor.NotVisited);
+			var verticesProcessed = new Dictionary<TVertex, VertexColor>();
 			bool firstRun = true;
 			foreach(TVertex vertex in _graphToCrawl.Vertices)
 			{
 				if(_abortCrawl)
 				{
 					break;
+				}
+				if(!verticesProcessed.ContainsKey(vertex))
+				{
+					verticesProcessed.Add(vertex, VertexColor.NotVisited);
 				}
 				TVertex vertexToProcess = vertex;
 				if(firstRun)
@@ -209,15 +212,19 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <param name="vertex">The vertex.</param>
 		/// <param name="verticesProcessed">The vertices processed.</param>
 		/// <param name="edges">The edges usable to visit the vertex.</param>
-		private void Visit(TVertex vertex, Dictionary<TVertex, VertexColor> verticesProcessed, HashSet<TEdge> edges)
+		private void Visit(TVertex vertex, IDictionary<TVertex, VertexColor> verticesProcessed, HashSet<TEdge> edges)
 		{
 			if(_abortCrawl)
 			{
 				return;
 			}
+			if(!verticesProcessed.ContainsKey(vertex))
+			{
+				verticesProcessed.Add(vertex, VertexColor.NotVisited);
+			}
 			if(verticesProcessed[vertex]==VertexColor.Visiting)
 			{
-				// check if we run into a cycle, in the case of a directed graph
+				// check if we ran into a cycle, in the case of a directed graph
 				if(_graphToCrawl.IsDirected)
 				{
 					if(_detectCycles)
