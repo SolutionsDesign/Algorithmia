@@ -127,10 +127,6 @@ namespace SD.Tools.Algorithmia.Graphs
 				{
 					break;
 				}
-				if(!verticesProcessed.ContainsKey(vertex))
-				{
-					verticesProcessed.Add(vertex, VertexColor.NotVisited);
-				}
 				TVertex vertexToProcess = vertex;
 				if(firstRun)
 				{
@@ -138,6 +134,10 @@ namespace SD.Tools.Algorithmia.Graphs
 					// already been processed. 
 					vertexToProcess = vertexToStart;
 					firstRun = false;
+				}
+				if(!verticesProcessed.ContainsKey(vertexToProcess))
+				{
+					verticesProcessed.Add(vertexToProcess, VertexColor.NotVisited);
 				}
 				if(verticesProcessed[vertexToProcess] != VertexColor.NotVisited)
 				{

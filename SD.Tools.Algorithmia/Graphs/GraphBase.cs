@@ -851,9 +851,14 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		/// <returns>this graph as a nondirected copy, even if this graph is a non-directed graph</returns>
 		public NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>> GetAsNonDirectedCopy()
-        {            
+        {
             NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>> toReturn = new NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>>();
-            foreach(TEdge edge in this.Edges)
+			// first add all vertices, as some vertices might not be in an edge
+			foreach(TVertex vertex in this.Vertices)
+			{
+				toReturn.Add(vertex);
+			}
+			foreach(TEdge edge in this.Edges)
             {
 				toReturn.Add(new NonDirectedEdge<TVertex>(edge.StartVertex, edge.EndVertex));
             }
