@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using SD.Tools.Algorithmia.UtilityClasses;
@@ -76,6 +77,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		public event EventHandler<GraphChangeEventArgs<TVertex>> VertexRemoved;
 		/// <summary>
+		/// If TVertex supports change notification, this event is raised when a vertex in the subgraph view was changed
+		/// </summary>
+		public event EventHandler<GraphChangeEventArgs<TVertex>> VertexChanged;
+		/// <summary>
 		/// Event which is raised when an edge has been added to this SubGraphView
 		/// </summary>
 		public event EventHandler<GraphChangeEventArgs<TEdge>> EdgeAdded;
@@ -83,6 +88,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// Event which is raised when an edge has been removed from this SubGraphView
 		/// </summary>
 		public event EventHandler<GraphChangeEventArgs<TEdge>> EdgeRemoved;
+		/// <summary>
+		/// If TEdge supports change notification, this event is raised when an edge in the subgraph view was changed
+		/// </summary>
+		public event EventHandler<GraphChangeEventArgs<TEdge>> EdgeChanged;
 		/// <summary>
 		/// Event which is raised when the subgraphview is made empty. Observers can use this event to dispose an empty subgraphview to avoid dangling event handlers.
 		/// </summary>
@@ -211,6 +220,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		protected virtual void OnVertexAdded(TVertex vertex)
 		{
 			this.VertexAdded.RaiseEvent(this, new GraphChangeEventArgs<TVertex>(vertex));
+			BindToINotifyPropertyChanged(vertex);
 		}
 
 
@@ -221,6 +231,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		protected virtual void OnEdgeAdded(TEdge edge)
 		{
 			this.EdgeAdded.RaiseEvent(this, new GraphChangeEventArgs<TEdge>(edge));
+			BindToINotifyPropertyChanged(edge);
 		}
 
 
@@ -231,6 +242,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		protected virtual void OnVertexRemoved(TVertex vertex)
 		{
 			this.VertexRemoved.RaiseEvent(this, new GraphChangeEventArgs<TVertex>(vertex));
+			UnbindFromINotifyPropertyChanged(vertex);
 		}
 
 
@@ -241,6 +253,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		protected virtual void OnEdgeRemoved(TEdge edge)
 		{
 			this.EdgeRemoved.RaiseEvent(this, new GraphChangeEventArgs<TEdge>(edge));
+			UnbindFromINotifyPropertyChanged(edge);
 		}
 
 		
@@ -312,6 +325,56 @@ namespace SD.Tools.Algorithmia.Graphs
 			this.MainGraph.VertexAdded -= new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexAdded);
 			this.MainGraph.VertexRemoved -= new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexRemoved);
 		}
+
+        
+		/// <summary>
+		/// Binds to INotifyPropertyChanged on the item specified
+		/// </summary>
+		/// <param name="item">The item.</param>
+		private void BindToINotifyPropertyChanged<T>(T item)
+		{
+			INotifyPropertyChanged itemAsINotifyPropertyChanged = item as INotifyPropertyChanged;
+			if(itemAsINotifyPropertyChanged != null)
+			{
+				itemAsINotifyPropertyChanged.PropertyChanged += new PropertyChangedEventHandler(OnElementPropertyChanged);
+			}
+		}
+
+
+		/// <summary>
+		/// Unbinds from INotifyPropertyChanged on the item specified
+		/// </summary>
+		/// <param name="item">The item.</param>
+		private void UnbindFromINotifyPropertyChanged<T>(T item)
+		{
+			INotifyPropertyChanged itemAsINotifyPropertyChanged = item as INotifyPropertyChanged;
+			if(itemAsINotifyPropertyChanged != null)
+			{
+				itemAsINotifyPropertyChanged.PropertyChanged -= new PropertyChangedEventHandler(OnElementPropertyChanged);
+			}
+		}
+
+
+		/// <summary>
+		/// Called when the PropertyChanged event was raised by an element in this list.
+		/// </summary>
+		/// <param name="sender">The source of the event.</param>
+		/// <param name="e">The event arguments instance containing the event data.</param>
+		private void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			if(sender is TVertex)
+			{
+				this.VertexChanged(this, new GraphChangeEventArgs<TVertex>((TVertex)sender));
+			}
+			else
+			{
+				if(sender is TEdge)
+				{
+					this.EdgeChanged(this, new GraphChangeEventArgs<TEdge>((TEdge)sender));
+				}
+			}
+		}
+
 
 
 		/// <summary>
