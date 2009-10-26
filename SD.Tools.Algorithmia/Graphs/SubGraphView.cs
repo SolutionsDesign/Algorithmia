@@ -364,13 +364,13 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(sender is TVertex)
 			{
-				this.VertexChanged(this, new GraphChangeEventArgs<TVertex>((TVertex)sender));
+				this.VertexChanged.RaiseEvent(this, new GraphChangeEventArgs<TVertex>((TVertex)sender));
 			}
 			else
 			{
 				if(sender is TEdge)
 				{
-					this.EdgeChanged(this, new GraphChangeEventArgs<TEdge>((TEdge)sender));
+					this.EdgeChanged.RaiseEvent(this, new GraphChangeEventArgs<TEdge>((TEdge)sender));
 				}
 			}
 		}
