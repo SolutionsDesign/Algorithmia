@@ -53,7 +53,6 @@ namespace SD.Tools.Algorithmia.Commands
 	{
 		#region Class Member Declarations
 		private TState _originalState;
-		private bool _commandQueuePushed;
 		private readonly bool _useParameterLessUndo;
 		private readonly Action<TState> _undoFunc1;		// _undoFunc1 is the undo func for single parameter commands
 		private readonly Func<TState> _getStateFunc;
@@ -197,8 +196,11 @@ namespace SD.Tools.Algorithmia.Commands
 				this.OwnCommandQueue.UndoPreviousCommand();
 			}
 
-			// then clear the own command queue and rollback ourselves. 
-			this.OwnCommandQueue.Clear();
+            // then, if we're not in an Undoable period clear the own command queue and rollback ourselves. 
+			if(!CommandQueueManagerSingleton.GetInstance().IsInUndoablePeriod)
+			{
+				this.OwnCommandQueue.Clear();
+			}
 
 			if(_useParameterLessUndo)
 			{
@@ -215,32 +217,6 @@ namespace SD.Tools.Algorithmia.Commands
 					// undo ourselves, by setting the original state back
 					_undoFunc1(_originalState);
 				}
-			}
-		}
-		
-
-		/// <summary>
-		/// Pushes the command queue on active stack if required.
-		/// </summary>
-		private void PushCommandQueueOnActiveStackIfRequired()
-		{
-			if(!_commandQueuePushed)
-			{
-				CommandQueueManagerSingleton.GetInstance().PushCommandQueueOnActiveStack(this.OwnCommandQueue);
-				_commandQueuePushed = true;
-			}
-		}
-
-
-		/// <summary>
-		/// Pops the command queue from active stack if required.
-		/// </summary>
-		private void PopCommandQueueFromActiveStackIfRequired()
-		{
-			if(_commandQueuePushed)
-			{
-				CommandQueueManagerSingleton.GetInstance().PopCommandQueueFromActiveStack();
-				_commandQueuePushed = false;
 			}
 		}
 	}

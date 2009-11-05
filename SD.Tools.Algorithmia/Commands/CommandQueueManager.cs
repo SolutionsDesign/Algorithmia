@@ -94,6 +94,13 @@ namespace SD.Tools.Algorithmia.Commands
 		// Per thread store a flag which signals if the command manager is in a non-undoable period, which means commands are dequeued after they've executed. 
 		[ThreadStatic]
 		private static bool _inNonUndoablePeriod;
+		/// <summary>
+		/// per thread store a flag which signals if the command manager is in a special mode called 'an undoable period', which means 'Redo' commands 
+		/// execute their queues and 'Undo' commands don't clear the queue, plus newly queued commands are ignored. Only set if an UndoablePeriod is Undone/Redone, 
+		/// otherwise false.
+		/// </summary>
+		[ThreadStatic]
+		private static bool _inUndoablePeriod;
 
 		/// <summary>
 		/// Flag to signal the CommandQueueManager and command objects whether to throw a DoDuringUndoException if a Do action is detected during an Undo action.
@@ -196,7 +203,7 @@ namespace SD.Tools.Algorithmia.Commands
 
 
 		/// <summary>
-		/// Ends the undoable period started with BeginUndoablePeriod. Commands enqueued and ran after this method will be undoable again. 
+		/// Ends the non-undoable period started with BeginNonUndoablePeriod. Commands enqueued and ran after this method will be undoable again. 
 		/// </summary>
 		public void EndNonUndoablePeriod()
 		{
@@ -204,6 +211,49 @@ namespace SD.Tools.Algorithmia.Commands
 			{
 				ThreadEnter();
 				_inNonUndoablePeriod = false;
+			}
+			finally
+			{
+				ThreadExit();
+			}
+		}
+
+
+		/// <summary>
+		/// Sets the command manager in a special mode where all subsequential commands are tracked inside an UndoablePeriodCommand which, when undone/redone
+		/// will not destroy its command queue during undo and won't accept new commands when redone, which is useful when you want to mark a method as an
+		/// undoable piece of code and the method creates objects, which can be a problem with a normal command calling the method because the objects created
+		/// inside the method are re-created (so you'll get new instances) when the command is redone. If follow up commands work on the instances, redoing these
+		/// commands as well causes a problem as they'll work on objects which aren't there.
+		/// </summary>
+		/// <param name="cmd">The command to use for the undoableperiod.</param>
+		public void BeginUndoablePeriod(UndoablePeriodCommand cmd)
+		{
+			try
+			{
+				ThreadEnter();
+				ArgumentVerifier.CantBeNull(cmd, "cmd");
+				EnqueueAndRunCommand(cmd);
+			}
+			finally
+			{
+				ThreadExit();
+			}
+		}
+
+
+		/// <summary>
+		/// Ends the undoable period started with BeginUndoablePeriod.
+		/// </summary>
+		/// <param name="cmd">The command used for the undoable period.</param>
+		public void EndUndoablePeriod(UndoablePeriodCommand cmd)
+		{
+			try
+			{
+				ThreadEnter();
+				ArgumentVerifier.CantBeNull(cmd, "cmd");
+				// the period has ended, so we've to pop the queue of the period from the stack.
+				cmd.PopCommandQueueFromActiveStackIfRequired();
 			}
 			finally
 			{
@@ -341,7 +391,7 @@ namespace SD.Tools.Algorithmia.Commands
 			try
 			{
 				ThreadEnter();
-				_activeCommandQueueStack.Peek().DoCurrentCommand();
+				_activeCommandQueueStack.Peek().RedoCurrentCommand();
 				RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.RedoPerformed, _activeCommandQueueStack.StackId));
 			}
 			finally
@@ -396,7 +446,7 @@ namespace SD.Tools.Algorithmia.Commands
 				ThreadExit();
 			}
 		}
-		
+
 
 		/// <summary>
 		/// Pushes the command queue passed in onto the active stack. This is done when a command is about to be executed. 
@@ -429,6 +479,24 @@ namespace SD.Tools.Algorithmia.Commands
 				CommandQueue toReturn = _activeCommandQueueStack.Pop();
 				RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.RedoPerformed, _activeCommandQueueStack.StackId));
 				return toReturn;
+			}
+			finally
+			{
+				ThreadExit();
+			}
+		}
+
+
+		/// <summary>
+		/// Sets the undoable period flag.
+		/// </summary>
+		/// <param name="value">the value to set the flag to.</param>
+		internal void SetUndoablePeriodFlag(bool value)
+		{
+			try
+			{
+				ThreadEnter();
+				_inUndoablePeriod = value;
 			}
 			finally
 			{
@@ -508,6 +576,15 @@ namespace SD.Tools.Algorithmia.Commands
 					ThreadExit();
 				}
 			}
+		}
+
+
+		/// <summary>
+		/// Gets a value indicating whether this instance is in an undoable period.
+		/// </summary>
+		internal bool IsInUndoablePeriod
+		{
+			get { return _inUndoablePeriod; }
 		}
 		#endregion
 	}

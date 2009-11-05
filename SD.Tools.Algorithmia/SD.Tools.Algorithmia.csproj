@@ -59,6 +59,7 @@
     <Compile Include="Commands\CommandQueueActionPerformedEventArgs.cs" />
     <Compile Include="Commands\CommandQueueManager.cs" />
     <Compile Include="Commands\CommandQueueStack.cs" />
+    <Compile Include="Commands\UndoablePeriodCommand.cs" />
     <Compile Include="Commands\DoDuringUndoException.cs" />
     <Compile Include="ConstantsEnums.cs" />
     <Compile Include="GeneralDataStructures\ChangeAwareKeyedCommandifiedList.cs" />

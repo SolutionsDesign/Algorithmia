@@ -44,6 +44,10 @@ namespace SD.Tools.Algorithmia.Commands
 	/// </summary>
 	public abstract class CommandBase
 	{
+		#region Class Member Declarations
+		private bool _commandQueuePushed;
+		#endregion
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CommandBase"/> class.
 		/// </summary>
@@ -60,9 +64,66 @@ namespace SD.Tools.Algorithmia.Commands
 		{
 			this.OwnCommandQueue = new CommandQueue();
 			this.Description = description;
+			_commandQueuePushed = false;
 		}
 
+
 		/// <summary>
+		/// Re-executes the command. Normally this is simply calling 'Do', however in an undoable period redo it's calling PerformRedo.
+		/// </summary>
+		protected internal virtual void Redo()
+		{
+			if(CommandQueueManagerSingleton.GetInstance().IsInUndoablePeriod)
+			{
+				PerformRedo();
+			}
+			else
+			{
+				Do();
+			}
+		}
+        
+
+		/// <summary>
+		/// Pushes the command queue on active stack if required.
+		/// </summary>
+		internal void PushCommandQueueOnActiveStackIfRequired()
+		{
+			if(!_commandQueuePushed)
+			{
+				CommandQueueManagerSingleton.GetInstance().PushCommandQueueOnActiveStack(this.OwnCommandQueue);
+				_commandQueuePushed = true;
+			}
+		}
+
+
+		/// <summary>
+		/// Pops the command queue from active stack if required.
+		/// </summary>
+		internal void PopCommandQueueFromActiveStackIfRequired()
+		{
+			if(_commandQueuePushed)
+			{
+				CommandQueueManagerSingleton.GetInstance().PopCommandQueueFromActiveStack();
+				_commandQueuePushed = false;
+			}
+		}
+        
+
+		/// <summary>
+		/// Performs the redo action.
+		/// </summary>
+		private void PerformRedo()
+		{
+			Do();
+			while(this.OwnCommandQueue.CanDo)
+			{
+				this.OwnCommandQueue.RedoCurrentCommand();
+			}
+		}
+
+
+        /// <summary>
 		/// Executes the command.
 		/// </summary>
 		protected internal abstract void Do();
@@ -70,6 +131,7 @@ namespace SD.Tools.Algorithmia.Commands
 		/// Undo's the action done with <see cref="Do"/>.
 		/// </summary>
 		protected internal abstract void Undo();
+
 
 		#region Class Property Declarations
 		/// <summary>

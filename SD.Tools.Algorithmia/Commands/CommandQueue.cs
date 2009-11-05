@@ -78,6 +78,11 @@ namespace SD.Tools.Algorithmia.Commands
 		public bool EnqueueCommand(CommandBase toEnqueue)
 		{
 			ArgumentVerifier.CantBeNull(toEnqueue, "toEnqueue");
+			if(CommandQueueManagerSingleton.GetInstance().IsInUndoablePeriod)
+			{
+				// ignore, all commands are already there in this mode and this command therefore already is either there or is not important
+				return false;
+			}
 			if(this.UndoInProgress)
 			{
 				if(CommandQueueManager.ThrowExceptionOnDoDuringUndo)
@@ -106,9 +111,28 @@ namespace SD.Tools.Algorithmia.Commands
 
 
 		/// <summary>
+		/// Calls the current command's Redo() method, if there's a command left to execute. It first makes the next command the current command and then executes it.
+		/// </summary>
+		public void RedoCurrentCommand()
+		{
+			PerformDoRedoCommand(true);
+		}
+
+
+		/// <summary>
 		/// Calls the current command's Do() method, if there's a command left to execute. It first makes the next command the current command and then executes it.
 		/// </summary>
 		public void DoCurrentCommand()
+		{
+			PerformDoRedoCommand(false);
+		}
+
+
+		/// <summary>
+		/// Performs the do / redo action on the current command.
+		/// </summary>
+		/// <param name="performRedo">if set to <see langword="true"/> perform a redo, otherwise perform a do.</param>
+		private void PerformDoRedoCommand(bool performRedo)
 		{
 			if(this.CanDo)
 			{
@@ -118,7 +142,14 @@ namespace SD.Tools.Algorithmia.Commands
 				{
 					commandToExecute.BeforeDoAction();
 				}
-				commandToExecute.Do();
+				if(performRedo)
+				{
+					commandToExecute.Redo();
+				}
+				else
+				{
+					commandToExecute.Do();
+				}
 				if(commandToExecute.AfterDoAction != null)
 				{
 					commandToExecute.AfterDoAction();
