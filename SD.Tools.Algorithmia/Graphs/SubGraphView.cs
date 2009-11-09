@@ -304,6 +304,15 @@ namespace SD.Tools.Algorithmia.Graphs
 
 
 		/// <summary>
+		/// Called when Disposing
+		/// </summary>
+		protected virtual void OnDisposing()
+		{
+			// nop
+		}
+
+
+		/// <summary>
 		/// Binds the events.
 		/// </summary>
 		private void BindEvents()
@@ -453,6 +462,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(disposing && !_isDisposed)
 			{
+				OnDisposing();
 				UnbindEvents();
 				_isDisposed = true;
 				this.Disposed.RaiseEvent(this);
