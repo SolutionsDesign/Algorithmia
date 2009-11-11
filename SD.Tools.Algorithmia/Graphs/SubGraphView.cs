@@ -42,6 +42,7 @@ using System.Text;
 using SD.Tools.Algorithmia.UtilityClasses;
 using SD.Tools.BCLExtensions.SystemRelated;
 using SD.Tools.Algorithmia.GeneralInterfaces;
+using SD.Tools.Algorithmia.Commands;
 
 namespace SD.Tools.Algorithmia.Graphs
 {
@@ -62,7 +63,8 @@ namespace SD.Tools.Algorithmia.Graphs
 		where TEdge : class, IEdge<TVertex>
 	{
 		#region Class Property Declarations
-		private bool _isDisposed;
+		private bool _isDisposed, _eventsBound;
+		private readonly bool _isCommandified;
 		private readonly HashSet<TVertex> _vertices;
 		private readonly HashSet<TEdge> _edges;
 		#endregion
@@ -111,13 +113,27 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// Initializes a new instance of the <see cref="SubGraphView&lt;TVertex, TEdge&gt;"/> class.
 		/// </summary>
 		/// <param name="mainGraph">The main graph this SubGraphView is a view on.</param>
+		/// <remarks>Creates a non-commandified instance</remarks>
 		public SubGraphView(GraphBase<TVertex, TEdge> mainGraph)
+			: this(mainGraph, false)
+		{
+		}
+
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="SubGraphView&lt;TVertex, TEdge&gt;"/> class.
+		/// </summary>
+		/// <param name="mainGraph">The main graph this SubGraphView is a view on.</param>
+		/// <param name="isCommandified">If set to true, the SubGraphView is a commandified SubGraphView, which means all actions taken on this SubGraphView 
+		/// which mutate its state are undoable.</param>
+		public SubGraphView(GraphBase<TVertex, TEdge> mainGraph, bool isCommandified)
 		{
 			ArgumentVerifier.CantBeNull(mainGraph, "mainGraph");
-			this.MainGraph = mainGraph;
-			BindEvents();
+			_isCommandified = isCommandified;
 			_vertices = new HashSet<TVertex>();
 			_edges = new HashSet<TEdge>();
+            this.MainGraph = mainGraph;
+			BindEvents();
 		}
 
 
@@ -129,8 +145,24 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(this.MainGraph.Contains(vertex))
 			{
-				_vertices.Add(vertex);
-				OnVertexAdded(vertex);
+				if(_isCommandified)
+				{
+					Command<TVertex>.DoNow(() =>
+						{
+							_vertices.Add(vertex);
+							OnVertexAdded(vertex);
+						},
+						() =>
+						{
+							_vertices.Remove(vertex);
+							OnVertexRemoved(vertex);
+						}, "Add vertex to SubGraphView");
+				}
+				else
+				{
+					_vertices.Add(vertex);
+					OnVertexAdded(vertex);
+				}
 			}
 		}
 
@@ -143,8 +175,24 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(this.MainGraph.Contains(edge))
 			{
-				_edges.Add(edge);
-				OnEdgeAdded(edge);
+				if(_isCommandified)
+				{
+					Command<TEdge>.DoNow(() =>
+						{
+							_edges.Add(edge);
+							OnEdgeAdded(edge);
+						},
+						() =>
+						{
+							_edges.Remove(edge);
+							OnEdgeRemoved(edge);
+						}, "Add edge to SubGraphView");
+				}
+				else
+				{
+					_edges.Add(edge);
+					OnEdgeAdded(edge);
+				}
 			}
 		}
 
@@ -157,9 +205,26 @@ namespace SD.Tools.Algorithmia.Graphs
 		public void Remove(TVertex toRemove)
 		{
 			ArgumentVerifier.CantBeNull(toRemove, "toRemove");
-			_vertices.Remove(toRemove);
-			OnVertexRemoved(toRemove);
-			CheckIsEmpty();
+			if(_isCommandified)
+			{
+				Command<TVertex>.DoNow(() =>
+					{
+						_vertices.Remove(toRemove);
+						OnVertexRemoved(toRemove);
+						CheckIsEmpty();
+					},
+					() =>
+					{
+						_vertices.Add(toRemove);
+						OnVertexAdded(toRemove);
+					}, "Remove vertex to SubGraphView");
+			}
+			else
+			{
+				_vertices.Remove(toRemove);
+				OnVertexRemoved(toRemove);
+				CheckIsEmpty();
+			}
 		}
 
 
@@ -171,9 +236,26 @@ namespace SD.Tools.Algorithmia.Graphs
 		public void Remove(TEdge toRemove)
 		{
 			ArgumentVerifier.CantBeNull(toRemove, "toRemove");
-			_edges.Remove(toRemove);
-			OnEdgeRemoved(toRemove);
-			CheckIsEmpty();
+			if(_isCommandified)
+			{
+				Command<TEdge>.DoNow(() =>
+					{
+						_edges.Remove(toRemove);
+						OnEdgeRemoved(toRemove);
+						CheckIsEmpty();
+					},
+					() =>
+					{
+						_edges.Add(toRemove);
+						OnEdgeAdded(toRemove);
+					}, "Remove edge to SubGraphView");
+			}
+			else
+			{
+				_edges.Remove(toRemove);
+				OnEdgeRemoved(toRemove);
+				CheckIsEmpty();
+			}
 		}
 
 
@@ -210,6 +292,42 @@ namespace SD.Tools.Algorithmia.Graphs
 		public void MarkAsRemoved()
 		{
 			this.HasBeenRemoved.RaiseEvent(this);
+		}
+
+
+		/// <summary>
+		/// Binds the event handlers to the events of the main graph.
+		/// </summary>
+		/// <remarks>Use this method to Bind the view to the main graph again when the view is added to a list in an undo-redo system if the events are
+		/// unbound using UnbindEvents in the removal action.</remarks>
+		public void BindEvents()
+		{
+			if(!_eventsBound)
+			{
+				this.MainGraph.EdgeAdded += new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeAdded);
+				this.MainGraph.EdgeRemoved += new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeRemoved);
+				this.MainGraph.VertexAdded += new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexAdded);
+				this.MainGraph.VertexRemoved += new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexRemoved);
+				_eventsBound = true;
+			}
+		}
+
+
+		/// <summary>
+		/// Unbinds the event handlers from the events of the main graph.
+		/// </summary>
+		/// <remarks>Use this method to unbind the view from the main graph in an undo-redo system rather than calling Dispose(), as
+		/// Dispose can't be undone and if a subgraphview's removal has to be undone, BindEvents() has to be called again.</remarks>
+		public void UnbindEvents()
+		{
+			if(_eventsBound)
+			{
+				this.MainGraph.EdgeAdded -= new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeAdded);
+				this.MainGraph.EdgeRemoved -= new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeRemoved);
+				this.MainGraph.VertexAdded -= new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexAdded);
+				this.MainGraph.VertexRemoved -= new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexRemoved);
+				_eventsBound = false;
+			}
 		}
 
 
@@ -311,30 +429,6 @@ namespace SD.Tools.Algorithmia.Graphs
 			// nop
 		}
 
-
-		/// <summary>
-		/// Binds the events.
-		/// </summary>
-		private void BindEvents()
-		{
-			this.MainGraph.EdgeAdded += new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeAdded);
-			this.MainGraph.EdgeRemoved += new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeRemoved);
-			this.MainGraph.VertexAdded += new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexAdded);
-			this.MainGraph.VertexRemoved += new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexRemoved);
-		}
-		
-
-		/// <summary>
-		/// Unbinds the events.
-		/// </summary>
-		private void UnbindEvents()
-		{
-			this.MainGraph.EdgeAdded -= new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeAdded);
-			this.MainGraph.EdgeRemoved -= new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeRemoved);
-			this.MainGraph.VertexAdded -= new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexAdded);
-			this.MainGraph.VertexRemoved -= new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexRemoved);
-		}
-
         
 		/// <summary>
 		/// Binds to INotifyPropertyChanged on the item specified
@@ -383,7 +477,6 @@ namespace SD.Tools.Algorithmia.Graphs
 				}
 			}
 		}
-
 
 
 		/// <summary>
