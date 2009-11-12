@@ -145,23 +145,26 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(this.MainGraph.Contains(vertex))
 			{
-				if(_isCommandified)
+				if(!_vertices.Contains(vertex))
 				{
-					Command<TVertex>.DoNow(() =>
-						{
-							_vertices.Add(vertex);
-							OnVertexAdded(vertex);
-						},
-						() =>
-						{
-							_vertices.Remove(vertex);
-							OnVertexRemoved(vertex);
-						}, "Add vertex to SubGraphView");
-				}
-				else
-				{
-					_vertices.Add(vertex);
-					OnVertexAdded(vertex);
+					if(_isCommandified)
+					{
+						Command<TVertex>.DoNow(() =>
+						                       	{
+						                       		_vertices.Add(vertex);
+						                       		OnVertexAdded(vertex);
+						                       	},
+						                       () =>
+						                       	{
+						                       		_vertices.Remove(vertex);
+						                       		OnVertexRemoved(vertex);
+						                       	}, "Add vertex to SubGraphView");
+					}
+					else
+					{
+						_vertices.Add(vertex);
+						OnVertexAdded(vertex);
+					}
 				}
 			}
 		}
@@ -175,23 +178,26 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(this.MainGraph.Contains(edge))
 			{
-				if(_isCommandified)
+				if(!_edges.Contains(edge))
 				{
-					Command<TEdge>.DoNow(() =>
-						{
-							_edges.Add(edge);
-							OnEdgeAdded(edge);
-						},
-						() =>
-						{
-							_edges.Remove(edge);
-							OnEdgeRemoved(edge);
-						}, "Add edge to SubGraphView");
-				}
-				else
-				{
-					_edges.Add(edge);
-					OnEdgeAdded(edge);
+					if(_isCommandified)
+					{
+						Command<TEdge>.DoNow(() =>
+						                     	{
+						                     		_edges.Add(edge);
+						                     		OnEdgeAdded(edge);
+						                     	},
+						                     () =>
+						                     	{
+						                     		_edges.Remove(edge);
+						                     		OnEdgeRemoved(edge);
+						                     	}, "Add edge to SubGraphView");
+					}
+					else
+					{
+						_edges.Add(edge);
+						OnEdgeAdded(edge);
+					}
 				}
 			}
 		}
@@ -205,25 +211,28 @@ namespace SD.Tools.Algorithmia.Graphs
 		public void Remove(TVertex toRemove)
 		{
 			ArgumentVerifier.CantBeNull(toRemove, "toRemove");
-			if(_isCommandified)
+			if(_vertices.Contains(toRemove))
 			{
-				Command<TVertex>.DoNow(() =>
-					{
-						_vertices.Remove(toRemove);
-						OnVertexRemoved(toRemove);
-						CheckIsEmpty();
-					},
-					() =>
-					{
-						_vertices.Add(toRemove);
-						OnVertexAdded(toRemove);
-					}, "Remove vertex to SubGraphView");
-			}
-			else
-			{
-				_vertices.Remove(toRemove);
-				OnVertexRemoved(toRemove);
-				CheckIsEmpty();
+				if(_isCommandified)
+				{
+					Command<TVertex>.DoNow(() =>
+					                       	{
+					                       		_vertices.Remove(toRemove);
+					                       		OnVertexRemoved(toRemove);
+					                       		CheckIsEmpty();
+					                       	},
+					                       () =>
+					                       	{
+					                       		_vertices.Add(toRemove);
+					                       		OnVertexAdded(toRemove);
+					                       	}, "Remove vertex to SubGraphView");
+				}
+				else
+				{
+					_vertices.Remove(toRemove);
+					OnVertexRemoved(toRemove);
+					CheckIsEmpty();
+				}
 			}
 		}
 
@@ -236,25 +245,28 @@ namespace SD.Tools.Algorithmia.Graphs
 		public void Remove(TEdge toRemove)
 		{
 			ArgumentVerifier.CantBeNull(toRemove, "toRemove");
-			if(_isCommandified)
+			if(_edges.Contains(toRemove))
 			{
-				Command<TEdge>.DoNow(() =>
-					{
-						_edges.Remove(toRemove);
-						OnEdgeRemoved(toRemove);
-						CheckIsEmpty();
-					},
-					() =>
-					{
-						_edges.Add(toRemove);
-						OnEdgeAdded(toRemove);
-					}, "Remove edge to SubGraphView");
-			}
-			else
-			{
-				_edges.Remove(toRemove);
-				OnEdgeRemoved(toRemove);
-				CheckIsEmpty();
+				if(_isCommandified)
+				{
+					Command<TEdge>.DoNow(() =>
+					                     	{
+					                     		_edges.Remove(toRemove);
+					                     		OnEdgeRemoved(toRemove);
+					                     		CheckIsEmpty();
+					                     	},
+					                     () =>
+					                     	{
+					                     		_edges.Add(toRemove);
+					                     		OnEdgeAdded(toRemove);
+					                     	}, "Remove edge to SubGraphView");
+				}
+				else
+				{
+					_edges.Remove(toRemove);
+					OnEdgeRemoved(toRemove);
+					CheckIsEmpty();
+				}
 			}
 		}
 
@@ -361,6 +373,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			this.VertexRemoved.RaiseEvent(this, new GraphChangeEventArgs<TVertex>(vertex));
 			UnbindFromINotifyPropertyChanged(vertex);
+			RemoveEdgesWithVertex(vertex);
 		}
 
 
@@ -427,6 +440,20 @@ namespace SD.Tools.Algorithmia.Graphs
 		protected virtual void OnDisposing()
 		{
 			// nop
+		}
+
+
+		/// <summary>
+		/// Removes the edges with vertex, which is necessary when a vertex is removed so all dangling edges are removed as well. 
+		/// </summary>
+		/// <param name="vertex">The vertex.</param>
+		private void RemoveEdgesWithVertex(TVertex vertex)
+		{
+			var edgesToRemove = _edges.Where(e=>(e.EndVertex!=null && e.EndVertex.Equals(vertex)) || (e.StartVertex!=null && e.StartVertex.Equals(vertex))).ToList();
+			foreach(var edge in edgesToRemove)
+			{
+				this.Remove(edge);
+			}
 		}
 
         
