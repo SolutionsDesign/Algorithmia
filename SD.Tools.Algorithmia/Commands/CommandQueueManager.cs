@@ -263,6 +263,41 @@ namespace SD.Tools.Algorithmia.Commands
 
 
 		/// <summary>
+		/// Performs the code func inside an undoable period guarded by the command specified. Use this method if the code to run inside the 
+		/// undoable period is well known and can be wrapped inside a single func. The func codeToExecuteInPeriodFunc is executed once, all
+		/// undo/redo logic is done by undo/redo-ing commands which were ran due to state changes caused by codeToExecuteInPeriodFunc.
+		/// If you want to run a command again during redo, you should enqueue and run a normal command instead of using this method.
+		/// To create an undoable period, you can also call BeginUndoablePeriod and EndUndoablePeriod.
+		/// </summary>
+		/// <param name="cmd">The CMD.</param>
+		/// <param name="codeToExecuteInPeriodFunc">The code to execute in period func.</param>
+		public void PerformUndoablePeriod(UndoablePeriodCommand cmd, Action codeToExecuteInPeriodFunc)
+		{
+			try
+			{
+				ThreadEnter();
+				ArgumentVerifier.CantBeNull(cmd, "cmd");
+				ArgumentVerifier.CantBeNull(codeToExecuteInPeriodFunc, "codeToExecuteInPeriod");
+				BeginUndoablePeriod(cmd);
+				if(cmd.BeforeDoAction!=null)
+				{
+					cmd.BeforeDoAction();
+				}
+				codeToExecuteInPeriodFunc();
+				if(cmd.AfterDoAction!=null)
+				{
+					cmd.AfterDoAction();
+				}
+				EndUndoablePeriod(cmd);
+			}
+			finally
+			{
+				ThreadExit();
+			}
+		}
+
+
+		/// <summary>
 		/// Determines whether the commandqueuestack with the id passed in can perform a Do operation (or redo)
 		/// </summary>
 		/// <param name="stackId">The stack id.</param>
