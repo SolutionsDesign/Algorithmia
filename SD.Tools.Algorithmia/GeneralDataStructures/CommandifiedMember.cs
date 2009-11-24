@@ -239,11 +239,13 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="valueToValidate">The value to validate.</param>
 		/// <param name="checkForDuplicates">if set to true, it will check for duplicate names</param>
 		/// <param name="throwOnError">if set to true, it will throw a ValidationException if validation failed</param>
+		/// <param name="correctValue">The correct value.</param>
 		/// <returns>
 		/// true if the member is valid, false otherwise
 		/// </returns>
-		protected virtual bool ValidateMemberValue(TValue valueToValidate, bool checkForDuplicates, bool throwOnError)
+		protected virtual bool ValidateMemberValue(TValue valueToValidate, bool checkForDuplicates, bool throwOnError, out TValue correctValue)
 		{
+			correctValue = valueToValidate;
 			return true;
 		}
 
@@ -356,10 +358,11 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			get { return _memberValue; }
 			set
 			{
-				if(ValidateMemberValue(value, true, this.ThrowExceptionOnValidationError))
+				TValue correctValue;
+				if(ValidateMemberValue(value, true, this.ThrowExceptionOnValidationError, out correctValue))
 				{
 					ResetErrorForMember();
-					if(GeneralUtils.ValuesAreEqual(_memberValue, value))
+					if(GeneralUtils.ValuesAreEqual(_memberValue, correctValue))
 					{
 						OnMemberSetToSameValue();
 					}
@@ -367,7 +370,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 					{
 						CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(
 																		new Command<TValue>(
-																			() => this.SetMemberValue(value),
+																			() => this.SetMemberValue(correctValue),
 																			() => _memberValue,
 																			v => this.SetMemberValue(v),
 																			_setValueDescription));
