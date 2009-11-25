@@ -171,7 +171,7 @@ namespace SD.Tools.Algorithmia.Graphs
 
 
 		/// <summary>
-		/// Adds the specified edge.
+		/// Adds the specified edge. If the vertices aren't in the view, they're added too.
 		/// </summary>
 		/// <param name="edge">The edge.</param>
 		public void Add(TEdge edge)
@@ -184,6 +184,8 @@ namespace SD.Tools.Algorithmia.Graphs
 					{
 						Command<TEdge>.DoNow(() =>
 						                     	{
+													Add(edge.StartVertex);
+													Add(edge.EndVertex);
 						                     		_edges.Add(edge);
 						                     		OnEdgeAdded(edge);
 						                     	},
