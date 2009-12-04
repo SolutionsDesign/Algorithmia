@@ -115,17 +115,14 @@ namespace SD.Tools.Algorithmia.Graphs.Algorithms
 				// flag the base crawler code that it should break off the traversal and silently allow the cycle.
 				return false;
 			}
-			StringBuilder builder = new StringBuilder();
+			string edgesDescription = string.Empty;
 			if(edges != null)
 			{
-				foreach(TEdge edge in edges)
-				{
-					builder.AppendFormat("{0}{1}", edge, Environment.NewLine);
-				}
+				edgesDescription = string.Join(" | ", edges.Select(e => e.ToString()).ToArray());
 			}
 			throw new InvalidOperationException(
 				string.Format("Cycle detected. Topological sorting can't be applied on a directed graph with one or more cycles. Related vertex (which was reached from one of the vertices already visited): {0}. Edge(s) followed (and vertices visited) to reach this related vertex: {1}", 
-					relatedVertex, builder));
+					relatedVertex, edgesDescription));
 		}
 
 
