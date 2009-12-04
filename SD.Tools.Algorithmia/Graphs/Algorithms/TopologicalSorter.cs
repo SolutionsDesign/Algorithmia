@@ -83,6 +83,7 @@ namespace SD.Tools.Algorithmia.Graphs.Algorithms
 			ArgumentVerifier.CantBeNull(graphToCrawl, "graphToCrawl");
 			ArgumentVerifier.ShouldBeTrue(g=>g.IsDirected, graphToCrawl, "graphToCrawl has to be a directed graph");
 			this.SortResults = new List<TVertex>();
+			this.SeeCycleCreatingEdgesAsNonExistend = false;
 			_directionMeansOrder = directionMeansOrder;
 		}
 
@@ -109,6 +110,11 @@ namespace SD.Tools.Algorithmia.Graphs.Algorithms
 		/// <remarks>It's recommended you throw an exception to quit the operation entirely if your algorithm can't deal with cycles.</remarks>
 		protected override bool CycleDetected(TVertex relatedVertex, HashSet<TEdge> edges)
 		{
+			if(this.SeeCycleCreatingEdgesAsNonExistend)
+			{
+				// flag the base crawler code that it should break off the traversal and silently allow the cycle.
+				return false;
+			}
 			StringBuilder builder = new StringBuilder();
 			if(edges != null)
 			{
@@ -118,7 +124,7 @@ namespace SD.Tools.Algorithmia.Graphs.Algorithms
 				}
 			}
 			throw new InvalidOperationException(
-				string.Format("Cycle detected. Topological sorting can't be applied on a directed graph with one or more cycles. Related vertex: {0}. Edge(s) followed to this vertex: {1}", 
+				string.Format("Cycle detected. Topological sorting can't be applied on a directed graph with one or more cycles. Related vertex (which was reached from one of the vertices already visited): {0}. Edge(s) followed (and vertices visited) to reach this related vertex: {1}", 
 					relatedVertex, builder));
 		}
 
@@ -150,6 +156,13 @@ namespace SD.Tools.Algorithmia.Graphs.Algorithms
 		/// that there is just 1 ordering, there can be many correct orderings. 
 		/// </summary>
 		public List<TVertex> SortResults { get; private set; }
+		/// <summary>
+		/// Gets or sets a value indicating whether edges which create a cycle should be seen as real (true) or as edges which can be ignored and
+		/// have no influence on the outcome (false, default). 'False' means that an exception is thrown when a cycle is detected. 
+		/// True means that the traversal is broken off at the re-visited vertex and continued using backtracking. Leave this property to false, 
+		/// unless cycles should be allowed.
+		/// </summary>
+		public bool SeeCycleCreatingEdgesAsNonExistend { get; set; }
 		#endregion
 	}
 }
