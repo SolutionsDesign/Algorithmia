@@ -1,6 +1,6 @@
 ﻿////////////////////////////////////////////////////////////////////////////////////////////
 // Core Class definitions for the Application Core assembly of LLBLGen Pro.
-// (c) 2002-2009 Solutions Design, all rights reserved.
+// (c) 2002-2010 Solutions Design, all rights reserved.
 // http://www.llblgen.com/
 // 
 // THIS IS NOT OPEN SOURCE SOFTWARE OF ANY KIND. 

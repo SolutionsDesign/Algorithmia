@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -398,7 +398,6 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// in a derived class, overriding this method.</remarks>
 		protected virtual void HandleVertexAddedToMainGraph(TVertex vertexAdded)
 		{
-			// nop
 		}
 
 
@@ -410,7 +409,6 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// in a derived class, overriding this method.</remarks>
 		protected virtual void HandleEdgeAddedToMainGraph(TEdge edgeAdded)
 		{
-			// nop
 		}
 
 
@@ -421,7 +419,6 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>The view automatically updates its own datastructures already, so use this method to perform additional work</remarks>
 		protected virtual void HandleEdgeRemovedFromMainGraph(TEdge edgeRemoved)
 		{
-			// nop
 		}
 
 		
@@ -432,7 +429,6 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>The view automatically updates its own datastructures already, so use this method to perform additional work</remarks>
 		protected virtual void HandleVertexRemovedFromMainGraph(TVertex vertexRemoved)
 		{
-			// nop
 		}
 
 
@@ -441,7 +437,6 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		protected virtual void OnDisposing()
 		{
-			// nop
 		}
 
 

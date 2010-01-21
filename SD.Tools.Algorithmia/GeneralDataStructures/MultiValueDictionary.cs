@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -46,7 +46,8 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	/// <summary>
 	/// Extension to the normal Dictionary. This class can store more than one value for every key. It keeps a HashSet for every Key value.
 	/// Calling Add with the same Key and multiple values will store each value under the same Key in the Dictionary. Obtaining the values
-	/// for a Key will return the HashSet with the Values of the Key. 
+	/// for a Key will return the HashSet with the Values of the Key. It can also merge with other instances of MultiValueDictionary, as long
+	/// as the TKey and TValue types are equal.
 	/// </summary>
 	/// <typeparam name="TKey">The type of the key.</typeparam>
 	/// <typeparam name="TValue">The type of the value.</typeparam>

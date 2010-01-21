@@ -1,10 +1,10 @@
 //////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved. (Algorithmia)
-// Copyright (c) 2009 Tony Allowatt (property bag code)
+// Copyright (c) 2010 Solutions Design. All rights reserved. (Algorithmia)
+// Copyright (c) 2010 Tony Allowatt (property bag code)
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -103,7 +103,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 				{
 					if(_specification.DefaultValue != null)
 					{
-						// value is null, return the default value as that's set in the specification.
 						e.Value = _specification.DefaultValue;
 					}
 				}
@@ -111,7 +110,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 				{
 					if(_specification.PropertyType.IsEnum)
 					{
-						// convert value from numeric to real enum object value. 
 						e.Value = Enum.ToObject(_specification.PropertyType, e.Value);
 					}
 				}
@@ -152,7 +150,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 				{
 					if(_specification.PropertyType.IsEnum)
 					{
-						// convert enum values to int
 						valueToUse = Convert.ToInt32(valueToUse);
 					}
 				}

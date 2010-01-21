@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -49,7 +49,9 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	/// <typeparam name="TValue">The type of the value.</typeparam>
 	/// <typeparam name="TChangeType">The type of the change type enum.</typeparam>
 	/// <remarks>Resets error messages on successful set of a value, or if the field is set to the same value.
-	/// Binds to a PropertyChanged event of TValue, if it implements INotifyPropertyChanged</remarks>
+	/// Binds to the HasBeenChanged event of TValue, if it implements INotifyAsChanged, and raises ValueChanged if HasBeenChanged is raised on an element.
+	/// Binds to the HasBeenRemoved event of TValue, if it implements INotifyAsRemoved, and raises ValueElementRemoved if HasBeenRemoved is raised
+	/// on an element.</remarks>
 	public class CommandifiedMember<TValue, TChangeType>
 	{
 		#region Class Member Declarations
@@ -70,7 +72,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		public event EventHandler ErrorReset;
 		/// <summary>
-		/// Event which is raised when the value of this member changed. If the value is a mutable object and implements INotifyElementChanged, the 
+		/// Event which is raised when MemberValue is set to a different value. If MemberValue's value is a mutable object and implements INotifyElementChanged, the 
 		/// event is also raised when some values inside the value object change. In that case, the original value and the new value in the event args
 		/// are the same. 
 		/// </summary>
@@ -148,11 +150,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </returns>
 		public override string ToString()
 		{
-			if(((object)_memberValue) == null)
-			{
-				return base.ToString();
-			}
-			return this.MemberValue.ToString();
+			return ((object)_memberValue) == null ? base.ToString() : this.MemberValue.ToString();
 		}
 
 

@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -169,7 +169,7 @@ namespace SD.Tools.Algorithmia.Commands
 		{
 			if(_getStateFunc != null)
 			{
-				// has state retrieval function.
+				// has state retrieval function so obtain the original state using that func. This state is then used in the undo action as the state to restore
 				_originalState = _getStateFunc();
 			}
 			try
@@ -206,7 +206,7 @@ namespace SD.Tools.Algorithmia.Commands
 			{
 				if(_undoFunc0 != null)
 				{
-					// undo ourselves, by setting the original state back
+					// undo ourselves, by setting the original state back using the undoFunc0. This func is responsible for the original state to set back.
 					_undoFunc0();
 				}
 			}
@@ -214,7 +214,7 @@ namespace SD.Tools.Algorithmia.Commands
 			{
 				if(_undoFunc1 != null)
 				{
-					// undo ourselves, by setting the original state back
+					// undo ourselves, by setting the original state back to the state we gathered using the getStateFunc
 					_undoFunc1(_originalState);
 				}
 			}

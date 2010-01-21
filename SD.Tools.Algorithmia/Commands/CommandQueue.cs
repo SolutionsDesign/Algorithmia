@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -253,7 +253,6 @@ namespace SD.Tools.Algorithmia.Commands
 		}
 		#endregion
 		
-
 		#region Class Property Declarations
 		/// <summary>
 		/// Gets or sets a value indicating whether an undo action is in progress. If an undo action is in progress, no commands can be added to this queue, as 
@@ -278,8 +277,7 @@ namespace SD.Tools.Algorithmia.Commands
 		/// </summary>
 		public bool CanDo
 		{
-			get { return (((_currentCommandBucket != null) && (_currentCommandBucket.Next!=null)) ||
-						((_currentCommandBucket==null) && (_commands.Count>0))); }
+			get { return (((_currentCommandBucket != null) && (_currentCommandBucket.Next!=null)) || ((_currentCommandBucket==null) && (_commands.Count>0))); }
 		}
 
 
@@ -288,14 +286,7 @@ namespace SD.Tools.Algorithmia.Commands
 		/// </summary>
 		public CommandBase ActiveCommand
 		{
-			get
-			{
-				if(_currentCommandBucket == null)
-				{
-					return null;
-				}
-				return _currentCommandBucket.Contents;
-			}
+			get { return _currentCommandBucket == null ? null : _currentCommandBucket.Contents; }
 		}
 
 		/// <summary>

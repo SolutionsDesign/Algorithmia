@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -107,7 +107,6 @@ namespace SD.Tools.Algorithmia.Heaps
 			int currentIndex = FindIndexOfElement(element);
 			if(currentIndex < 0)
 			{
-				// not in the heap
 				return;
 			}
 
@@ -120,7 +119,7 @@ namespace SD.Tools.Algorithmia.Heaps
 			int newIndex = FindIndexOfElement(element);
 			if(newIndex == currentIndex)
 			{
-				// not changed, check using downheap
+				// Upheap did not change its position, check using downheap
 				Downheap(currentIndex);
 			}
 		}
@@ -180,7 +179,6 @@ namespace SD.Tools.Algorithmia.Heaps
 			int indexOfElement = FindIndexOfElement(element);
 			if(indexOfElement < 0)
 			{
-				// element isn't in heap
 				return;
 			}
 
@@ -218,12 +216,7 @@ namespace SD.Tools.Algorithmia.Heaps
 		/// <returns>the index of the element passed in in the _elements array, or -1 if not found</returns>
 		private int FindIndexOfElement(TElement element)
 		{
-			if(element == null)
-			{
-				return -1;
-			}
-
-			return FindIndexOfElement(element, 0);
+			return element == null ? -1 : FindIndexOfElement(element, 0);
 		}
 
 
@@ -274,7 +267,7 @@ namespace SD.Tools.Algorithmia.Heaps
 								// has right child. Check if the right child would be a parent of this element. If not, skip it, otherwise, dig into that tree.
 								if(this.ElementCompareFunc(_elements[indexRightChild], element))
 								{
-									// dig into left child's tree
+									// dig into right child's tree
 									int rightResult = FindIndexOfElement(element, indexRightChild);
 									if(rightResult >= 0)
 									{
@@ -308,7 +301,7 @@ namespace SD.Tools.Algorithmia.Heaps
 				return;
 			}
 
-			int parentIndex = (index - 1) / 2;		// auto-floored.
+			int parentIndex = (index - 1) / 2;
 			if(!this.ElementCompareFunc(_elements[parentIndex], _elements[index]))
 			{
 				// parent shouldn't be the parent of this element. Swap
@@ -369,7 +362,6 @@ namespace SD.Tools.Algorithmia.Heaps
 			switch(_elements.Count)
 			{
 				case 0:
-					// nothing
 					return;
 				case 1:
 				case 2:

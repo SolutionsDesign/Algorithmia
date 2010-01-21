@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -61,6 +61,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.EventArguments
 			this.TypeOfChange = typeOfChange;
 		}
 
+		#region Class Property Declarations
 		/// <summary>
 		/// Gets or sets the involved element.
 		/// </summary>
@@ -69,5 +70,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.EventArguments
 		/// Gets or sets the type of change 
 		/// </summary>
 		public TChangeType TypeOfChange { get; set; }
+		#endregion
 	}
 }

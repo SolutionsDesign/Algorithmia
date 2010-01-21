@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -203,7 +203,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				this.ListClearing.RaiseEvent(this, eventArgs);
 				if(eventArgs.Cancel)
 				{
-					// clearing is cancelled, return
 					return;
 				}
 			}
@@ -230,14 +229,12 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				this.ElementAdding.RaiseEvent(this, eventArgs);
 				if(eventArgs.Cancel)
 				{
-					// addition is cancelled, return
 					return;
 				}
 			}
 			// create a command which simply inserts the item at the given index and as undo function removes the item at the index specified.
-			Command<T> insertCmd = new Command<T>(() => this.PerformInsertItem(index, item), () => this.PerformRemoveItem(index), 
-													_cachedCommandDescriptions[ListCommandType.InsertItem]);
-			CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(insertCmd);
+			Command<T>.DoNow(() => this.PerformInsertItem(index, item), () => this.PerformRemoveItem(index), 
+							_cachedCommandDescriptions[ListCommandType.InsertItem]);
 		}
 
 
@@ -257,7 +254,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				this.ElementRemoving.RaiseEvent(this, eventArgs);
 				if(eventArgs.Cancel)
 				{
-					// removal is cancelled, return
 					return;
 				}
 			}
@@ -286,13 +282,11 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				this.ElementRemoving.RaiseEvent(this, eventArgs);
 				if(eventArgs.Cancel)
 				{
-					// removal is cancelled, return
 					return;
 				}
 				this.ElementAdding.RaiseEvent(this, eventArgs);
 				if(eventArgs.Cancel)
 				{
-					// addition is cancelled, return
 					return;
 				}
 			}
@@ -308,7 +302,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		protected virtual void OnClearing()
 		{
-			// nop
 		}
 
 
@@ -318,7 +311,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="item">The item which is about to be removed.</param>
 		protected virtual void OnRemovingItem(T item)
 		{
-			// nop
 		}
 
 
@@ -328,7 +320,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="item">The item which is about to be added.</param>
 		protected virtual void OnAddingItem(T item)
 		{
-			// nop
 		}
 
 
@@ -338,7 +329,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="item">The item.</param>
 		protected virtual void OnRemovingItemComplete(T item)
 		{
-			// nop
 		}
 
 
@@ -348,7 +338,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="item">The item.</param>
 		protected virtual void OnAddingItemComplete(T item)
 		{
-			// nop
 		}
 
 
@@ -357,7 +346,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		protected virtual void OnClearingComplete()
 		{
-			// nop
 		}
 
 

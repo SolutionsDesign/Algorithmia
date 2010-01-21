@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -129,10 +129,7 @@ namespace SD.Tools.Algorithmia.Heaps
 				return;
 			}
 
-			// perform keyUpdateFunc on it with newValue
 			keyUpdateFunc(element, newValue);
-
-			// check if element now voilates heap func with parent or children
 			if(CheckIfElementViolatesHeap(elementNode))
 			{
 				// As this heap can be a maxheap as well, and the action can make the root of the heap be violating the heap, we simply remove the element
@@ -204,8 +201,6 @@ namespace SD.Tools.Algorithmia.Heaps
 			UpdateRootIfRequired(newNode);
 
 			AddElementNodeMapping(newNode);
-
-			// done. Increase the count of the # of elements in this heap
 			_count++;
 		}
 
@@ -333,7 +328,6 @@ namespace SD.Tools.Algorithmia.Heaps
 				// already violates heap
 				return true;
 			}
-			// check with each child (if any)
 			foreach(FibonacciHeapNode<TElement> child in elementNode.Children)
 			{
 				toReturn |= !this.ElementCompareFunc(elementNode.Contents, child.Contents);

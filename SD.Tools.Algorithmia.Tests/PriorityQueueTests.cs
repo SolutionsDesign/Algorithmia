@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -169,13 +169,12 @@ namespace SD.Tools.Algorithmia.Tests
 			Assert.IsNotNull(highestPriorityElement);
 			Assert.AreEqual(priorities[0], highestPriorityElement.Priority);
 
-			QueueElement current = null;
-			QueueElement previous = null;
+			QueueElement current;
+			QueueElement previous;
 			if(performEnumerateTest)
 			{
 				// test the enumerator to see if it gives back the elements in the right order
 				current = highestPriorityElement;
-				previous = null;
 				foreach(QueueElement element in queue)
 				{
 					previous = current;

@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -161,7 +161,6 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>Only called in non-directed graphs, as root detection isn't possible with a DFS crawler in directed graphs without additional algorithm code</remarks>
         protected virtual void RootDetected(TVertex vertex)
         { 
-            //nop
         }
 
 
@@ -189,7 +188,6 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// the vertex is a tree root, or the start vertex.)</param>
 		protected virtual void OnVisiting(TVertex vertexVisited, HashSet<TEdge> edges)
 		{
-			// nop
 		}
 
 
@@ -201,7 +199,6 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// the vertex is a tree root, or the start vertex.)</param>
 		protected virtual void OnVisited(TVertex vertexVisited, HashSet<TEdge> edges)
 		{
-			// nop
 		}
 		
 

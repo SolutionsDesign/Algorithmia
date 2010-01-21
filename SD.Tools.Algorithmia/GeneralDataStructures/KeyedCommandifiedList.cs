@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -79,9 +79,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// Determines whether the specified key is present
 		/// </summary>
 		/// <param name="key">The key.</param>
-		/// <returns>
-		/// 	<see langword="true"/> if the specified key is present, false otherwise. 
-		/// </returns>
+		/// <returns><see langword="true"/> if the specified key is present, false otherwise. </returns>
 		public bool ContainsKey(TKeyValue key)
 		{
 			return _elementPerKeyValue.ContainsKey(key);
@@ -99,7 +97,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			{
 				elements = new HashSet<T>();
 			}
-
 			return elements.ToList();
 		}
 

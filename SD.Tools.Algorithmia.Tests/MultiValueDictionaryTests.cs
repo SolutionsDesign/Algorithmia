@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -49,10 +49,7 @@ namespace SD.Tools.Algorithmia.Tests
 		[Test]
 		public void SimpleEnumerationTest()
 		{
-			MultiValueDictionary<int, string> container = new MultiValueDictionary<int, string>();
-			container.Add(1, "value1");
-			container.Add(2, "value2");
-			container.Add(2, "value3");
+			MultiValueDictionary<int, string> container = new MultiValueDictionary<int, string> { { 1, "value1" }, { 2, "value2" }, { 2, "value3" } };
 
 			foreach(KeyValuePair<int, HashSet<string>> pair in container)
 			{
@@ -74,12 +71,9 @@ namespace SD.Tools.Algorithmia.Tests
 		[Test]
 		public void SimpleEnumerationTestWithLinqOperator()
 		{
-			MultiValueDictionary<int, string> container = new MultiValueDictionary<int, string>();
-			container.Add(1, "value1");
-			container.Add(2, "value2");
-			container.Add(2, "value3");
+			MultiValueDictionary<int, string> container = new MultiValueDictionary<int, string> { { 1, "value1" }, { 2, "value2" }, { 2, "value3" } };
 
-			foreach(KeyValuePair<int, HashSet<string>> pair in container.OrderBy<KeyValuePair<int, HashSet<string>>, int>(p=>p.Key))
+			foreach(KeyValuePair<int, HashSet<string>> pair in container.OrderBy(p=>p.Key))
 			{
 				switch(pair.Key)
 				{

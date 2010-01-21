@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -1246,10 +1246,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		public IEnumerable<TVertex> Vertices
 		{
-			get
-			{
-				return _graph.Keys;
-			}
+			get { return _graph.Keys; }
 		}
 
 		/// <summary>
@@ -1283,10 +1280,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		public int VertexCount
 		{
-			get
-			{
-				return _graph.Keys.Count;
-			}
+			get { return _graph.Keys.Count; }
 		}
 
 		/// <summary>
@@ -1299,7 +1293,6 @@ namespace SD.Tools.Algorithmia.Graphs
 			get { return this.Edges.Count(); }
 		}
 		
-
 		/// <summary>
 		/// Gets or sets the edge producer func which produces edges for this graph. Used in some algorithms which have to produce edges. 
 		/// </summary>

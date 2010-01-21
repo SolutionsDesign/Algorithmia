@@ -1,10 +1,10 @@
 //////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved. (Algorithmia)
-// Copyright (c) 2009 Tony Allowatt (property bag code)
+// Copyright (c) 2010 Solutions Design. All rights reserved. (Algorithmia)
+// Copyright (c) 2010 Tony Allowatt (property bag code)
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)

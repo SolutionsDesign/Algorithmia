@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -34,6 +34,7 @@
 // Contributers to the code:
 //		- Frans Bouma [FB]
 //////////////////////////////////////////////////////////////////////
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using SD.Tools.Algorithmia.GeneralInterfaces;
@@ -162,7 +163,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			INotifyAsRemoved itemAsINotifyElementRemoved = item as INotifyAsRemoved;
 			if(itemAsINotifyElementRemoved != null)
 			{
-				itemAsINotifyElementRemoved.HasBeenRemoved -= new System.EventHandler(element_ElementRemoved);
+				itemAsINotifyElementRemoved.HasBeenRemoved -= new EventHandler(element_ElementRemoved);
 			}
 		}
 
@@ -176,7 +177,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			INotifyAsRemoved itemAsINotifyElementRemoved = item as INotifyAsRemoved;
 			if(itemAsINotifyElementRemoved != null)
 			{
-				itemAsINotifyElementRemoved.HasBeenRemoved += new System.EventHandler(element_ElementRemoved);
+				itemAsINotifyElementRemoved.HasBeenRemoved += new EventHandler(element_ElementRemoved);
 			}
 		}
 
@@ -186,9 +187,8 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		/// <param name="sender">The source of the event.</param>
 		/// <param name="e">The event arguments instance containing the event data.</param>
-		private void element_ElementRemoved(object sender, System.EventArgs e)
+		private void element_ElementRemoved(object sender, EventArgs e)
 		{
-			// the sender notifies that it has been removed, so this list should remove the element.
 			T senderToRemove = sender as T;
 			if(senderToRemove!=null)
 			{

@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2009 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
 // http://www.sd.nl
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2009 Solutions Design. All rights reserved.
+// Copyright (c) 2010 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -93,7 +93,6 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// startVertex and endVertex, not between endVertex and startVertex. If false, this edge isn't considered a directed edge and is seen as an edge between
 		/// startVertex and endVertex and also between endVertex and startVertex.
 		/// </summary>
-		/// <value></value>
 		public bool IsDirected { get; private set; }
 		#endregion
 	}
