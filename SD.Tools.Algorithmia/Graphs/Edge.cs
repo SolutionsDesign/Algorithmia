@@ -51,6 +51,11 @@ namespace SD.Tools.Algorithmia.Graphs
 	/// <typeparam name="TVertex">The type of the vertices in this edge.</typeparam>
 	public class Edge<TVertex> : IEdge<TVertex>
 	{
+		#region Class Property Declarations
+		private TVertex _startVertex;
+		private TVertex _endVertex;
+		#endregion
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="Edge&lt;TVertex&gt;"/> class.
 		/// </summary>
@@ -72,21 +77,72 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			ArgumentVerifier.CantBeNull(startVertex, "startVertex");
 			ArgumentVerifier.CantBeNull(endVertex, "endVertex");
-			this.StartVertex = startVertex;
-			this.EndVertex = endVertex;
+			_startVertex = startVertex;
+			_endVertex = endVertex;
 			this.IsDirected = isDirected;
 		}
+
+
+		/// <summary>
+		/// Called when the StartVertex property has been assigned to a new value.
+		/// </summary>
+		protected virtual void OnAfterStartVertexSet()
+		{
+		}
+
+		/// <summary>
+		/// Called when the StartVertex property is about to be assigned to a new value
+		/// </summary>
+		/// <param name="value">The value the StartVertex property is about to be assigned to</param>
+		protected virtual void OnBeforeStartVertexSet(TVertex value)
+		{
+        }
+
+		/// <summary>
+		/// Called when the EndVertex property has been assigned to a new value.
+		/// </summary>
+		protected virtual void OnAfterEndVertexSet()
+		{
+		}
+        
+		/// <summary>
+		/// Called when the EndVertex property is about to be assigned to a new value
+		/// </summary>
+		/// <param name="value">The value the EndVertex property is about to be assigned to</param>
+		protected virtual void OnBeforeEndVertexSet(TVertex value)
+		{
+		}
+
 
 		#region Class Property Declarations
 		/// <summary>
 		/// Gets the start vertex of the edge.
 		/// </summary>
-		public TVertex StartVertex { get; private set; }
+		public TVertex StartVertex
+		{
+			get { return _startVertex; }
+			set
+			{
+				OnBeforeStartVertexSet(value);
+				_startVertex = value;
+				OnAfterStartVertexSet();
+			}
+		}
+
 
 		/// <summary>
 		/// Gets the end vertex of the edge.
 		/// </summary>
-		public TVertex EndVertex { get; private set;}
+		public TVertex EndVertex
+		{
+			get { return _endVertex; }
+			set
+			{
+				OnBeforeEndVertexSet(value);
+				_endVertex = value;
+				OnAfterEndVertexSet();
+			}
+		}
 
 		/// <summary>
 		/// Gets a value indicating whether this edge is directed. If true, the edge is directed from startVertex to endVertex and is seen as an edge only between
