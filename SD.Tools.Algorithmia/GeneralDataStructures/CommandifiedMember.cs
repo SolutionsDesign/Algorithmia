@@ -224,8 +224,9 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 
 		/// <summary>
 		/// Sets the initial value of this commandified member. It does this by bypassing the actual member set function.
-		/// Use this method to avoid events being raised while setting the value. No validation occurs as well, so only use this
-		/// if you want to set the initial value after the ctor has already been called. 
+		/// Use this method to avoid events being raised while setting the value and also when you want to avoid using commands to set the value, as the
+		/// memberValue is set without using commands. No validation occurs as well, so only use this if you want to set the initial value after the ctor 
+		/// has already been called. 
 		/// </summary>
 		/// <param name="value">The value.</param>
 		public void SetInitialValue(TValue value)
