@@ -223,6 +223,18 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 
 
 		/// <summary>
+		/// Sets the initial value of this commandified member. It does this by bypassing the actual member set function.
+		/// Use this method to avoid events being raised while setting the value. No validation occurs as well, so only use this
+		/// if you want to set the initial value after the ctor has already been called. 
+		/// </summary>
+		/// <param name="value">The value.</param>
+		public void SetInitialValue(TValue value)
+		{
+			_memberValue = value;
+		}
+
+
+		/// <summary>
 		/// Called when the member is set to the same value it already has
 		/// </summary>
 		protected virtual void OnMemberSetToSameValue()
