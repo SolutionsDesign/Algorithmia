@@ -92,8 +92,9 @@ namespace SD.Tools.Algorithmia.Commands
 		[ThreadStatic]
 		private static Guid _threadActiveCommandQueueStackId = Guid.Empty;
 		// Per thread store a flag which signals if the command manager is in a non-undoable period, which means commands are dequeued after they've executed. 
+		// these flags are stored on a stack so multiple times a call to Begin/end doesn't ruin a previous value.
 		[ThreadStatic]
-		private static bool _inNonUndoablePeriod;
+		private Stack<bool> _isInNonUndoablePeriodStack;
 		/// <summary>
 		/// per thread store a flag which signals if the command manager is in a special mode called 'an undoable period', which means 'Redo' commands 
 		/// execute their queues and 'Undo' commands don't clear the queue, plus newly queued commands are ignored. Only set if an UndoablePeriod is Undone/Redone, 
@@ -193,7 +194,11 @@ namespace SD.Tools.Algorithmia.Commands
 			try
 			{
 				ThreadEnter();
-				_inNonUndoablePeriod = true;
+				if(_isInNonUndoablePeriodStack==null)
+				{
+					_isInNonUndoablePeriodStack = new Stack<bool>();
+				}
+				_isInNonUndoablePeriodStack.Push(true);
 			}
 			finally
 			{
@@ -210,7 +215,15 @@ namespace SD.Tools.Algorithmia.Commands
 			try
 			{
 				ThreadEnter();
-				_inNonUndoablePeriod = false;
+				if(_isInNonUndoablePeriodStack==null)
+				{
+					return;
+				}
+				if(_isInNonUndoablePeriodStack.Count==0)
+				{
+					return;
+				}
+				_isInNonUndoablePeriodStack.Pop();
 			}
 			finally
 			{
@@ -380,7 +393,7 @@ namespace SD.Tools.Algorithmia.Commands
 					RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandEnqueued, _activeCommandQueueStack.StackId));
 					_activeCommandQueueStack.Peek().DoCurrentCommand();
 					RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandExecuted, _activeCommandQueueStack.StackId));
-					if(_inNonUndoablePeriod)
+					if(this.IsInNonUndoablePeriod)
 					{
 						_activeCommandQueueStack.Peek().DequeueLastExecutedCommand();
 						RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandDequeued, _activeCommandQueueStack.StackId));
@@ -620,6 +633,22 @@ namespace SD.Tools.Algorithmia.Commands
 		internal bool IsInUndoablePeriod
 		{
 			get { return _inUndoablePeriod; }
+		}
+
+
+		/// <summary>
+		/// Gets a value indicating whether this instance is in a non undoable period.
+		/// </summary>
+		internal bool IsInNonUndoablePeriod
+		{
+			get
+			{
+				if((_isInNonUndoablePeriodStack==null) || (_isInNonUndoablePeriodStack.Count==0))
+				{
+					return false;
+				}
+				return _isInNonUndoablePeriodStack.Peek();
+			}
 		}
 		#endregion
 	}
