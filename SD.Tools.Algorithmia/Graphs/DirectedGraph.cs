@@ -148,7 +148,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// See http://en.wikipedia.org/wiki/Transitive_closure and http://en.wikipedia.org/wiki/Floyd-Warshall_algorithm.
 		/// </summary>
 		/// <returns>The transitive closure of this graph.</returns>
-		public DirectedGraph<TVertex, TEdge> TransitiveClosure()
+		public virtual DirectedGraph<TVertex, TEdge> TransitiveClosure()
 		{
 			DirectedGraph<TVertex, TEdge> result = new DirectedGraph<TVertex, TEdge>(this, this.EdgeProducerFunc);
 			if(this.EdgeProducerFunc == null)
