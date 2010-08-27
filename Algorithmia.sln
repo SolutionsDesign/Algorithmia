@@ -8,15 +8,19 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		ForShipping|Any CPU = ForShipping|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{46A021F5-5EB9-42B2-9334-724870C4BE45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{46A021F5-5EB9-42B2-9334-724870C4BE45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46A021F5-5EB9-42B2-9334-724870C4BE45}.ForShipping|Any CPU.ActiveCfg = ForShipping|Any CPU
+		{46A021F5-5EB9-42B2-9334-724870C4BE45}.ForShipping|Any CPU.Build.0 = ForShipping|Any CPU
 		{46A021F5-5EB9-42B2-9334-724870C4BE45}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46A021F5-5EB9-42B2-9334-724870C4BE45}.Release|Any CPU.Build.0 = Release|Any CPU
 		{35EA3655-5477-4C57-8783-AE26F15C5086}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{35EA3655-5477-4C57-8783-AE26F15C5086}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35EA3655-5477-4C57-8783-AE26F15C5086}.ForShipping|Any CPU.ActiveCfg = ForShipping|Any CPU
 		{35EA3655-5477-4C57-8783-AE26F15C5086}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{35EA3655-5477-4C57-8783-AE26F15C5086}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
