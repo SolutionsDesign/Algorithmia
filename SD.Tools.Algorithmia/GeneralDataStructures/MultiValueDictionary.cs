@@ -51,6 +51,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	/// </summary>
 	/// <typeparam name="TKey">The type of the key.</typeparam>
 	/// <typeparam name="TValue">The type of the value.</typeparam>
+	[Serializable]
 	public class MultiValueDictionary<TKey, TValue> : Dictionary<TKey, HashSet<TValue>>
 	{
 		/// <summary>

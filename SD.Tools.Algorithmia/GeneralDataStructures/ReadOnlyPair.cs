@@ -46,6 +46,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	/// </summary>
 	/// <typeparam name="TVal1">The type of value 1.</typeparam>
 	/// <typeparam name="TVal2">The type of value 2.</typeparam>
+	[Serializable]
 	public class ReadOnlyPair<TVal1, TVal2>
 	{
 		#region Class Member Declarations

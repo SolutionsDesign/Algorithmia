@@ -50,6 +50,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	/// <typeparam name="TVal2">The type of value 2.</typeparam>
 	/// <remarks>Pair implements Equals and GetHashCode. The implementation is oriented towards C# null behavior (null==null is true), so if you're using 
 	/// VB.NET, you've to take this into account.</remarks>
+	[Serializable]
 	public class Pair<TVal1, TVal2>
 	{
 		/// <summary>
