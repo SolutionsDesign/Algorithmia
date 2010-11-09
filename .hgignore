@@ -1,0 +1,2 @@
+glob:*.csproj.user
+glob:*/obj/*

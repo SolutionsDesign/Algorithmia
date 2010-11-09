@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SD.Tools.Algorithmia", "SD.Tools.Algorithmia\SD.Tools.Algorithmia.csproj", "{46A021F5-5EB9-42B2-9334-724870C4BE45}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SD.Tools.Algorithmia.Tests", "SD.Tools.Algorithmia.Tests\SD.Tools.Algorithmia.Tests.csproj", "{35EA3655-5477-4C57-8783-AE26F15C5086}"
