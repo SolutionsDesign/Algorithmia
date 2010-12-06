@@ -1,2 +1,4 @@
 glob:*.csproj.user
 glob:*/obj/*
+glob:*.suo
+glob:*/bin/*
