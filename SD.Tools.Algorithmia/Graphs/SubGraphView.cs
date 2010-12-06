@@ -132,7 +132,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			_isCommandified = isCommandified;
 			_vertices = new HashSet<TVertex>();
 			_edges = new HashSet<TEdge>();
-            this.MainGraph = mainGraph;
+			this.MainGraph = mainGraph;
 			BindEvents();
 		}
 
@@ -150,15 +150,15 @@ namespace SD.Tools.Algorithmia.Graphs
 					if(_isCommandified)
 					{
 						Command<TVertex>.DoNow(() =>
-						                       	{
-						                       		_vertices.Add(vertex);
-						                       		OnVertexAdded(vertex);
-						                       	},
-						                       () =>
-						                       	{
-						                       		_vertices.Remove(vertex);
-						                       		OnVertexRemoved(vertex);
-						                       	}, "Add vertex to SubGraphView");
+												{
+													_vertices.Add(vertex);
+													OnVertexAdded(vertex);
+												},
+											   () =>
+												{
+													_vertices.Remove(vertex);
+													OnVertexRemoved(vertex);
+												}, "Add vertex to SubGraphView");
 					}
 					else
 					{
@@ -183,17 +183,17 @@ namespace SD.Tools.Algorithmia.Graphs
 					if(_isCommandified)
 					{
 						Command<TEdge>.DoNow(() =>
-						                     	{
+												{
 													Add(edge.StartVertex);
 													Add(edge.EndVertex);
-						                     		_edges.Add(edge);
-						                     		OnEdgeAdded(edge);
-						                     	},
-						                     () =>
-						                     	{
-						                     		_edges.Remove(edge);
-						                     		OnEdgeRemoved(edge);
-						                     	}, "Add edge to SubGraphView");
+													_edges.Add(edge);
+													OnEdgeAdded(edge);
+												},
+											 () =>
+												{
+													_edges.Remove(edge);
+													OnEdgeRemoved(edge);
+												}, "Add edge to SubGraphView");
 					}
 					else
 					{
@@ -218,16 +218,16 @@ namespace SD.Tools.Algorithmia.Graphs
 				if(_isCommandified)
 				{
 					Command<TVertex>.DoNow(() =>
-					                       	{
-					                       		_vertices.Remove(toRemove);
-					                       		OnVertexRemoved(toRemove);
-					                       		CheckIsEmpty();
-					                       	},
-					                       () =>
-					                       	{
-					                       		_vertices.Add(toRemove);
-					                       		OnVertexAdded(toRemove);
-					                       	}, "Remove vertex to SubGraphView");
+											{
+												_vertices.Remove(toRemove);
+												OnVertexRemoved(toRemove);
+												CheckIsEmpty();
+											},
+										   () =>
+											{
+												_vertices.Add(toRemove);
+												OnVertexAdded(toRemove);
+											}, "Remove vertex to SubGraphView");
 				}
 				else
 				{
@@ -252,16 +252,16 @@ namespace SD.Tools.Algorithmia.Graphs
 				if(_isCommandified)
 				{
 					Command<TEdge>.DoNow(() =>
-					                     	{
-					                     		_edges.Remove(toRemove);
-					                     		OnEdgeRemoved(toRemove);
-					                     		CheckIsEmpty();
-					                     	},
-					                     () =>
-					                     	{
-					                     		_edges.Add(toRemove);
-					                     		OnEdgeAdded(toRemove);
-					                     	}, "Remove edge to SubGraphView");
+											{
+												_edges.Remove(toRemove);
+												OnEdgeRemoved(toRemove);
+												CheckIsEmpty();
+											},
+										 () =>
+											{
+												_edges.Add(toRemove);
+												OnEdgeAdded(toRemove);
+											}, "Remove edge to SubGraphView");
 				}
 				else
 				{
@@ -453,7 +453,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			}
 		}
 
-        
+		
 		/// <summary>
 		/// Binds to INotifyPropertyChanged on the item specified
 		/// </summary>

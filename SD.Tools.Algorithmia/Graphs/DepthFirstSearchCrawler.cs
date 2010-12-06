@@ -154,14 +154,14 @@ namespace SD.Tools.Algorithmia.Graphs
 		}
 
 
-        /// <summary>
-        /// Signal the detection of a root vertex that has been visited by the crawler.
-        /// </summary>
-        /// <param name="vertex">The detected root vertex</param>
+		/// <summary>
+		/// Signal the detection of a root vertex that has been visited by the crawler.
+		/// </summary>
+		/// <param name="vertex">The detected root vertex</param>
 		/// <remarks>Only called in non-directed graphs, as root detection isn't possible with a DFS crawler in directed graphs without additional algorithm code</remarks>
-        protected virtual void RootDetected(TVertex vertex)
-        { 
-        }
+		protected virtual void RootDetected(TVertex vertex)
+		{ 
+		}
 
 
 		/// <summary>

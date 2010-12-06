@@ -816,34 +816,34 @@ namespace SD.Tools.Algorithmia.Graphs
 		}
 
 
-        /// <summary>
-        /// A graph is called connected if every pair of distinct vertices in the graph is connected (directly or indirectly). 
-        /// A connected component is a maximal connected subgraph of G. Each vertex belongs to exactly one connected component, as does each edge.
-        /// A directed graph is called weakly connected if replacing all of its directed edges with undirected edges produces a connected (undirected) graph. 
-        /// It is strongly connected or strong if it contains a directed path from u to v and a directed path from v to u for every pair of vertices u,v. 
-        /// The strong components are the maximal strongly connected subgraphs.
-        /// See http://en.wikipedia.org/wiki/Connectivity_(graph_theory)
-        /// 
-        /// We will only check for a connected un-directed graph or a weakly connected directed graph (same logic).
-        /// </summary>
-        /// <returns>True if the graph is considered connected, false otherwise</returns>
-        public virtual bool IsConnected()
-        {
+		/// <summary>
+		/// A graph is called connected if every pair of distinct vertices in the graph is connected (directly or indirectly). 
+		/// A connected component is a maximal connected subgraph of G. Each vertex belongs to exactly one connected component, as does each edge.
+		/// A directed graph is called weakly connected if replacing all of its directed edges with undirected edges produces a connected (undirected) graph. 
+		/// It is strongly connected or strong if it contains a directed path from u to v and a directed path from v to u for every pair of vertices u,v. 
+		/// The strong components are the maximal strongly connected subgraphs.
+		/// See http://en.wikipedia.org/wiki/Connectivity_(graph_theory)
+		/// 
+		/// We will only check for a connected un-directed graph or a weakly connected directed graph (same logic).
+		/// </summary>
+		/// <returns>True if the graph is considered connected, false otherwise</returns>
+		public virtual bool IsConnected()
+		{
 			IRootDetector rootDetector;
-            if(this.IsDirected)
-            {
+			if(this.IsDirected)
+			{
 				// create non-directed copy. 
 				rootDetector = new RootDetector<TVertex, NonDirectedEdge<TVertex>>(GetAsNonDirectedCopy());
-            }
-            else
-            {
+			}
+			else
+			{
 				// use this instance directly. 
-                rootDetector = new RootDetector<TVertex, TEdge>(this);
-            }
+				rootDetector = new RootDetector<TVertex, TEdge>(this);
+			}
 
-            // Use the DepthFirstCrawler to detect the number of roots of this graph. If the number of roots is higher than 1, the graph isn't connected. 
+			// Use the DepthFirstCrawler to detect the number of roots of this graph. If the number of roots is higher than 1, the graph isn't connected. 
 			return !(rootDetector.SearchForRoots() > 1);
-        }
+		}
 
 
 		/// <summary>
@@ -851,22 +851,21 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		/// <returns>this graph as a nondirected copy, even if this graph is a non-directed graph</returns>
 		public NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>> GetAsNonDirectedCopy()
-        {
-            NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>> toReturn = new NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>>();
+		{
+			NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>> toReturn = new NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>>();
 			// first add all vertices, as some vertices might not be in an edge
 			foreach(TVertex vertex in this.Vertices)
 			{
 				toReturn.Add(vertex);
 			}
 			foreach(TEdge edge in this.Edges)
-            {
+			{
 				toReturn.Add(new NonDirectedEdge<TVertex>(edge.StartVertex, edge.EndVertex));
-            }
-            return toReturn;
-        }
+			}
+			return toReturn;
+		}
 
 
-		#region Perform methods for actions on graph state
 		/// <summary>
 		/// Performs the add action for adding a complete graph to this graph.
 		/// </summary>
@@ -943,11 +942,11 @@ namespace SD.Tools.Algorithmia.Graphs
 			Add(edgeToAdd.StartVertex);
 			Add(edgeToAdd.EndVertex);
 			AddEdgeToGraphStructure(edgeToAdd, edgeToAdd.StartVertex, edgeToAdd.EndVertex);
-            if (!edgeToAdd.IsDirected)
-            {
-                // not directed, the endvertex also has a connection with startvertex.
-                AddEdgeToGraphStructure(edgeToAdd, edgeToAdd.EndVertex, edgeToAdd.StartVertex);
-            }
+			if (!edgeToAdd.IsDirected)
+			{
+				// not directed, the endvertex also has a connection with startvertex.
+				AddEdgeToGraphStructure(edgeToAdd, edgeToAdd.EndVertex, edgeToAdd.StartVertex);
+			}
 		}
 
 
@@ -1229,10 +1228,10 @@ namespace SD.Tools.Algorithmia.Graphs
 				}
 			}
 		}
-		#endregion
+
 
 		#region Class Property Declarations
-        
+		
 		/// <summary>if true, the graph is directed and only EdgeBase instances which have IsDirected set to true are allowed,
 		/// otherwise it's a non-directed graph and EdgeBase instances which have IsDirected set to false are accepted.
 		/// </summary>
@@ -1309,6 +1308,6 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		protected bool SuppressEvents { get; set; }
 		#endregion
-    }
+	}
 
 }

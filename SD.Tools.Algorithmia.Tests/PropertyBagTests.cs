@@ -104,7 +104,7 @@ namespace SD.Tools.Algorithmia.Tests
 			// event handler binding so values get store inside the dictionary and also retrieved from it. 
 			bag.GetValue += (sender, e) => { e.Value = values.GetValue(e.Property.Name); };
 			bag.SetValue += (sender, e) => { values[e.Property.Name] = e.Value; };
-            
+			
 			// open a testform which binds the bag to the propertygrid. Editing values will store the values in the dictionary, default values are
 			// not in the dictionary.
 			using(TestForm f = new TestForm(bag))
@@ -156,7 +156,7 @@ namespace SD.Tools.Algorithmia.Tests
 										return v;
 									};
 			bag.ValueSetterFunc = (s, v) =>
-			                      	{
+									{
 										values[s] = v;
 										Console.WriteLine("Set: {0} : {1}", s, v ?? "<null>");
 									};

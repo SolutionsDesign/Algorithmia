@@ -196,7 +196,7 @@ namespace SD.Tools.Algorithmia.Commands
 				this.OwnCommandQueue.UndoPreviousCommand();
 			}
 
-            // then, if we're not in an Undoable period clear the own command queue and rollback ourselves. 
+			// then, if we're not in an Undoable period clear the own command queue and rollback ourselves. 
 			if(!CommandQueueManagerSingleton.GetInstance().IsInUndoablePeriod)
 			{
 				this.OwnCommandQueue.Clear();

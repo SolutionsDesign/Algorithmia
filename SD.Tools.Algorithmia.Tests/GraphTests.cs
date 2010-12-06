@@ -343,33 +343,33 @@ namespace SD.Tools.Algorithmia.Tests
 			Assert.IsFalse(graph.Contains("F"));			
 		}
 
-        /// <summary>
-        /// Test the logic of the IsConnected method.
-        /// </summary>
-        [Test]
-        public void IsConnectedTest()
-        {
-            DirectedGraph<string, DirectedEdge<string>> graph = new DirectedGraph<string, DirectedEdge<string>>();
-            graph.Add(new DirectedEdge<string>("A", "B"));	// A->B
-            graph.Add(new DirectedEdge<string>("A", "C"));	// A->C
-            graph.Add(new DirectedEdge<string>("B", "D"));	// B->D
-            graph.Add(new DirectedEdge<string>("C", "D"));	// C->D
-            graph.Add(new DirectedEdge<string>("D", "E"));	// D->E
+		/// <summary>
+		/// Test the logic of the IsConnected method.
+		/// </summary>
+		[Test]
+		public void IsConnectedTest()
+		{
+			DirectedGraph<string, DirectedEdge<string>> graph = new DirectedGraph<string, DirectedEdge<string>>();
+			graph.Add(new DirectedEdge<string>("A", "B"));	// A->B
+			graph.Add(new DirectedEdge<string>("A", "C"));	// A->C
+			graph.Add(new DirectedEdge<string>("B", "D"));	// B->D
+			graph.Add(new DirectedEdge<string>("C", "D"));	// C->D
+			graph.Add(new DirectedEdge<string>("D", "E"));	// D->E
 
-            Assert.IsTrue(graph.IsConnected());
+			Assert.IsTrue(graph.IsConnected());
 
-            // Add an un-connected edge.
-            DirectedEdge<string> toAdd = new DirectedEdge<string>("G", "F");
-            graph.Add(toAdd);
+			// Add an un-connected edge.
+			DirectedEdge<string> toAdd = new DirectedEdge<string>("G", "F");
+			graph.Add(toAdd);
 
-            Assert.IsFalse(graph.IsConnected());
+			Assert.IsFalse(graph.IsConnected());
 
-            // Add a directed edge from F to A.
-            toAdd = new DirectedEdge<string>("F", "A");
-            graph.Add(toAdd);
+			// Add a directed edge from F to A.
+			toAdd = new DirectedEdge<string>("F", "A");
+			graph.Add(toAdd);
 
-            Assert.IsTrue(graph.IsConnected());
-        }
+			Assert.IsTrue(graph.IsConnected());
+		}
 
 
 		[Test]
@@ -450,50 +450,50 @@ namespace SD.Tools.Algorithmia.Tests
 		}
 
 
-        /// <summary>
-        /// Test the GetNonDirectedCopy method.
-        /// </summary>
-        [Test]
-        public void AsNonDirectedGraphTest()
-        {
-            DirectedGraph<string, DirectedEdge<string>> graph = new DirectedGraph<string, DirectedEdge<string>>();
-            graph.Add(new DirectedEdge<string>("A", "B"));	// A->B
-            graph.Add(new DirectedEdge<string>("A", "C"));	// A->C
-            graph.Add(new DirectedEdge<string>("B", "D"));	// B->D
-            graph.Add(new DirectedEdge<string>("C", "D"));	// C->D
-            graph.Add(new DirectedEdge<string>("D", "E"));	// D->E
+		/// <summary>
+		/// Test the GetNonDirectedCopy method.
+		/// </summary>
+		[Test]
+		public void AsNonDirectedGraphTest()
+		{
+			DirectedGraph<string, DirectedEdge<string>> graph = new DirectedGraph<string, DirectedEdge<string>>();
+			graph.Add(new DirectedEdge<string>("A", "B"));	// A->B
+			graph.Add(new DirectedEdge<string>("A", "C"));	// A->C
+			graph.Add(new DirectedEdge<string>("B", "D"));	// B->D
+			graph.Add(new DirectedEdge<string>("C", "D"));	// C->D
+			graph.Add(new DirectedEdge<string>("D", "E"));	// D->E
 
-            Assert.IsTrue(graph.IsDirected);
-            Assert.IsTrue(graph.EdgeCount == 5);
+			Assert.IsTrue(graph.IsDirected);
+			Assert.IsTrue(graph.EdgeCount == 5);
 
-            NonDirectedGraph<string, NonDirectedEdge<string>> nonDirectedGraph = (NonDirectedGraph<string, NonDirectedEdge<string>>)graph.GetAsNonDirectedCopy();
+			NonDirectedGraph<string, NonDirectedEdge<string>> nonDirectedGraph = (NonDirectedGraph<string, NonDirectedEdge<string>>)graph.GetAsNonDirectedCopy();
 
-            Assert.IsFalse(nonDirectedGraph.IsDirected);
+			Assert.IsFalse(nonDirectedGraph.IsDirected);
 
-            Assert.IsTrue(nonDirectedGraph.ContainsEdge("A", "B"));
-            Assert.IsTrue(nonDirectedGraph.ContainsEdge("B", "A"));
+			Assert.IsTrue(nonDirectedGraph.ContainsEdge("A", "B"));
+			Assert.IsTrue(nonDirectedGraph.ContainsEdge("B", "A"));
 
-            Assert.IsTrue(nonDirectedGraph.ContainsEdge("A", "C"));
-            Assert.IsTrue(nonDirectedGraph.ContainsEdge("C", "A"));
+			Assert.IsTrue(nonDirectedGraph.ContainsEdge("A", "C"));
+			Assert.IsTrue(nonDirectedGraph.ContainsEdge("C", "A"));
 
-            Assert.IsTrue(nonDirectedGraph.ContainsEdge("B", "D")); 
-            Assert.IsTrue(nonDirectedGraph.ContainsEdge("D", "B"));
+			Assert.IsTrue(nonDirectedGraph.ContainsEdge("B", "D")); 
+			Assert.IsTrue(nonDirectedGraph.ContainsEdge("D", "B"));
 
-            Assert.IsTrue(nonDirectedGraph.ContainsEdge("C", "D"));
-            Assert.IsTrue(nonDirectedGraph.ContainsEdge("D", "C"));
+			Assert.IsTrue(nonDirectedGraph.ContainsEdge("C", "D"));
+			Assert.IsTrue(nonDirectedGraph.ContainsEdge("D", "C"));
 
-            Assert.IsTrue(nonDirectedGraph.ContainsEdge("D", "E"));
-            Assert.IsTrue(nonDirectedGraph.ContainsEdge("E", "D"));
+			Assert.IsTrue(nonDirectedGraph.ContainsEdge("D", "E"));
+			Assert.IsTrue(nonDirectedGraph.ContainsEdge("E", "D"));
 
-            foreach (Edge<string> edge in nonDirectedGraph.Edges)
-            {
-                Console.Write("\n\nEdge Start index: " + edge.StartVertex + "\tEdge End index:" + edge.EndVertex + "\n\t");
+			foreach (Edge<string> edge in nonDirectedGraph.Edges)
+			{
+				Console.Write("\n\nEdge Start index: " + edge.StartVertex + "\tEdge End index:" + edge.EndVertex + "\n\t");
 
-                Assert.IsFalse(edge.IsDirected);
-            }
+				Assert.IsFalse(edge.IsDirected);
+			}
 
-            //Assert.IsTrue(nonDirectedGraph.EdgeCount == 10);
-        }
+			//Assert.IsTrue(nonDirectedGraph.EdgeCount == 10);
+		}
 	}
 
 

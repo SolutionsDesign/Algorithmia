@@ -82,7 +82,7 @@ namespace SD.Tools.Algorithmia.Commands
 				Do();
 			}
 		}
-        
+		
 
 		/// <summary>
 		/// Pushes the command queue on active stack if required.
@@ -108,7 +108,7 @@ namespace SD.Tools.Algorithmia.Commands
 				_commandQueuePushed = false;
 			}
 		}
-        
+		
 
 		/// <summary>
 		/// Performs the redo action.
@@ -123,7 +123,7 @@ namespace SD.Tools.Algorithmia.Commands
 		}
 
 
-        /// <summary>
+		/// <summary>
 		/// Executes the command.
 		/// </summary>
 		protected internal abstract void Do();

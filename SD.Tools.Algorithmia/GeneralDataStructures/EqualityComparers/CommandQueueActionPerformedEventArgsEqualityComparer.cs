@@ -32,48 +32,50 @@
 //
 //////////////////////////////////////////////////////////////////////
 // Contributers to the code:
-//		- Frans Bouma [FB]
+//		- Frans  Bouma [FB]
 //////////////////////////////////////////////////////////////////////
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SD.Tools.Algorithmia.UtilityClasses;
+using SD.Tools.Algorithmia.GeneralDataStructures.EventArguments;
+using SD.Tools.Algorithmia.Commands;
 
-namespace SD.Tools.Algorithmia.GeneralDataStructures.EventArguments
+namespace SD.Tools.Algorithmia.GeneralDataStructures.EqualityComparers
 {
 	/// <summary>
-	/// Custom event argument class which is used to signal a change in an element.
+	/// An IEqualityComparer usable to compare CommandQueueActionPerformedEventArgs objects.
 	/// </summary>
-	/// <typeparam name="TChangeType">The type of the change type. Has to be an enum</typeparam>
-	/// <typeparam name="TElement">The type of the involved element.</typeparam>
-	[Serializable]
-	public class ElementChangedEventArgs<TChangeType, TElement> : EventArgs
+	public class CommandQueueActionPerformedEventArgsEqualityComparer : IEqualityComparer<CommandQueueActionPerformedEventArgs>
 	{
 		/// <summary>
-		/// CTor
+		/// Compares x with y and returns true if they're equal. This is a value-based comparison (so InvolvedElement and changetype are equal)
 		/// </summary>
-		/// <param name="typeOfChange">The change type to pass on to subscribers</param>
-		/// <param name="involvedElement">The involved element which was changed.</param>
-		public ElementChangedEventArgs(TChangeType typeOfChange, TElement involvedElement)
+		/// <param name="x">first element to compare</param>
+		/// <param name="y">second element to compare</param>
+		/// <returns>true if x and y represent the same event arguments, false otherwise</returns>
+		public bool Equals(CommandQueueActionPerformedEventArgs x, CommandQueueActionPerformedEventArgs y)
 		{
-			if(!typeof(TChangeType).IsEnum)
+			if((x == null) || (y == null))
 			{
-				throw new ArgumentException("The generic type of ElementChangedEventArgs has to be an enum type");
+				return false;
 			}
-			this.TypeOfChange = typeOfChange;
-			this.InvolvedElement = involvedElement;
+			return (x.ActionPerformed.Equals(y.ActionPerformed) && x.ActiveCommandStackId.Equals(y.ActiveCommandStackId));
 		}
 
-		#region Class Property Declarations
+
 		/// <summary>
-		/// Gets / sets typeOfChange
+		/// Returns a hash code for the specified object. 
 		/// </summary>
-		public TChangeType TypeOfChange { get; set; }
-		/// <summary>
-		/// Gets or sets the involved element. Can be null in the situation where this event args is used in change events on commandified members.
-		/// </summary>
-		public TElement InvolvedElement { get; set; }
-		#endregion
+		/// <param name="obj">The instance to return the hascode for.</param>
+		/// <returns>A hash code for the specified object</returns>
+		public int GetHashCode(CommandQueueActionPerformedEventArgs obj)
+		{
+			if(obj == null)
+			{
+				return this.GetHashCode();
+			}
+			return obj.ActionPerformed.GetHashCode() ^ obj.ActiveCommandStackId.GetHashCode();
+		}
 	}
 }

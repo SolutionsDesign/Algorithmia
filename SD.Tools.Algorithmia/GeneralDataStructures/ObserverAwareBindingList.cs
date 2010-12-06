@@ -153,7 +153,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			base.RemoveItem(index);
 		}
 
-        
+		
 		/// <summary>
 		/// Unbinds the eventhandler from item.ElementRemoved if item implements INotifyElementRemoved
 		/// </summary>

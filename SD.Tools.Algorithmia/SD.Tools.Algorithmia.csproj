@@ -96,6 +96,8 @@
     <Compile Include="ConstantsEnums.cs" />
     <Compile Include="GeneralDataStructures\ChangeAwareKeyedCommandifiedList.cs" />
     <Compile Include="GeneralDataStructures\CommandifiedMember.cs" />
+    <Compile Include="GeneralDataStructures\EqualityComparers\CommandQueueActionPerformedEventArgsEqualityComparer.cs" />
+    <Compile Include="GeneralDataStructures\EqualityComparers\ElementChangedEventArgsEqualityComparer.cs" />
     <Compile Include="GeneralDataStructures\EventArguments\ContainerEventArgs.cs" />
     <Compile Include="GeneralDataStructures\EventArguments\CancelableListModificationEventArgs.cs" />
     <Compile Include="GeneralDataStructures\EventArguments\CollectionElementRemovedEventArgs.cs" />
@@ -105,6 +107,7 @@
     <Compile Include="GeneralDataStructures\EventArguments\MemberChangedEventArgs.cs" />
     <Compile Include="GeneralDataStructures\EventArguments\ElementChangedEventArgs.cs" />
     <Compile Include="GeneralDataStructures\EventArguments\ElementInListChangedEventArgs.cs" />
+    <Compile Include="GeneralDataStructures\EventThrottler.cs" />
     <Compile Include="GeneralDataStructures\ExtensionMethods.cs" />
     <Compile Include="GeneralDataStructures\Grouping.cs" />
     <Compile Include="GeneralDataStructures\KeyedCommandifiedList.cs" />

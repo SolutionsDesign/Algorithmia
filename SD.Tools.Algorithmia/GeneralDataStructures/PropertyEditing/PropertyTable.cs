@@ -84,7 +84,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 		}
 
 		#region Class Property Declarations
-        /// <summary>
+		/// <summary>
 		/// Gets or sets the value of the property with the specified name.
 		/// <p>In C#, this property is the indexer of the PropertyTable class.</p>
 		/// </summary>
