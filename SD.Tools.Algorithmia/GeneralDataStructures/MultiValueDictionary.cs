@@ -54,12 +54,27 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	[Serializable]
 	public class MultiValueDictionary<TKey, TValue> : Dictionary<TKey, HashSet<TValue>>
 	{
+		#region Class Member Declarations
+		private IEqualityComparer<TValue> _valueComparer;
+		#endregion
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MultiValueDictionary&lt;TKey, TValue&gt;"/> class.
 		/// </summary>
 		public MultiValueDictionary()
-			: base()
+			: this(null)
 		{
+		}
+
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="MultiValueDictionary&lt;TKey, TValue&gt;"/> class.
+		/// </summary>
+		/// <param name="valueComparer">The IEqualityComparer&lt;TValue&gt; which is used for the HashSet objects created for each TKey instance. 
+		/// Can be null, in which case the default EqualityComparer is used.</param>
+		public MultiValueDictionary(IEqualityComparer<TValue> valueComparer) : base()
+		{
+			_valueComparer = valueComparer;
 		}
 
 
@@ -75,7 +90,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			HashSet<TValue> container;
 			if(!this.TryGetValue(key, out container))
 			{
-				container = new HashSet<TValue>();
+				container = new HashSet<TValue>(_valueComparer);
 				this.Add(key, container);
 			}
 			container.Add(value);
@@ -145,6 +160,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// Merges the specified multivaluedictionary into this instance.
 		/// </summary>
 		/// <param name="toMergeWith">To merge with.</param>
+		/// <remarks>If this instance has an EqualityComparer set for the values, it is used when merging toMergeWith</remarks>
 		public void Merge(MultiValueDictionary<TKey, TValue> toMergeWith)
 		{ 
 			if(toMergeWith==null)
@@ -177,7 +193,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			HashSet<TValue> toReturn;
 			if(!this.TryGetValue(key, out toReturn) && returnEmptySet)
 			{
-				toReturn = new HashSet<TValue>();
+				toReturn = new HashSet<TValue>(_valueComparer);
 			}
 			return toReturn;
 		}
