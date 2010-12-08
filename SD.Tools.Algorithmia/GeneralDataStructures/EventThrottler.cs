@@ -44,7 +44,7 @@ using SD.Tools.BCLExtensions.SystemRelated;
 using System.ComponentModel;
 using System.Timers;
 
-namespace SD.LLBLGen.Pro.ApplicationCore.GeneralDataStructures
+namespace SD.Tools.Algorithmia.GeneralDataStructures
 {
 	/// <summary>
 	/// Class which throttles an event pipeline. It offers unique event raising during a fixed interval.

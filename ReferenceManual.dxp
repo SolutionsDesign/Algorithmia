@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <DocumentXProject Version="5.0" CompileHelpFile="True" RefreshIfExists="False" DocumentSourceCode="False" AlwaysCopySupportFiles="True" PropertyCommentsFrom="0" RelationshipsFrom="2" DefaultRelsOnlyForCollections="True" ProjectGroupName="Algorithmia Reference Documentation" HTMLHelpVersion="1" HHNamespace="SD.Tools.Algorithmia" HHIdentifier="" H2PlugIn="False" H2PlugInNamespace="" LocaleID="0" ExcludeFiltersRegExp="False" OutputFileExtension=".html">
-    <OutputLocation OutputFolder="Help\" HelpFileName="SD.Tools.Algorithmia.chm" UseFilenameAliases="True" StripMetadata="False" ClearBeforeBuild="True" RemoveOutputFilesAfterCompile="True"/>
+    <OutputLocation OutputFolder="C:\Temp\DocumentXTemp\" HelpFileName="SD.Tools.Algorithmia.chm" UseFilenameAliases="True" StripMetadata="False" ClearBeforeBuild="True" RemoveOutputFilesAfterCompile="True"/>
     <HTMLHelpOptions UseALinkMenus="False"/>
     <OtherOptions CreateContextLinks="True" WriteHelpDescriptions="True" CopySourceCode="False" CreateWinHelpStub="False" Language="English"/>
     <IncludeFilters IncludePrivate="False" IncludeFriend="False" IncludeProtected="True" IdentifyVisibility="False">
