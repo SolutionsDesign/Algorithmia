@@ -120,8 +120,8 @@ namespace SD.Tools.Algorithmia.Tests
 			Assert.AreEqual(0, heap2.Count);
 
 			// check if they are inserted correctly
-			HeapElement current = heap1.ExtractRoot();
 			HeapElement previous = heap1.ExtractRoot();
+			HeapElement current = heap1.ExtractRoot();
 			while(current != null)
 			{
 				Assert.IsTrue(previous.Priority >= current.Priority);
@@ -153,8 +153,8 @@ namespace SD.Tools.Algorithmia.Tests
 			Assert.AreEqual(0, heap2.Count);
 
 			// check if they are inserted correctly
-			HeapElement current = heap1.ExtractRoot();
 			HeapElement previous = heap1.ExtractRoot();
+			HeapElement current = heap1.ExtractRoot();
 			while(current != null)
 			{
 				Assert.IsTrue(previous.Priority <= current.Priority);
@@ -256,8 +256,8 @@ namespace SD.Tools.Algorithmia.Tests
 			Assert.AreEqual(0, heap2.Count);
 
 			// check if they are inserted correctly
-			HeapElement current = heap1.ExtractRoot();
 			HeapElement previous = heap1.ExtractRoot();
+			HeapElement current = heap1.ExtractRoot();
 			while(current != null)
 			{
 				Assert.IsTrue(previous.Priority >= current.Priority);
@@ -289,8 +289,8 @@ namespace SD.Tools.Algorithmia.Tests
 			Assert.AreEqual(0, heap2.Count);
 
 			// check if they are inserted correctly
-			HeapElement current = heap1.ExtractRoot();
 			HeapElement previous = heap1.ExtractRoot();
+			HeapElement current = heap1.ExtractRoot();
 			while(current != null)
 			{
 				Assert.IsTrue(previous.Priority <= current.Priority);
