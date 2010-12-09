@@ -366,7 +366,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="changeType">Type of the change.</param>
 		/// <param name="oldIndex">The old index.</param>
 		/// <param name="newIndex">The new index.</param>
-		protected void NotifyChange(ListChangedType changeType, int oldIndex, int newIndex)
+		protected virtual void NotifyChange(ListChangedType changeType, int oldIndex, int newIndex)
 		{
 			if(!this.SuppressEvents)
 			{
