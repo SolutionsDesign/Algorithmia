@@ -40,6 +40,7 @@ using System.Linq;
 using System.Text;
 using SD.Tools.Algorithmia.UtilityClasses;
 using System.Collections;
+using System.Runtime.Serialization;
 
 namespace SD.Tools.Algorithmia.GeneralDataStructures
 {
@@ -75,6 +76,36 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		public MultiValueDictionary(IEqualityComparer<TValue> valueComparer) : base()
 		{
 			_valueComparer = valueComparer;
+		}
+
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="MultiValueDictionary&lt;TKey, TValue&gt;"/> class.
+		/// </summary>
+		/// <param name="info">The info.</param>
+		/// <param name="context">The context.</param>
+		protected MultiValueDictionary(SerializationInfo info, StreamingContext context) : base(info, context)
+		{
+			try
+			{
+				_valueComparer = info.GetValue("_valueComparer", typeof(IEqualityComparer<TValue>)) as IEqualityComparer<TValue>;
+			}
+			catch
+			{
+				// ignore. Versioning issue -> data doesn't contain the comparer. 
+			}
+		}
+
+
+		/// <summary>
+		/// Gets the object data.
+		/// </summary>
+		/// <param name="info">The info.</param>
+		/// <param name="context">The context.</param>
+		public override void GetObjectData(SerializationInfo info, StreamingContext context)
+		{
+			base.GetObjectData(info, context);
+			info.AddValue("_valueComparer", _valueComparer);
 		}
 
 
