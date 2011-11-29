@@ -177,7 +177,8 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 		PropertyDescriptor ICustomTypeDescriptor.GetDefaultProperty()
 		{
 			PropertySpecification propertySpec = this.PropertySpecifications.FirstOrDefault(p => p.Name == this.DefaultProperty);
-			return propertySpec == null ? null : new PropertySpecificationDescriptor(propertySpec, this, null);
+			return propertySpec == null ? null : new PropertySpecificationDescriptor(propertySpec, this, 
+				new Attribute[] { new MergablePropertyAttribute(true)});
 		}
 
 		/// <summary>

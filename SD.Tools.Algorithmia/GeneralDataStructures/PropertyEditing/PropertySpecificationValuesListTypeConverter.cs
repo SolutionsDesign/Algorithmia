@@ -98,7 +98,27 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 			PropertySpecificationDescriptor specificationDescriptor = context.PropertyDescriptor as PropertySpecificationDescriptor;
 			if(specificationDescriptor==null)
 			{
-				return base.GetStandardValues(context);
+				// check if the property descriptor is a multi-property descriptor, which is created by various property grids when multiple objects are
+				// merged and displayed simultaneously.
+				var itemProperty = context.PropertyDescriptor.GetType().GetProperty("Item");
+				if(itemProperty == null)
+				{
+					return base.GetStandardValues(context);
+				}
+				try
+				{
+					specificationDescriptor = itemProperty.GetValue(context.PropertyDescriptor, new object[] { 0 }) as PropertySpecificationDescriptor;
+					if(specificationDescriptor == null)
+					{
+						// give up
+						return base.GetStandardValues(context);
+					}
+				}
+				catch
+				{
+					// no descriptor at index 0
+					return base.GetStandardValues(context);
+				}
 			}
 			PropertySpecification specification = specificationDescriptor.Specification;
 			if((specification==null) || (specification.ValueList==null) || (specification.ValueList.Count<=0))
