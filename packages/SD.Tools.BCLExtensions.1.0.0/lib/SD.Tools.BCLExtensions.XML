@@ -1,0 +1,267 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SD.Tools.BCLExtensions</name>
+    </assembly>
+    <members>
+        <member name="T:SD.Tools.BCLExtensions.SystemRelated.TypeExtensionMethods">
+            <summary>
+            Class for Type related extension methods.
+            </summary>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.SystemRelated.TypeExtensionMethods.IsNullableValueType(System.Type)">
+            <summary>
+            Determines whether the type this method is called on is a nullable type of type Nullable(Of T)
+            </summary>
+            <param name="toCheck">The type to check.</param>
+            <returns>true if toCheck is a Nullable(Of T) type, otherwise false</returns>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.SystemRelated.TypeExtensionMethods.GetFullTypeName(System.Type)">
+            <summary>
+            Gets the full type name, of the format: Type.Fullname, assembly name. 
+            If the assembly is signed, the full assembly name is added, otherwise just the assembly name, not the version, public key token or culture.
+            </summary>
+            <param name="type">The type of which the full name should be obtained.</param>
+            <returns>full type name. If the type is a .NET system type (e.g. is located in mscorlib or namespace starts with Microsoft. or System.) the 
+            FullTypeName is equal to the FullName of the type.</returns>
+            <remarks>Use this method if you need to store the type's full name in a string for re-instantiation later on with Activator.CreateInstance.</remarks>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.SystemRelated.TypeExtensionMethods.IsNetSystemType(System.Type)">
+            <summary>
+            Determines whether the type specified is a system type of .NET. System types are types in mscorlib, assemblies which start with 'Microsoft.', 'System.'
+            or the System assembly itself. 
+            </summary>
+            <param name="type">The type.</param>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.SystemRelated.TypeExtensionMethods.GetDefaultValue(System.Type,System.Boolean)">
+            <summary>
+            Gets the default value for the type, e.g. 0 for int, empty guid for guid.
+            </summary>
+            <param name="typeToCreateValueFor">The type to create value for.</param>
+            <param name="safeDefaults">if set to true, the routine will return string.Empty for string and empty byte array for byte[], otherwise null</param>
+            <returns>
+            the default value for the type. It returns string.Empty for string, empty byte array for a byte array,
+            if safeDefaults is set to true
+            </returns>
+        </member>
+        <member name="T:SD.Tools.BCLExtensions.DataRelated.DbConnectionExtensionMethods">
+            <summary>
+            Class for DbConnection related extension methods
+            </summary>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.DataRelated.DbConnectionExtensionMethods.SafeClose(System.Data.Common.DbConnection,System.Boolean)">
+            <summary>
+            A safe close routine for a database connection, which can also dispose the connection, if required.
+            </summary>
+            <param name="toClose">the connection to close</param>
+            <param name="dispose">if set to true, it will also dispose the connection.</param>
+        </member>
+        <member name="T:SD.Tools.BCLExtensions.CollectionsRelated.DictionaryExtensionMethods">
+            <summary>
+            Class for Dictionary related extension methods.
+            </summary>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.CollectionsRelated.DictionaryExtensionMethods.AddRange``2(System.Collections.Generic.Dictionary{``0,``1},System.Func{``1,``0},System.Collections.Generic.IEnumerable{``1})">
+            <summary>
+            Adds the range specified to the dictionary specified, using the key producer func to produce the key values.
+            If the key already exists, the key's value is overwritten with the value to add.
+            </summary>
+            <typeparam name="TKey">The type of the key.</typeparam>
+            <typeparam name="TValue">The type of the value.</typeparam>
+            <param name="container">The container.</param>
+            <param name="keyProducerFunc">The key producer func.</param>
+            <param name="rangeToAdd">The range to add.</param>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.CollectionsRelated.DictionaryExtensionMethods.GetValue``2(System.Collections.Generic.Dictionary{``0,``1},``0)">
+            <summary>
+            Gets the value for the key from the dictionary specified, or null / default(TValue) if key not found or the key is null.
+            </summary>
+            <typeparam name="TKey">The type of the key.</typeparam>
+            <typeparam name="TValue">The type of the value.</typeparam>
+            <param name="dictionary">The dictionary.</param>
+            <param name="key">The key.</param>
+            <returns>the value for the key from the dictionary specified, or null / default(TValue) if key not found or the key is null.</returns>
+        </member>
+        <member name="T:SD.Tools.BCLExtensions.CollectionsRelated.IEnumerableExtensionMethods">
+            <summary>
+            Class for IEnumberable and IEnumerable(Of T) related extension methods.
+            </summary>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.CollectionsRelated.IEnumerableExtensionMethods.ToReadOnlyCollection``1(System.Collections.IEnumerable)">
+            <summary>
+            Converts the enumerable to a ReadOnlyCollection.
+            </summary>
+            <param name="source">the enumerable to convert</param>
+            <returns>A ReadOnlyCollection with the elements of the passed in enumerable, or an empty ReadOnlyCollection if source is null or empty</returns>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.CollectionsRelated.IEnumerableExtensionMethods.ToHashSet``1(System.Collections.Generic.IEnumerable{``0})">
+            <summary>
+            Creates a new hashset and adds the source to it. 
+            </summary>
+            <typeparam name="TDestination">The type of the destination.</typeparam>
+            <param name="source">The source.</param>
+            <returns>Hashset with all the unique values in source</returns>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.CollectionsRelated.IEnumerableExtensionMethods.SetEqual``1(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``0})">
+            <summary>
+            Checks whether the enumerable to compare with is equal to the source enumerable, element wise. If elements are in a different order, the
+            method will still return true. This is different from SequenceEqual which does take order into account
+            </summary>
+            <typeparam name="T">type of the element in the sequences to compare</typeparam>
+            <param name="source">The source.</param>
+            <param name="toCompareWith">the sequence to compare with.</param>
+            <returns>true if the source and the sequence to compare with have the same elements, regardless of ordering</returns>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.CollectionsRelated.IEnumerableExtensionMethods.SetEqual``1(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEqualityComparer{``0})">
+            <summary>
+            Checks whether the enumerable to compare with is equal to the source enumerable, element wise. If elements are in a different order, the
+            method will still return true. This is different from SequenceEqual which does take order into account
+            </summary>
+            <typeparam name="T">type of the element in the sequences to compare</typeparam>
+            <param name="source">The source.</param>
+            <param name="toCompareWith">the sequence to compare with.</param>
+            <param name="comparer">The comparer.</param>
+            <returns>
+            true if the source and the sequence to compare with have the same elements, regardless of ordering
+            </returns>
+        </member>
+        <member name="T:SD.Tools.BCLExtensions.DataRelated.DataSetExtensionMethods">
+            <summary>
+            Class for DataSet related extension methods.
+            </summary>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.DataRelated.DataSetExtensionMethods.Value``1(System.Data.DataRow,System.String)">
+            <summary>
+            Gets the value of the column with the column name specified from the DataRow in the type specified. If the value is DBNull.Value, null / Nothing
+            will be returned, if TValue is a nullable value type or a reference type, the default value for TValue will be returned otherwise. 
+            </summary>
+            <typeparam name="TValue">The type of the value.</typeparam>
+            <param name="row">The row.</param>
+            <param name="columnName">Name of the column.</param>
+            <returns>the value of the column specified, or the default value for the type specified if not found.</returns>
+            <remarks>Use this method instead of Field(Of TValue) if you don't want to receive cast exceptions</remarks>
+        </member>
+        <member name="T:SD.Tools.BCLExtensions.SystemRelated.EventExtensionMethods">
+            <summary>
+            Class for event related extension methods
+            </summary>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.SystemRelated.EventExtensionMethods.RaiseEvent``1(System.EventHandler{``0},System.Object,``0)">
+            <summary>
+            Raises the event which is represented by the handler specified. 
+            </summary>
+            <typeparam name="T">type of the event args</typeparam>
+            <param name="handler">The handler of the event to raise.</param>
+            <param name="sender">The sender of the event.</param>
+            <param name="arguments">The arguments to pass to the handler.</param>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.SystemRelated.EventExtensionMethods.RaiseEvent(System.ComponentModel.PropertyChangedEventHandler,System.Object,System.String)">
+            <summary>
+            Raises the PropertyChanged event, if the handler isn't null, otherwise a no-op
+            </summary>
+            <param name="handler">The handler.</param>
+            <param name="sender">The sender.</param>
+            <param name="propertyName">Name of the property.</param>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.SystemRelated.EventExtensionMethods.RaiseEvent(System.EventHandler,System.Object)">
+            <summary>
+            Raises the event on the handler passed in with default empty arguments
+            </summary>
+            <param name="handler">The handler.</param>
+            <param name="sender">The sender.</param>
+        </member>
+        <member name="T:SD.Tools.BCLExtensions.SystemRelated.StringExtensionMethods">
+            <summary>
+            Class for String related extension methods
+            </summary>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.SystemRelated.StringExtensionMethods.AsFormatted(System.String,System.Object[])">
+            <summary>
+            Formats the specified formatted string. Usable on constant strings, without falling back to String.Format()
+            </summary>
+            <param name="formattedString">The formatted string.</param>
+            <param name="arguments">The arguments.</param>
+            <returns></returns>
+        </member>
+        <member name="T:SD.Tools.BCLExtensions.HelperClasses.ArgumentVerifier">
+            <summary>
+            Class which contains argument verification logic and which can throw exceptions if necessary. This code makes it easier to verify input arguments. 
+            </summary>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.HelperClasses.ArgumentVerifier.CantBeNull(System.Object,System.String)">
+            <summary>
+            Checks the argument passed in. if it's null, it throws an ArgumentNullException
+            </summary>
+            <param name="argument">The argument.</param>
+            <param name="name">The name.</param>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.HelperClasses.ArgumentVerifier.ShouldBeTrue``1(System.Func{``0,System.Boolean},``0,System.String)">
+            <summary>
+            Checks if the argument returns true with the func passed in. If not, it throws an ArgumentException with the error message specified. 
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="checkFunc">The check func.</param>
+            <param name="argument">The argument.</param>
+            <param name="formattedError">The formatted error message.</param>
+        </member>
+        <member name="T:SD.Tools.BCLExtensions.CollectionsRelated.IListExtensionMethods">
+            <summary>
+            Class for IList related extension methods.
+            </summary>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.CollectionsRelated.IListExtensionMethods.IsNullOrEmpty``1(System.Collections.Generic.IList{``0})">
+            <summary>
+            Determines whether the passed in list is null or empty.
+            </summary>
+            <typeparam name="T">the type of the elements in the list to check</typeparam>
+            <param name="toCheck">the list to check.</param>
+            <returns>true if the passed in list is null or empty, false otherwise</returns>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.CollectionsRelated.IListExtensionMethods.SwapValues``1(System.Collections.Generic.IList{``0},System.Int32,System.Int32)">
+            <summary>
+            Swaps the values at indexA and indexB.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="source">The source.</param>
+            <param name="indexA">The index for A.</param>
+            <param name="indexB">The index for B.</param>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.CollectionsRelated.IListExtensionMethods.AddRange``1(System.Collections.Generic.IList{``0},System.Collections.Generic.IEnumerable{``0})">
+            <summary>
+            Adds the range specified to an IList(Of T) typed container.
+            </summary>
+            <typeparam name="T">type of the element in the list</typeparam>
+            <param name="container">The container.</param>
+            <param name="rangeToAdd">The range to add.</param>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.CollectionsRelated.IListExtensionMethods.BinarySearch``1(System.Collections.IList,``0,System.Collections.Generic.IComparer{``0})">
+            <summary>
+            Searches for the element specified in the sorted list specified using binary search http://en.wikipedia.org/wiki/Binary_search. The algorithm
+            is re-implemented here to be able to search in any sorted IList implementing data structure (.NET's BCL only implements BinarySearch on arrays and
+            List(Of T). If no IComparer(Of T) is available, try using Algorithmia's ComparisonBasedComparer, 
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="sortedList">The sorted list.</param>
+            <param name="element">The element.</param>
+            <param name="comparer">The comparer.</param>
+            <returns>The index of the element searched or the bitwise complement of the index of the next element that is larger than 
+            <i>element</i> or if there is no larger element the bitwise complement of Count. Bitwise complements have their original bits negated. Use
+            the '~' operator in C# to get the real value. Bitwise complements are used to avoid returning a value which is in the range of valid indices so 
+            callers can't check whether the value returned is an index or if the element wasn't found. If the value returned is negative, the bitwise complement
+            can be used as index to insert the element in the sorted list to keep the list sorted</returns>
+            <remarks>Assumes that sortedList is sorted ascending. If you pass in a descending sorted list, be sure the comparer is adjusted as well.</remarks>
+        </member>
+        <member name="T:SD.Tools.BCLExtensions.CollectionsRelated.HashSetExtensionMethods">
+            <summary>
+            Class for HashSet related extension methods.
+            </summary>
+        </member>
+        <member name="M:SD.Tools.BCLExtensions.CollectionsRelated.HashSetExtensionMethods.AddRange``1(System.Collections.Generic.HashSet{``0},System.Collections.Generic.IEnumerable{``0})">
+            <summary>
+            Adds the range defined by source to the destination.
+            </summary>
+            <param name="destination">The destination.</param>
+            <param name="source">The source.</param>
+        </member>
+    </members>
+</doc>
