@@ -148,7 +148,7 @@ namespace SD.Tools.Algorithmia.Commands
 			{
 				try
 				{
-					ThreadEnter();
+					Monitor.Enter(_semaphore);
 					if(!_commandQueueStackPerID.TryGetValue(stackId, out _activeCommandQueueStack))
 					{
 						// not yet known, create a new one
@@ -162,7 +162,7 @@ namespace SD.Tools.Algorithmia.Commands
 				}
 				finally
 				{
-					ThreadExit();
+					Monitor.Exit(_semaphore);
 				}
 			}
 		}
