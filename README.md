@@ -14,4 +14,4 @@ Although Algorithmia is stable since May 2010, we still update it with new algor
 Algorithmia is also [available on Nuget](https://nuget.org/packages/SD.Tools.Algorithmia/). When you obtained Algorithmia via Nuget, it's recommended you check out the unit tests in this source repository and/or look at the SD.Tools.Algorithmia.chm reference manual included in the source repository, which is generated from the sourcecode.
 
 ### License
-Algorithmia is &copy; 2010-2013 [Solutions Design bv](http://www.sd.nl/) and is released under the BSD2 license.
+Algorithmia is &copy; 2010-2013 [Solutions Design bv](http://www.sd.nl/) and is released under the [BSD2 license](https://github.com/SolutionsDesign/Algorithmia/blob/master/LICENSE.txt).
