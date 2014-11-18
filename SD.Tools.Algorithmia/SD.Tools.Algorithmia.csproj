@@ -68,6 +68,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SD.Tools.BCLExtensions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=a3f87088dcb994e1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\SD.Tools.BCLExtensions.1.0.0\lib\SD.Tools.BCLExtensions.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -94,6 +95,7 @@
     <Compile Include="Commands\UndoablePeriodCommand.cs" />
     <Compile Include="Commands\DoDuringUndoException.cs" />
     <Compile Include="ConstantsEnums.cs" />
+    <Compile Include="GeneralDataStructures\CallLimiter.cs" />
     <Compile Include="GeneralDataStructures\ChangeAwareKeyedCommandifiedList.cs" />
     <Compile Include="GeneralDataStructures\CommandifiedMember.cs" />
     <Compile Include="GeneralDataStructures\EqualityComparers\CommandQueueActionPerformedEventArgsEqualityComparer.cs" />

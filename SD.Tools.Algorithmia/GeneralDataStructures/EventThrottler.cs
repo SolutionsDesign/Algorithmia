@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2010 Solutions Design. All rights reserved.
-// http://www.sd.nl
+// Algorithmia is (c) 2014 Solutions Design. All rights reserved.
+// https://github.com/SolutionsDesign/Algorithmia
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2010 Solutions Design. All rights reserved.
+// Copyright (c) 2014 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -68,7 +68,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		private Timer _timer;
 		private bool _queueProcessingInProgress;
 		private IEqualityComparer<TEventArgs> _eventArgsComparer;
-		private ISynchronizeInvoke _synchronizingObject;
 		#endregion
 
 		#region Events
@@ -127,11 +126,10 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			{
 				intervalToUse = 500.0;
 			}
-			_synchronizingObject = synchronizingObject;
 			_taskQueue = new Queue<Pair<TElement, TEventArgs>>();
 			_queueProcessingInProgress = false;
 			_timer = new Timer(intervalToUse);
-			_timer.SynchronizingObject = _synchronizingObject;
+			_timer.SynchronizingObject = synchronizingObject;
 			_timer.AutoReset = false;
 			_timer.Elapsed += new ElapsedEventHandler(_timer_Elapsed);
 			_eventArgsComparer = eventArgsComparer;

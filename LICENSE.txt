@@ -1,4 +1,4 @@
-Algorithmia is (c) 2010-2013 Solutions Design. All rights reserved.
+Algorithmia is (c) 2010-2014 Solutions Design. All rights reserved.
 http://www.sd.nl
 
 COPYRIGHTS:
