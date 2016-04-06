@@ -65,6 +65,7 @@
     <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>bin\ForShipping\SD.Tools.Algorithmia.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SD.Tools.BCLExtensions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=a3f87088dcb994e1, processorArchitecture=MSIL">
