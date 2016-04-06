@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration(".NET 3.5+")]
 [assembly: AssemblyCompany("Solutions Design bv")]
 [assembly: AssemblyProduct("SD.Tools.Algorithmia")]
-[assembly: AssemblyCopyright("Copyright © Solutions Design 2007-2010")]
+[assembly: AssemblyCopyright("Copyright © Solutions Design 2007-2016")]
 [assembly: AssemblyTrademark("Algorithmia is a trademark of Solutions Design")]
 [assembly: AssemblyCulture("")]
 
@@ -20,4 +20,4 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 [assembly: AssemblyVersion("1.2.0.0")]
-[assembly: AssemblyFileVersion("1.2.14.1118")]
+[assembly: AssemblyFileVersion("1.2.16.0406")]
