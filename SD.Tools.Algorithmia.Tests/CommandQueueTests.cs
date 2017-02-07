@@ -384,6 +384,175 @@ namespace SD.Tools.Algorithmia.Tests
 		}
 
 
+
+
+		[Test]
+		public void CommandifiedListClear_Sync_Test()
+		{
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			CommandifiedList<string> toTest = new CommandifiedList<string>(isSynchronized:true) { "Foo", "Bar", "Blah" };
+			Assert.AreEqual(3, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+			Assert.AreEqual("Blah", toTest[2]);
+
+			// perform a clear operation. We'll undo this later on.
+			toTest.Clear();
+			Assert.AreEqual(0, toTest.Count);
+
+			// undo operation.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(3, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+			Assert.AreEqual("Blah", toTest[2]);
+
+			CQManager.ActivateCommandQueueStack(Guid.Empty);
+		}
+
+
+		[Test]
+		public void CommandifiedListInsert_Sync_Test()
+		{
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			CommandifiedList<string> toTest = new CommandifiedList<string>(isSynchronized: true) { "Foo", "Bar" };
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			// perform an insert operation, this can be triggered by both 'Add' and 'Insert'. We'll undo this later on.
+			toTest.Add("Blah");
+			Assert.AreEqual(3, toTest.Count);
+			Assert.AreEqual("Blah", toTest[2]);
+
+			// undo operation.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			toTest.Insert(1, "Blah");
+			Assert.AreEqual(3, toTest.Count);
+			Assert.AreEqual("Blah", toTest[1]);
+			Assert.AreEqual("Bar", toTest[2]);
+
+			// undo operation.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			CQManager.ActivateCommandQueueStack(Guid.Empty);
+		}
+
+
+		[Test]
+		public void CommandifiedListRemove_Sync_Test()
+		{
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			CommandifiedList<string> toTest = new CommandifiedList<string>(isSynchronized: true) { "Foo", "Bar" };
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			// perform a remove operation. We'll undo this later on.
+			toTest.Remove("Foo");
+			Assert.AreEqual(1, toTest.Count);
+			Assert.AreEqual("Bar", toTest[0]);
+
+			// undo operation.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			toTest.RemoveAt(1);
+			Assert.AreEqual(1, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+
+			// undo operation.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			CQManager.ActivateCommandQueueStack(Guid.Empty);
+		}
+
+
+		[Test]
+		public void CommandifiedListSetItem_Sync_Test()
+		{
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			CommandifiedList<string> toTest = new CommandifiedList<string>(isSynchronized: true) { "Foo", "Bar" };
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			// perform a set index operation. We'll undo this later on.
+			toTest[0] = "Blah";
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Blah", toTest[0]);
+
+			// undo operation.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			// use a library extension method to swap two items. We want to roll back the swap call completely, so the SwapValues call is seen
+			// as an atomic action. We therefore have to create a command to make it undoable as an atomic action. It doesn't have an undo action,
+			// it relies on the actions it executes by itself to undo.
+			CQManager.EnqueueAndRunCommand(new Command<string>(() => toTest.SwapValues(0, 1)));
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Bar", toTest[0]);
+			Assert.AreEqual("Foo", toTest[1]);
+
+			// undo operation. This is undoing the call to SwapValues, which by undoing that, will undo all the actions SwapValues took, i.e. setting 2 items at
+			// 2 indexes.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			CQManager.ActivateCommandQueueStack(Guid.Empty);
+		}
+
+
+		[Test]
+		public void CommandifiedListSortWithUndo_Sync_Test()
+		{
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			CommandifiedList<string> toTest = new CommandifiedList<string>(isSynchronized: true) { "aaa", "aab", "aba", "baa" };
+
+			// use command to sort the list, so it's undoable.
+			CQManager.EnqueueAndRunCommand(new Command<string>(() => toTest.Sort(SortAlgorithm.ShellSort, SortDirection.Descending)));
+			Assert.AreEqual("baa", toTest[0]);
+			Assert.AreEqual("aba", toTest[1]);
+			Assert.AreEqual("aab", toTest[2]);
+			Assert.AreEqual("aaa", toTest[3]);
+
+			// undo the sort
+			CQManager.UndoLastCommand();
+			Assert.AreEqual("aaa", toTest[0]);
+			Assert.AreEqual("aab", toTest[1]);
+			Assert.AreEqual("aba", toTest[2]);
+			Assert.AreEqual("baa", toTest[3]);
+
+			CQManager.ActivateCommandQueueStack(Guid.Empty);
+		}
+
+
 		[Test]
 		public void CommandifiedGraphAddRemoveVertexWithUndoTest()
 		{

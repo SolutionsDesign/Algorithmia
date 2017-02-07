@@ -245,7 +245,6 @@ namespace SD.Tools.Algorithmia.Tests
 
 
 		[Test]
-		[ExpectedException(typeof(InvalidOperationException))]
 		public void TopologicalSorterOnDirectedGraphWithCycle()
 		{
 			DirectedGraph<string, DirectedEdge<string>> graph = new DirectedGraph<string, DirectedEdge<string>>();
@@ -259,7 +258,7 @@ namespace SD.Tools.Algorithmia.Tests
 			graph.Add(new DirectedEdge<string>("G", "F"));	// G->F
 
 			TopologicalSorter<string, DirectedEdge<string>> sorter = new TopologicalSorter<string, DirectedEdge<string>>(graph);
-			sorter.Sort();
+			Assert.That(()=>sorter.Sort(), Throws.TypeOf<InvalidOperationException>());
 		}
 
 

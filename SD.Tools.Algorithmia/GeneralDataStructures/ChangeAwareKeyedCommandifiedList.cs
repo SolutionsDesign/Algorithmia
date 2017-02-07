@@ -75,7 +75,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		protected override void OnAddingItem(T item)
 		{
 			base.OnAddingItem(item);
-			item.DetailedElementChanged += new EventHandler<ElementChangedEventArgs<TChangeType, T>>(item_DetailedElementChanged);
+			item.DetailedElementChanged += item_DetailedElementChanged;
 		}
 
 
@@ -86,7 +86,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		protected override void OnRemovingItemComplete(T item)
 		{
 			base.OnRemovingItemComplete(item);
-			item.DetailedElementChanged -= new EventHandler<ElementChangedEventArgs<TChangeType, T>>(item_DetailedElementChanged);
+			item.DetailedElementChanged -= item_DetailedElementChanged;
 		}
 
 

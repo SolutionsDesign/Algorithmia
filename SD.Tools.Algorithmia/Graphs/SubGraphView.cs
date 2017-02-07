@@ -318,10 +318,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(!_eventsBound)
 			{
-				this.MainGraph.EdgeAdded += new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeAdded);
-				this.MainGraph.EdgeRemoved += new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeRemoved);
-				this.MainGraph.VertexAdded += new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexAdded);
-				this.MainGraph.VertexRemoved += new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexRemoved);
+				this.MainGraph.EdgeAdded += MainGraph_EdgeAdded;
+				this.MainGraph.EdgeRemoved += MainGraph_EdgeRemoved;
+				this.MainGraph.VertexAdded += MainGraph_VertexAdded;
+				this.MainGraph.VertexRemoved += MainGraph_VertexRemoved;
 				_eventsBound = true;
 			}
 		}
@@ -336,10 +336,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(_eventsBound)
 			{
-				this.MainGraph.EdgeAdded -= new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeAdded);
-				this.MainGraph.EdgeRemoved -= new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeRemoved);
-				this.MainGraph.VertexAdded -= new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexAdded);
-				this.MainGraph.VertexRemoved -= new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexRemoved);
+				this.MainGraph.EdgeAdded -= MainGraph_EdgeAdded;
+				this.MainGraph.EdgeRemoved -= MainGraph_EdgeRemoved;
+				this.MainGraph.VertexAdded -= MainGraph_VertexAdded;
+				this.MainGraph.VertexRemoved -= MainGraph_VertexRemoved;
 				_eventsBound = false;
 			}
 		}
@@ -463,7 +463,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			INotifyPropertyChanged itemAsINotifyPropertyChanged = item as INotifyPropertyChanged;
 			if(itemAsINotifyPropertyChanged != null)
 			{
-				itemAsINotifyPropertyChanged.PropertyChanged += new PropertyChangedEventHandler(OnElementPropertyChanged);
+				itemAsINotifyPropertyChanged.PropertyChanged += OnElementPropertyChanged;
 			}
 		}
 
@@ -477,7 +477,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			INotifyPropertyChanged itemAsINotifyPropertyChanged = item as INotifyPropertyChanged;
 			if(itemAsINotifyPropertyChanged != null)
 			{
-				itemAsINotifyPropertyChanged.PropertyChanged -= new PropertyChangedEventHandler(OnElementPropertyChanged);
+				itemAsINotifyPropertyChanged.PropertyChanged -= OnElementPropertyChanged;
 			}
 		}
 
