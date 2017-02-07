@@ -48,6 +48,8 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	/// Class which extends KeyedCommandifiedList so that it picks up detailed changes in elements in this list and propagates them to subscribers in a single event.
 	/// Subscribers therefore don't have to subscribe to all detailed change events of all the elements in the list. 
 	/// </summary>
+	/// <remarks>This class can be a synchronized collection by passing true for isSynchronized in the constructor. To synchronize access to the contents of this class, 
+	/// lock on the SyncRoot object. This class uses the same lock for its internal elements as the base class as these elements are related to the elements of the base class</remarks>
 	public class ChangeAwareKeyedCommandifiedList<T, TKeyValue, TChangeType> : KeyedCommandifiedList<T, TKeyValue>
 		where T : class, IDetailedNotifyElementChanged<TChangeType, T>
 	{
@@ -64,7 +66,19 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="keyValueProducerFunc">The key value producer func.</param>
 		/// <param name="keyPropertyName">Name of the key property which is used to track changes in individual elements.</param>
 		public ChangeAwareKeyedCommandifiedList(Func<T, TKeyValue> keyValueProducerFunc, string keyPropertyName)
-			: base(keyValueProducerFunc, keyPropertyName)
+			: this(keyValueProducerFunc, keyPropertyName, isSynchronized:false)
+		{ }
+
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ChangeAwareKeyedCommandifiedList&lt;T, TKeyValue, TChangeType&gt;" /> class.
+		/// </summary>
+		/// <param name="keyValueProducerFunc">The key value producer func.</param>
+		/// <param name="keyPropertyName">Name of the key property which is used to track changes in individual elements.</param>
+		/// <param name="isSynchronized">if set to <c>true</c> this list is a synchronized collection, using a lock on SyncRoot to synchronize activity in multithreading
+		/// scenarios</param>
+		public ChangeAwareKeyedCommandifiedList(Func<T, TKeyValue> keyValueProducerFunc, string keyPropertyName, bool isSynchronized)
+			: base(keyValueProducerFunc, keyPropertyName, isSynchronized)
 		{
 		}
 

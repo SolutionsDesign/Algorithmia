@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration(".NET 3.5+")]
 [assembly: AssemblyCompany("Solutions Design bv")]
 [assembly: AssemblyProduct("SD.Tools.Algorithmia")]
-[assembly: AssemblyCopyright("Copyright © Solutions Design 2007-2016")]
+[assembly: AssemblyCopyright("Copyright © Solutions Design 2007-2017")]
 [assembly: AssemblyTrademark("Algorithmia is a trademark of Solutions Design")]
 [assembly: AssemblyCulture("")]
 
@@ -19,5 +19,5 @@ using System.Runtime.InteropServices;
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
 
-[assembly: AssemblyVersion("1.2.0.0")]
-[assembly: AssemblyFileVersion("1.2.16.0406")]
+[assembly: AssemblyVersion("1.3.0.0")]
+[assembly: AssemblyFileVersion("1.3.17.0207")]

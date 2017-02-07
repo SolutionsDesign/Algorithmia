@@ -48,6 +48,8 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
 	/// <typeparam name="TKeyValue">The type of the key value.</typeparam>
+	/// <remarks>This class can be a synchronized collection by passing true for isSynchronized in the constructor. To synchronize access to the contents of this class, 
+	/// lock on the SyncRoot object. This class uses the same lock for its internal elements as the base class as these elements are related to the elements of the base class</remarks>
 	public class KeyedCommandifiedList<T, TKeyValue> : CommandifiedList<T>
 		where T : class
 	{
@@ -58,13 +60,25 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		private readonly string _keyPropertyName;
 		#endregion
 
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="KeyedCommandifiedList&lt;T, TKeyValue&gt;"/> class.
 		/// </summary>
 		/// <param name="keyValueProducerFunc">The key value producer func.</param>
 		/// <param name="keyPropertyName">Name of the key property which is used to track changes in individual elements.</param>
-		public KeyedCommandifiedList(Func<T, TKeyValue> keyValueProducerFunc, string keyPropertyName)
-			: base()
+		public KeyedCommandifiedList(Func<T, TKeyValue> keyValueProducerFunc, string keyPropertyName) : this(keyValueProducerFunc, keyPropertyName, isSynchronized:false)
+		{
+		}
+
+		
+		/// <summary>
+		/// Initializes a new instance of the <see cref="KeyedCommandifiedList&lt;T, TKeyValue&gt;"/> class.
+		/// </summary>
+		/// <param name="keyValueProducerFunc">The key value producer func.</param>
+		/// <param name="keyPropertyName">Name of the key property which is used to track changes in individual elements.</param>
+		/// <param name="isSynchronized">if set to <c>true</c> this list is a synchronized collection, using a lock on SyncRoot to synchronize activity in multithreading scenarios</param>
+		public KeyedCommandifiedList(Func<T, TKeyValue> keyValueProducerFunc, string keyPropertyName, bool isSynchronized)
+			: base(isSynchronized)
 		{
 			ArgumentVerifier.CantBeNull(keyValueProducerFunc, "keyValueProducerFunc");
 			ArgumentVerifier.CantBeNull(keyPropertyName, "keyPropertyName");
@@ -82,9 +96,10 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <returns><see langword="true"/> if the specified key is present, false otherwise. </returns>
 		public bool ContainsKey(TKeyValue key)
 		{
-			return _elementPerKeyValue.ContainsKey(key);
+			return PerformSyncedAction(()=>_elementPerKeyValue.ContainsKey(key));
 		}
 		
+
 		/// <summary>
 		/// Finds the instances which have the keyValue specified.
 		/// </summary>
@@ -92,12 +107,15 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <returns>an IEnumerable with all the elements which have the keyvalue specified or an empty enumerable if not found</returns>
 		public IEnumerable<T> FindByKey(TKeyValue keyValue)
 		{
-			HashSet<T> elements;
-			if(!_elementPerKeyValue.TryGetValue(keyValue, out elements))
-			{
-				elements = new HashSet<T>();
-			}
-			return elements.ToList();
+			return PerformSyncedAction(()=>
+									   {
+										   HashSet<T> elements;
+										   if(!_elementPerKeyValue.TryGetValue(keyValue, out elements))
+										   {
+											   elements = new HashSet<T>();
+										   }
+										   return elements.ToList();
+									   });
 		}
 
 
@@ -108,6 +126,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <returns>the first element which matches the keyValue or null if not found.</returns>
 		public T FindFirstByKey(TKeyValue keyValue)
 		{
+			// is safe as the returned enumerable by FindByKey is a copy.
 			return this.FindByKey(keyValue).FirstOrDefault();
 		}
 
@@ -118,8 +137,11 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="item">The item which is about to be added.</param>
 		protected override void OnAddingItem(T item)
 		{
-			base.OnAddingItem(item);
-			IndexElement(item);
+			PerformSyncedAction(()=>
+								{
+									base.OnAddingItem(item);
+									IndexElement(item);
+								});
 		}
 
 
@@ -128,9 +150,12 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		protected override void OnClearing()
 		{
-			base.OnClearing();
-			_elementPerKeyValue.Clear();
-			_keyValuePerElement.Clear();
+			PerformSyncedAction(()=>
+								{
+									base.OnClearing();
+									_elementPerKeyValue.Clear();
+									_keyValuePerElement.Clear();
+								});
 		}
 
 
@@ -140,8 +165,11 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="item">The item which is about to be removed.</param>
 		protected override void OnRemovingItem(T item)
 		{
-			base.OnRemovingItem(item);
-			RemoveIndexOfElement(item);
+			PerformSyncedAction(()=>
+								{
+									base.OnRemovingItem(item);
+									RemoveIndexOfElement(item);
+								});
 		}
 
 
@@ -156,8 +184,11 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			{
 				// re-index
 				T senderAsT = (T)sender;
-				RemoveIndexOfElement(senderAsT);
-				IndexElement(senderAsT);
+				PerformSyncedAction(()=>
+									{
+										RemoveIndexOfElement(senderAsT);
+										IndexElement(senderAsT);
+									});
 			}
 			base.OnElementPropertyChanged(sender, e);
 		}
@@ -169,9 +200,12 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="element">The element.</param>
 		private void RemoveIndexOfElement(T element)
 		{
-			TKeyValue currentKeyValue = _keyValuePerElement.GetValue(element);
-			_keyValuePerElement.Remove(element);
-			_elementPerKeyValue.Remove(currentKeyValue, element);
+			PerformSyncedAction(()=>
+								{
+									TKeyValue currentKeyValue = _keyValuePerElement.GetValue(element);
+									_keyValuePerElement.Remove(element);
+									_elementPerKeyValue.Remove(currentKeyValue, element);
+								});
 		}
 
 
@@ -181,9 +215,12 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="toIndex">To index.</param>
 		private void IndexElement(T toIndex)
 		{
-			TKeyValue keyValue = _keyValueProducerFunc(toIndex);
-			_keyValuePerElement.Add(toIndex, keyValue);
-			_elementPerKeyValue.Add(keyValue, toIndex);
+			PerformSyncedAction(()=>
+								{
+									TKeyValue keyValue = _keyValueProducerFunc(toIndex);
+									_keyValuePerElement.Add(toIndex, keyValue);
+									_elementPerKeyValue.Add(keyValue, toIndex);
+								});
 		}
 	}
 }

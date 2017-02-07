@@ -395,6 +395,53 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 
 
 		/// <summary>
+		/// Performs the specified action, either inside a lock on <see cref="SyncRoot"/> if this list is Synchronized, or normally, if this list isn't synchronized.
+		/// </summary>
+		/// <param name="toPerform">To perform.</param>
+		protected void PerformSyncedAction(Action toPerform)
+		{
+			if(toPerform == null)
+			{
+				return;
+			}
+			if(this.IsSynchronized)
+			{
+				lock(this.SyncRoot)
+				{
+					toPerform();
+				}
+			}
+			else
+			{
+				toPerform();
+			}
+		}
+
+
+		/// <summary>
+		/// Performs the specified action, either inside a lock on <see cref="SyncRoot"/> if this list is Synchronized, or normally, if this list isn't synchronized.
+		/// </summary>
+		/// <typeparam name="T">The type of the element to return</typeparam>
+		/// <param name="toPerform">To perform.</param>
+		/// <returns>the result of toPerform</returns>
+		protected T PerformSyncedAction<T>(Func<T> toPerform)
+		{
+			if(toPerform == null)
+			{
+				return default(T);
+			}
+			if(this.IsSynchronized)
+			{
+				lock(this.SyncRoot)
+				{
+					return toPerform();
+				}
+			}
+			return toPerform();
+		}
+
+
+		/// <summary>
 		/// Notifies observers that an element has been removed.
 		/// </summary>
 		/// <param name="itemRemoved">The item removed.</param>
@@ -582,54 +629,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			OnAddingItemComplete(item);
 			NotifyChange(ListChangedType.ItemChanged, -1, index);
 		}
-
-
-		/// <summary>
-		/// Performs the specified action, either inside a lock on <see cref="SyncRoot"/> if this list is Synchronized, or normally, if this list isn't synchronized.
-		/// </summary>
-		/// <param name="toPerform">To perform.</param>
-		private void PerformSyncedAction(Action toPerform)
-		{
-			if(toPerform == null)
-			{
-				return;
-			}
-			if(this.IsSynchronized)
-			{
-				lock(this.SyncRoot)
-				{
-					toPerform();
-				}
-			}
-			else
-			{
-				toPerform();
-			}
-		}
-
-
-		/// <summary>
-		/// Performs the specified action, either inside a lock on <see cref="SyncRoot"/> if this list is Synchronized, or normally, if this list isn't synchronized.
-		/// </summary>
-		/// <typeparam name="T">The type of the element to return</typeparam>
-		/// <param name="toPerform">To perform.</param>
-		/// <returns>the result of toPerform</returns>
-		private T PerformSyncedAction<T>(Func<T> toPerform)
-		{
-			if(toPerform == null)
-			{
-				return default(T);
-			}
-			if(this.IsSynchronized)
-			{
-				lock(this.SyncRoot)
-				{
-					return toPerform();
-				}
-			}
-			return toPerform();
-		}
-
 		#endregion
 
 		#region IBindingList Members
