@@ -400,44 +400,19 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="toPerform">To perform.</param>
 		protected void PerformSyncedAction(Action toPerform)
 		{
-			if(toPerform == null)
-			{
-				return;
-			}
-			if(this.IsSynchronized)
-			{
-				lock(this.SyncRoot)
-				{
-					toPerform();
-				}
-			}
-			else
-			{
-				toPerform();
-			}
+			GeneralUtils.PerformSyncedAction(toPerform, this.SyncRoot, this.IsSynchronized);
 		}
 
 
 		/// <summary>
 		/// Performs the specified action, either inside a lock on <see cref="SyncRoot"/> if this list is Synchronized, or normally, if this list isn't synchronized.
 		/// </summary>
-		/// <typeparam name="T">The type of the element to return</typeparam>
+		/// <typeparam name="TFunc">The type of the element to return</typeparam>
 		/// <param name="toPerform">To perform.</param>
 		/// <returns>the result of toPerform</returns>
-		protected T PerformSyncedAction<T>(Func<T> toPerform)
+		protected TFunc PerformSyncedAction<TFunc>(Func<TFunc> toPerform)
 		{
-			if(toPerform == null)
-			{
-				return default(T);
-			}
-			if(this.IsSynchronized)
-			{
-				lock(this.SyncRoot)
-				{
-					return toPerform();
-				}
-			}
-			return toPerform();
+			return GeneralUtils.PerformSyncedAction(toPerform, this.SyncRoot, this.IsSynchronized);
 		}
 
 
@@ -814,7 +789,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		public bool SuppressEvents { get; set; }
 
 		/// <summary>
-		/// Gets a value indicating whether access to the <see cref="System.Collections.ICollection" /> is synchronized (thread safe). Default: false. Set to true to 
+		/// Gets a value indicating whether access to the <see cref="System.Collections.ICollection" /> is synchronized (thread safe). Default: false. Set to true in the ctor to 
 		/// make sure the operations on this object are using locks. Use <see cref="SyncRoot"/> to lock on the same object as this class' internal operations.
 		/// </summary>
 		public bool IsSynchronized { get; }

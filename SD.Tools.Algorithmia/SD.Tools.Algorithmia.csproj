@@ -44,6 +44,8 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Debug\SD.Tools.Algorithmia.XML</DocumentationFile>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <NoWarn>
+    </NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

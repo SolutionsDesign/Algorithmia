@@ -98,7 +98,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		protected void Crawl()
 		{
-			TVertex vertexToStart = _graphToCrawl.Vertices.FirstOrDefault();
+			TVertex vertexToStart = GeneralUtils.PerformSyncedAction(()=>_graphToCrawl.Vertices.FirstOrDefault(), _graphToCrawl.SyncRoot, _graphToCrawl.IsSynchronized);
 			if((object)vertexToStart==null)
 			{
 				// nothing to crawl
@@ -121,7 +121,13 @@ namespace SD.Tools.Algorithmia.Graphs
 			}
 			var verticesProcessed = new Dictionary<TVertex, VertexColor>();
 			bool firstRun = true;
-			foreach(TVertex vertex in _graphToCrawl.Vertices)
+			IEnumerable<TVertex> toEnumerate = _graphToCrawl.Vertices;
+			if(_graphToCrawl.IsSynchronized)
+			{
+				// create safe copy to work with. This can be a bit of a problem regarding performance with massive graphs, but toArray is in general rather quick. 
+				toEnumerate = GeneralUtils.PerformSyncedAction(()=> _graphToCrawl.Vertices.ToArray(), _graphToCrawl.SyncRoot, _graphToCrawl.IsSynchronized);
+			}
+			foreach(TVertex vertex in toEnumerate)
 			{
 				if(_abortCrawl)
 				{
@@ -250,8 +256,7 @@ namespace SD.Tools.Algorithmia.Graphs
 				return;
 			}
 			verticesProcessed[vertex] = VertexColor.Visiting;
-
-			MultiValueDictionary<TVertex, TEdge> adjacencyList = _graphToCrawl.GetAdjacencyListForVertex(vertex);
+			var adjacencyList = GeneralUtils.PerformSyncedAction(()=>_graphToCrawl.GetAdjacencyListForVertex(vertex), _graphToCrawl.SyncRoot, _graphToCrawl.IsSynchronized);
 			OnVisiting(vertex, edges);
 
 			// crawl to all this vertex' related vertices, if they've not yet been processed. 

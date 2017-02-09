@@ -90,6 +90,7 @@
   <ItemGroup>
     <Compile Include="CommandQueueTests.cs" />
     <Compile Include="GeneralDataStructuresTests.cs" />
+    <Compile Include="GraphTests_Synchronized.cs" />
     <Compile Include="SortingTests.cs" />
     <Compile Include="HeapTests.cs" />
     <Compile Include="GraphTests.cs" />

@@ -38,6 +38,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading;
 using SD.Tools.Algorithmia.GeneralDataStructures;
 using SD.Tools.Algorithmia.UtilityClasses;
 using SD.Tools.Algorithmia.Commands;
@@ -128,7 +129,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		/// <param name="isDirected">if set to true, the graph is directed and only edges which have IsDirected set to true are allowed,
 		/// otherwise it's a non-directed graph and edges which have IsDirected set to false are accepted.</param>
-		protected GraphBase(bool isDirected) : this (isDirected, false)
+		protected GraphBase(bool isDirected) : this (isDirected, isCommandified: false, isSynchronized:false)
 		{
 		}
 
@@ -140,9 +141,23 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// otherwise it's a non-directed graph and edges which have IsDirected set to false are accepted.</param>
 		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
 		/// graph state are undoable.</param>
-		protected GraphBase(bool isDirected, bool isCommandified)
+		protected GraphBase(bool isDirected, bool isCommandified) : this (isDirected, isCommandified, isSynchronized:false)
 		{
-			Initialize(isDirected, isCommandified);
+		}
+
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="GraphBase&lt;TVertex, TEdge&gt;"/> class.
+		/// </summary>
+		/// <param name="isDirected">if set to true, the graph is directed and only edges which have IsDirected set to true are allowed,
+		/// otherwise it's a non-directed graph and edges which have IsDirected set to false are accepted.</param>
+		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
+		/// graph state are undoable.</param>
+		/// <param name="isSynchronized">if set to <c>true</c> this list is a synchronized collection, using a lock on <see cref="SyncRoot"/> to synchronize activity in multithreading
+		/// scenarios</param>
+		protected GraphBase(bool isDirected, bool isCommandified, bool isSynchronized)
+		{
+			Initialize(isDirected, isCommandified, isSynchronized);
 		}
 
 
@@ -153,7 +168,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <param name="isDirected">if set to true, the graph is directed and only edges which have IsDirected set to true are allowed,
 		/// otherwise it's a non-directed graph and edges which have IsDirected set to false are accepted.</param>
 		protected GraphBase(GraphBase<TVertex, TEdge> graph, bool isDirected) 
-			: this(graph, isDirected, false)
+			: this(graph, isDirected, isCommandified:false, isSynchronized:false)
 		{
 		}
 
@@ -166,9 +181,24 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// otherwise it's a non-directed graph and edges which have IsDirected set to false are accepted.</param>
 		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
 		/// graph state are undoable.</param>
-		protected GraphBase(GraphBase<TVertex, TEdge> graph, bool isDirected, bool isCommandified)
+		protected GraphBase(GraphBase<TVertex, TEdge> graph, bool isDirected, bool isCommandified) : this(graph, isDirected, isCommandified, isSynchronized:false)
 		{
-			Initialize(isDirected, isCommandified);
+		}
+
+
+		/// <summary>
+		/// Copy constructor of the <see cref="GraphBase&lt;TVertex, TEdge&gt;"/> class.
+		/// </summary>
+		/// <param name="graph">The graph.</param>
+		/// <param name="isDirected">if set to true, the graph is directed and only edges which have IsDirected set to true are allowed,
+		/// otherwise it's a non-directed graph and edges which have IsDirected set to false are accepted.</param>
+		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
+		/// graph state are undoable.</param>
+		/// <param name="isSynchronized">if set to <c>true</c> this list is a synchronized collection, using a lock on <see cref="SyncRoot"/> to synchronize activity in multithreading
+		/// scenarios</param>
+		protected GraphBase(GraphBase<TVertex, TEdge> graph, bool isDirected, bool isCommandified, bool isSynchronized)
+		{
+			Initialize(isDirected, isCommandified, isSynchronized);
 			Add(graph);
 		}
 
@@ -217,8 +247,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			if(_isCommandified)
 			{
 				// use a command to call the method so all the commands spawned by the method called are undoable with a single undo.
-				CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<TEdge>(() => PerformAddEdge(edge), null,
-										_cachedCommandDescriptions[GraphCommandType.AddEdge]));
+				CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<TEdge>(() => PerformAddEdge(edge), null, _cachedCommandDescriptions[GraphCommandType.AddEdge]));
 			}
 			else
 			{
@@ -234,13 +263,13 @@ namespace SD.Tools.Algorithmia.Graphs
 		public void Add(TVertex vertex)
 		{
 			ArgumentVerifier.CantBeNull(vertex, "vertex");
-			if(!_graph.ContainsKey(vertex))
+			if(!PerformSyncedAction(()=>_graph.ContainsKey(vertex)))
 			{
 				if(_isCommandified)
 				{
 					// use a command to call the method so all the commands spawned by the method called are undoable with a single undo.
 					CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<TEdge>(() => PerformAddVertex(vertex), null,
-										_cachedCommandDescriptions[GraphCommandType.AddVertex]));
+																										_cachedCommandDescriptions[GraphCommandType.AddVertex]));
 				}
 				else
 				{
@@ -272,7 +301,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			{
 				// use a command to call the method so all the commands spawned by the method called are undoable with a single undo.
 				CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<GraphBase<TVertex, TEdge>>(() => PerformRemoveGraph(graph, edgesOnly), null,
-										_cachedCommandDescriptions[GraphCommandType.RemoveGraph]));
+																														  _cachedCommandDescriptions[GraphCommandType.RemoveGraph]));
 			}
 			else
 			{
@@ -296,8 +325,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			if(_isCommandified)
 			{
 				// use a command to call the method so all the commands spawned by the method called are undoable with a single undo.
-				CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<TEdge>(() => PerformRemoveEdge(edge), null, 
-										_cachedCommandDescriptions[GraphCommandType.RemoveEdge]));
+				CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<TEdge>(() => PerformRemoveEdge(edge), null, _cachedCommandDescriptions[GraphCommandType.RemoveEdge]));
 			}
 			else
 			{
@@ -313,7 +341,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		public void Remove(TVertex vertex)
 		{
 			ArgumentVerifier.CantBeNull(vertex, "vertex");
-			if(!_graph.ContainsKey(vertex))
+			if(!PerformSyncedAction(()=>_graph.ContainsKey(vertex)))
 			{
 				// not a vertex in this graph.
 				return;
@@ -321,8 +349,8 @@ namespace SD.Tools.Algorithmia.Graphs
 			if(_isCommandified)
 			{
 				// use a command to call the method so all the commands spawned by the method called are undoable with a single undo.
-				CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<TVertex>(() => PerformRemoveVertex(vertex), null,
-										_cachedCommandDescriptions[GraphCommandType.RemoveVertex]));
+				CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<TVertex>(() => PerformRemoveVertex(vertex), null, 
+																									 _cachedCommandDescriptions[GraphCommandType.RemoveVertex]));
 			}
 			else
 			{
@@ -348,7 +376,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			{
 				// use a command to call the method so all the commands spawned by the method called are undoable with a single undo.
 				CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<TVertex>(() => PerformDisconnect(startVertex, endVertex, bothSides), 
-										null, _cachedCommandDescriptions[GraphCommandType.DisconnectVertices]));
+																										null, _cachedCommandDescriptions[GraphCommandType.DisconnectVertices]));
 			}
 			else
 			{
@@ -371,7 +399,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			ArgumentVerifier.CantBeNull(startVertex, "startVertex");
 			ArgumentVerifier.CantBeNull(endVertex, "endVertex");
 
-			return _graph.ContainsKey(startVertex) && _graph[startVertex].ContainsKey(endVertex);
+			return PerformSyncedAction(()=>_graph.ContainsKey(startVertex) && _graph[startVertex].ContainsKey(endVertex));
 		}
 
 
@@ -387,7 +415,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			ArgumentVerifier.CantBeNull(edge, "edge");
 			// true if there's an edge between start vertex and end vertex (which automatically returns false if the vertices aren't part of this graph etc.)
 			// and if this particular edge object is part of the adjacency list.
-			return (ContainsEdge(edge.StartVertex, edge.EndVertex) && _graph[edge.StartVertex][edge.EndVertex].Contains(edge));
+			return (ContainsEdge(edge.StartVertex, edge.EndVertex) && PerformSyncedAction(()=>_graph[edge.StartVertex][edge.EndVertex].Contains(edge)));
 		}
 
 
@@ -399,12 +427,12 @@ namespace SD.Tools.Algorithmia.Graphs
 		public bool Contains(TVertex vertex)
 		{
 			ArgumentVerifier.CantBeNull(vertex, "vertex");
-			return _graph.ContainsKey(vertex);
+			return PerformSyncedAction(()=>_graph.ContainsKey(vertex));
 		}
 
 
 		/// <summary>
-		/// Gets all the edges between startVertex and endVertex
+		/// Gets all the edges between startVertex and endVertex.
 		/// </summary>
 		/// <param name="startVertex">The start vertex.</param>
 		/// <param name="endVertex">The end vertex.</param>
@@ -413,13 +441,13 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			ArgumentVerifier.CantBeNull(startVertex, "startVertex");
 			ArgumentVerifier.CantBeNull(endVertex, "endVertex");
-			return this.ContainsEdge(startVertex, endVertex) ? _graph[startVertex][endVertex] : new HashSet<TEdge>();
+			return this.ContainsEdge(startVertex, endVertex) ? PerformSyncedAction(() => (_graph[startVertex][endVertex]).ToHashSet()) : new HashSet<TEdge>();
 		}
 
 
 		/// <summary>
 		/// Gets the adjacency list for vertex. The adjacency list is a list of TVertex - Hashset(Of TEdge) tuples, as a vertex can have multiple edges with the same
-		/// related vertex. 
+		/// related vertex.
 		/// </summary>
 		/// <param name="vertex">The vertex to obtain the adjacency list for.</param>
 		/// <returns>MultiValueDictionary with as key the related vertices of the passed in vertex and as value per related vertex a Hashset with edges which 
@@ -427,9 +455,15 @@ namespace SD.Tools.Algorithmia.Graphs
 		public MultiValueDictionary<TVertex, TEdge> GetAdjacencyListForVertex(TVertex vertex)
 		{
 			ArgumentVerifier.CantBeNull(vertex, "vertex");
-			MultiValueDictionary<TVertex, TEdge> toReturn;
-			_graph.TryGetValue(vertex, out toReturn);
-			return toReturn;
+			return PerformSyncedAction(()=>
+										{
+											var toReturn = _graph.GetValue(vertex);
+											if(toReturn != null)
+											{
+												toReturn = toReturn.Clone();
+											}
+											return toReturn;
+										});
 		}
 
 
@@ -444,11 +478,14 @@ namespace SD.Tools.Algorithmia.Graphs
 			HashSet<TEdge> toReturn = new HashSet<TEdge>();
 			if(this.Contains(startVertex))
 			{
-				MultiValueDictionary<TVertex, TEdge> adjacencyList = _graph[startVertex];
-				foreach(HashSet<TEdge> edges in adjacencyList.Values)
-				{
-					toReturn.AddRange(edges);
-				}
+				PerformSyncedAction(()=>
+									{
+										MultiValueDictionary<TVertex, TEdge> adjacencyList = _graph[startVertex];
+										foreach(HashSet<TEdge> edges in adjacencyList.Values)
+										{
+											toReturn.AddRange(edges);
+										}
+									});
 			}
 			return toReturn;
 		}
@@ -468,13 +505,16 @@ namespace SD.Tools.Algorithmia.Graphs
 				var q = from adjacencyList in _graph.Values
 						where adjacencyList.ContainsKey(endVertex)
 						select adjacencyList;
-				foreach(MultiValueDictionary<TVertex, TEdge> adjacencyList in q)
-				{
-					foreach(HashSet<TEdge> edges in adjacencyList.Values)
-					{
-						toReturn.AddRange(edges.Where(e=>e.StartVertex.Equals(endVertex) || e.EndVertex.Equals(endVertex)));
-					}
-				}
+				PerformSyncedAction(()=>
+									{
+										foreach(MultiValueDictionary<TVertex, TEdge> adjacencyList in q)
+										{
+											foreach(HashSet<TEdge> edges in adjacencyList.Values)
+											{
+												toReturn.AddRange(edges.Where(e=>e.StartVertex.Equals(endVertex) || e.EndVertex.Equals(endVertex)));
+											}
+										}
+									});
 			}
 			return toReturn;
 		}
@@ -489,17 +529,20 @@ namespace SD.Tools.Algorithmia.Graphs
 			// do an Except query between the list of vertices and the list of vertices in the adjacency lists. As a vertex in an adjancency list is always
 			// part of the graph, this doesn't give false positives. 
 			HashSet<TVertex> verticesInEdges = new HashSet<TVertex>();
-			foreach(KeyValuePair<TVertex, MultiValueDictionary<TVertex, TEdge>> adjacencyListsPerVertex in _graph)
-			{
-				if(adjacencyListsPerVertex.Value.Count == 0)
-				{
-					// isn't a startvertex in any edge.
-					continue;
-				}
-				verticesInEdges.Add(adjacencyListsPerVertex.Key);
-				verticesInEdges.AddRange(adjacencyListsPerVertex.Value.Keys);
-			}
-			return new HashSet<TVertex>(this.Vertices.Except(verticesInEdges));
+			return PerformSyncedAction(()=>
+									   {
+										   foreach(KeyValuePair<TVertex, MultiValueDictionary<TVertex, TEdge>> adjacencyListsPerVertex in _graph)
+										   {
+											   if(adjacencyListsPerVertex.Value.Count == 0)
+											   {
+												   // isn't a startvertex in any edge.
+												   continue;
+											   }
+											   verticesInEdges.Add(adjacencyListsPerVertex.Key);
+											   verticesInEdges.AddRange(adjacencyListsPerVertex.Value.Keys);
+										   }
+										   return new HashSet<TVertex>(this.Vertices.Except(verticesInEdges));
+									   });
 		}
 
 
@@ -515,24 +558,26 @@ namespace SD.Tools.Algorithmia.Graphs
 			where TGraph : GraphBase<TVertex, TEdge>, new()
 		{
 			TGraph toReturn = new TGraph();
+			PerformSyncedAction(()=>
+								{
+									// first copy vertices
+									foreach(TVertex vertex in this.Vertices)
+									{
+										if((vertexSelector == null) || vertexSelector(vertex))
+										{
+											toReturn.Add(vertex);
+										}
+									}
 
-			// first copy vertices
-			foreach(TVertex vertex in this.Vertices)
-			{
-				if((vertexSelector == null) || vertexSelector(vertex))
-				{
-					toReturn.Add(vertex);
-				}
-			}
-			// then copy edges. If the edges aren't compatible with the graph, it's the responsibility of the caller. 
-			foreach(TEdge edge in this.Edges)
-			{
-				if((edgeSelector == null) || edgeSelector(edge))
-				{
-					toReturn.Add(edge);
-				}
-			}
-
+									// then copy edges. If the edges aren't compatible with the graph, it's the responsibility of the caller. 
+									foreach(TEdge edge in this.Edges)
+									{
+										if((edgeSelector == null) || edgeSelector(edge))
+										{
+											toReturn.Add(edge);
+										}
+									}
+								});
 			return toReturn;
 		}
 
@@ -557,19 +602,101 @@ namespace SD.Tools.Algorithmia.Graphs
 			TGraph result = new TGraph();
 			if(g.EdgeCount > 0 && h.EdgeCount > 0)
 			{
-				foreach(TEdge gEdge in g.Edges)
+				bool gLockTaken = false;
+				object gSyncRoot = g.SyncRoot;
+				bool hLockTaken = false;
+				object hSyncRoot = h.SyncRoot;
+				try
 				{
-					foreach(TEdge hEdge in h.Edges)
+					if(g.IsSynchronized)
 					{
-						if(gEdge.EndVertex.Equals(hEdge.StartVertex))
+						Monitor.Enter(gSyncRoot);
+						gLockTaken = true;
+					}
+					if(h.IsSynchronized)
+					{
+						Monitor.Enter(hSyncRoot);
+						hLockTaken = true;
+					}
+					foreach(TEdge gEdge in g.Edges)
+					{
+						foreach(TEdge hEdge in h.Edges)
 						{
-							result.Add(edgeProducerFunc(gEdge.StartVertex, hEdge.EndVertex));
+							if(gEdge.EndVertex.Equals(hEdge.StartVertex))
+							{
+								result.Add(edgeProducerFunc(gEdge.StartVertex, hEdge.EndVertex));
+							}
 						}
+					}
+				}
+				finally
+				{
+					if(hLockTaken)
+					{
+						Monitor.Exit(hSyncRoot);
+					}
+					if(gLockTaken)
+					{
+						Monitor.Exit(gSyncRoot);
 					}
 				}
 			}
 			return result;
 		}
+
+
+		/// <summary>
+		/// A graph is called connected if every pair of distinct vertices in the graph is connected (directly or indirectly). 
+		/// A connected component is a maximal connected subgraph of G. Each vertex belongs to exactly one connected component, as does each edge.
+		/// A directed graph is called weakly connected if replacing all of its directed edges with undirected edges produces a connected (undirected) graph. 
+		/// It is strongly connected or strong if it contains a directed path from u to v and a directed path from v to u for every pair of vertices u,v. 
+		/// The strong components are the maximal strongly connected subgraphs.
+		/// See http://en.wikipedia.org/wiki/Connectivity_(graph_theory)
+		/// 
+		/// We will only check for a connected un-directed graph or a weakly connected directed graph (same logic).
+		/// </summary>
+		/// <returns>True if the graph is considered connected, false otherwise</returns>
+		public virtual bool IsConnected()
+		{
+			IRootDetector rootDetector;
+			if(this.IsDirected)
+			{
+				// create non-directed copy. 
+				rootDetector = new RootDetector<TVertex, NonDirectedEdge<TVertex>>(GetAsNonDirectedCopy());
+			}
+			else
+			{
+				// use this instance directly. 
+				rootDetector = new RootDetector<TVertex, TEdge>(this);
+			}
+
+			// Use the DepthFirstCrawler to detect the number of roots of this graph. If the number of roots is higher than 1, the graph isn't connected. 
+			return !(rootDetector.SearchForRoots() > 1);
+		}
+
+
+		/// <summary>
+		/// Creates a NonDirectedGraph version of this graph. Always creates a copy, even if this graph is a non-directed graph.
+		/// </summary>
+		/// <returns>this graph as a nondirected copy, even if this graph is a non-directed graph</returns>
+		public NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>> GetAsNonDirectedCopy()
+		{
+			NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>> toReturn = new NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>>();
+			// first add all vertices, as some vertices might not be in an edge
+			PerformSyncedAction(()=>
+								{
+									foreach(TVertex vertex in this.Vertices)
+									{
+										toReturn.Add(vertex);
+									}
+									foreach(TEdge edge in this.Edges)
+									{
+										toReturn.Add(new NonDirectedEdge<TVertex>(edge.StartVertex, edge.EndVertex));
+									}
+								});
+			return toReturn;
+		}
+
 
 		/// <summary>
 		/// Validates if the edge passed in is addable to this graph structure. The start vertex and the end vertex for the are given as well. The same edge
@@ -632,6 +759,29 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			return true;
 		}
+		
+
+		/// <summary>
+		/// Performs the specified action, either inside a lock on <see cref="SyncRoot"/> if this graph is Synchronized, or normally, if the graph isn't synchronized.
+		/// </summary>
+		/// <param name="toPerform">To perform.</param>
+		protected void PerformSyncedAction(Action toPerform)
+		{
+			GeneralUtils.PerformSyncedAction(toPerform, this.SyncRoot, this.IsSynchronized);
+		}
+
+
+		/// <summary>
+		/// Performs the specified action, either inside a lock on <see cref="SyncRoot"/> if this graph is Synchronized, or normally, if the graph isn't synchronized.
+		/// </summary>
+		/// <typeparam name="T">The type of the element to return</typeparam>
+		/// <param name="toPerform">To perform.</param>
+		/// <returns>the result of toPerform</returns>
+		protected T PerformSyncedAction<T>(Func<T> toPerform)
+		{
+			return GeneralUtils.PerformSyncedAction(toPerform, this.SyncRoot, this.IsSynchronized);
+		}
+
 
 		/// <summary>
 		/// Called when a vertex has been added
@@ -749,10 +899,14 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		/// <param name="isDirected">if set to true, the graph is directed and only EdgeBase instances which have IsDirected set to true are allowed,
 		/// otherwise it's a non-directed graph and EdgeBase instances which have IsDirected set to false are accepted.</param>
-		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
+		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate
 		/// graph state are undoable.</param>
-		private void Initialize(bool isDirected, bool isCommandified)
+		/// <param name="isSynchronized">if set to <c>true</c> this list is a synchronized collection, using a lock on <see cref="SyncRoot"/> to synchronize activity in multithreading
+		/// scenarios</param>
+		private void Initialize(bool isDirected, bool isCommandified, bool isSynchronized)
 		{
+			this.IsSynchronized = isSynchronized;
+			this.SyncRoot = new object();
 			_graph = new Dictionary<TVertex, MultiValueDictionary<TVertex, TEdge>>();
 			_isDirected = isDirected;
 			_isCommandified = isCommandified;
@@ -817,66 +971,19 @@ namespace SD.Tools.Algorithmia.Graphs
 
 
 		/// <summary>
-		/// A graph is called connected if every pair of distinct vertices in the graph is connected (directly or indirectly). 
-		/// A connected component is a maximal connected subgraph of G. Each vertex belongs to exactly one connected component, as does each edge.
-		/// A directed graph is called weakly connected if replacing all of its directed edges with undirected edges produces a connected (undirected) graph. 
-		/// It is strongly connected or strong if it contains a directed path from u to v and a directed path from v to u for every pair of vertices u,v. 
-		/// The strong components are the maximal strongly connected subgraphs.
-		/// See http://en.wikipedia.org/wiki/Connectivity_(graph_theory)
-		/// 
-		/// We will only check for a connected un-directed graph or a weakly connected directed graph (same logic).
-		/// </summary>
-		/// <returns>True if the graph is considered connected, false otherwise</returns>
-		public virtual bool IsConnected()
-		{
-			IRootDetector rootDetector;
-			if(this.IsDirected)
-			{
-				// create non-directed copy. 
-				rootDetector = new RootDetector<TVertex, NonDirectedEdge<TVertex>>(GetAsNonDirectedCopy());
-			}
-			else
-			{
-				// use this instance directly. 
-				rootDetector = new RootDetector<TVertex, TEdge>(this);
-			}
-
-			// Use the DepthFirstCrawler to detect the number of roots of this graph. If the number of roots is higher than 1, the graph isn't connected. 
-			return !(rootDetector.SearchForRoots() > 1);
-		}
-
-
-		/// <summary>
-		/// Creates a NonDirectedGraph version of this graph. Always creates a copy, even if this graph is a non-directed graph.
-		/// </summary>
-		/// <returns>this graph as a nondirected copy, even if this graph is a non-directed graph</returns>
-		public NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>> GetAsNonDirectedCopy()
-		{
-			NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>> toReturn = new NonDirectedGraph<TVertex, NonDirectedEdge<TVertex>>();
-			// first add all vertices, as some vertices might not be in an edge
-			foreach(TVertex vertex in this.Vertices)
-			{
-				toReturn.Add(vertex);
-			}
-			foreach(TEdge edge in this.Edges)
-			{
-				toReturn.Add(new NonDirectedEdge<TVertex>(edge.StartVertex, edge.EndVertex));
-			}
-			return toReturn;
-		}
-
-
-		/// <summary>
 		/// Performs the add action for adding a complete graph to this graph.
 		/// </summary>
 		/// <param name="graph">The graph.</param>
 		/// <remarks>If you want to undo actions performed by this method, call this method using a Command object.</remarks>
 		private void PerformAddGraph(GraphBase<TVertex, TEdge> graph)
 		{
-			foreach(TEdge edge in graph.Edges)
-			{
-				Add(edge);
-			}
+			PerformSyncedAction(()=>
+								{
+									foreach(TEdge edge in graph.Edges)
+									{
+										Add(edge);
+									}
+								});
 		}
 
 
@@ -888,21 +995,23 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>If you want to undo actions performed by this method, call this method using a Command object.</remarks>
 		private void PerformRemoveGraph(GraphBase<TVertex, TEdge> graphToRemove, bool edgesOnly)
 		{
-			if(edgesOnly)
-			{
-				foreach(TEdge edge in graphToRemove.Edges)
-				{
-					Remove(edge);
-				}
-			}
-			else
-			{
-				foreach(TVertex vertex in graphToRemove.Vertices)
-				{
-					Remove(vertex);
-				}
-			}
-
+			PerformSyncedAction(()=>
+								{
+									if(edgesOnly)
+									{
+										foreach(TEdge edge in graphToRemove.Edges)
+										{
+											Remove(edge);
+										}
+									}
+									else
+									{
+										foreach(TVertex vertex in graphToRemove.Vertices)
+										{
+											Remove(vertex);
+										}
+									}
+								});
 		}
 
 
@@ -942,7 +1051,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			Add(edgeToAdd.StartVertex);
 			Add(edgeToAdd.EndVertex);
 			AddEdgeToGraphStructure(edgeToAdd, edgeToAdd.StartVertex, edgeToAdd.EndVertex);
-			if (!edgeToAdd.IsDirected)
+			if(!edgeToAdd.IsDirected)
 			{
 				// not directed, the endvertex also has a connection with startvertex.
 				AddEdgeToGraphStructure(edgeToAdd, edgeToAdd.EndVertex, edgeToAdd.StartVertex);
@@ -977,10 +1086,13 @@ namespace SD.Tools.Algorithmia.Graphs
 			// Then remove the vertex itself...
 			RemoveVertexFromGraphStructure(vertexToRemove);
 			// ...and also all edges to it.
-			foreach(TVertex key in _graph.Keys)
-			{
-				RemoveVertexFromAdjacencyList(vertexToRemove, key);
-			}
+			PerformSyncedAction(()=>
+								{
+									foreach(TVertex key in _graph.Keys)
+									{
+										RemoveVertexFromAdjacencyList(vertexToRemove, key);
+									}
+								});
 
 			// And finally remove orphaned vertices if removal of the edges made them orphaned. 
 			RemoveOrphanedVertices();
@@ -1055,24 +1167,27 @@ namespace SD.Tools.Algorithmia.Graphs
 				{
 					CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(
 							new Command<TVertex>(
-								() =>
+								() => PerformSyncedAction(()=>
 								{
 									OnVertexAdding(vertexToAdd);
 									_graph.Add(vertexToAdd, new MultiValueDictionary<TVertex, TEdge>());
 									OnVertexAdded(vertexToAdd);
-								},
-								() =>
+								}),
+								() => PerformSyncedAction(()=>
 								{
 									OnVertexRemoving(vertexToAdd);
 									_graph.Remove(vertexToAdd);
 									OnVertexRemoved(vertexToAdd);
-								}, _cachedCommandDescriptions[GraphCommandType.AddVertexToGraphStructure]));
+								}), _cachedCommandDescriptions[GraphCommandType.AddVertexToGraphStructure]));
 				}
 				else
 				{
-					OnVertexAdding(vertexToAdd);
-					_graph.Add(vertexToAdd, new MultiValueDictionary<TVertex, TEdge>());
-					OnVertexAdded(vertexToAdd);
+					PerformSyncedAction(()=>
+										{
+											OnVertexAdding(vertexToAdd);
+											_graph.Add(vertexToAdd, new MultiValueDictionary<TVertex, TEdge>());
+											OnVertexAdded(vertexToAdd);
+										});
 				}
 			}
 		}
@@ -1093,24 +1208,27 @@ namespace SD.Tools.Algorithmia.Graphs
 				{
 					CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(
 							new Command<TEdge>(
-								() =>
+								() => PerformSyncedAction(()=>
 								{
 									OnEdgeAdding(edgeToAdd);
 									_graph[startVertex].Add(endVertex, edgeToAdd);
 									OnEdgeAdded(edgeToAdd);
-								},
-								() =>
+								}),
+								() => PerformSyncedAction(()=>
 								{
 									OnEdgeRemoving(edgeToAdd);
 									_graph[startVertex].Remove(endVertex, edgeToAdd);
 									OnEdgeRemoved(edgeToAdd);
-								}, _cachedCommandDescriptions[GraphCommandType.AddEdgeToGraphStructure]));
+								}), _cachedCommandDescriptions[GraphCommandType.AddEdgeToGraphStructure]));
 				}
 				else
-				{                    
-					OnEdgeAdding(edgeToAdd);
-					_graph[startVertex].Add(endVertex, edgeToAdd);
-					OnEdgeAdded(edgeToAdd);
+				{
+					PerformSyncedAction(()=>
+										{
+											OnEdgeAdding(edgeToAdd);
+											_graph[startVertex].Add(endVertex, edgeToAdd);
+											OnEdgeAdded(edgeToAdd);
+										});
 				}
 			}
 		}
@@ -1127,7 +1245,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(this.Contains(startVertex) && this.Contains(endVertex))
 			{
-				if(_graph[startVertex].ContainsValue(endVertex, edgeToRemove))
+				if(PerformSyncedAction(()=>_graph[startVertex].ContainsValue(endVertex, edgeToRemove)))
 				{
 					if(ValidateEdgeForRemoval(edgeToRemove, startVertex, endVertex))
 					{
@@ -1135,24 +1253,27 @@ namespace SD.Tools.Algorithmia.Graphs
 						{
 							CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(
 								new Command<TEdge>(
-										() =>
+										() => PerformSyncedAction(()=>
 										{
 											OnEdgeRemoving(edgeToRemove);
 											_graph[startVertex].Remove(endVertex, edgeToRemove);
 											OnEdgeRemoved(edgeToRemove);
-										},
-										() =>
+										}),
+										() => PerformSyncedAction(()=>
 										{
 											OnEdgeAdding(edgeToRemove);
 											_graph[startVertex].Add(endVertex, edgeToRemove);
 											OnEdgeAdded(edgeToRemove);
-										}, _cachedCommandDescriptions[GraphCommandType.RemoveEdgeFromGraphStructure]));
+										}), _cachedCommandDescriptions[GraphCommandType.RemoveEdgeFromGraphStructure]));
 						}
 						else
 						{
-							OnEdgeRemoving(edgeToRemove);
-							_graph[startVertex].Remove(endVertex, edgeToRemove);
-							OnEdgeRemoved(edgeToRemove);
+							PerformSyncedAction(()=>
+												{
+													OnEdgeRemoving(edgeToRemove);
+													_graph[startVertex].Remove(endVertex, edgeToRemove);
+													OnEdgeRemoved(edgeToRemove);
+												});
 						}
 					}
 				}
@@ -1167,7 +1288,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <remarks>Do not call this method directly. Call Remove() to remove a vertex. This method is used to physically remove the vertex from the datastructures</remarks>
 		private void RemoveVertexFromGraphStructure(TVertex vertexToRemove)
 		{
-			if(_graph.ContainsKey(vertexToRemove))
+			if(PerformSyncedAction(()=>_graph.ContainsKey(vertexToRemove)))
 			{
 				if(ValidateVertexForRemoval(vertexToRemove))
 				{
@@ -1175,25 +1296,28 @@ namespace SD.Tools.Algorithmia.Graphs
 					{
 						CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(
 							new Command<MultiValueDictionary<TVertex, TEdge>>(
-									() =>
+									() => PerformSyncedAction(() => 
 									{
 										OnVertexRemoving(vertexToRemove);
 										_graph.Remove(vertexToRemove);
 										OnVertexRemoved(vertexToRemove);
-									},
-									() => _graph[vertexToRemove],
-									al =>
+									}),
+									() => PerformSyncedAction(()=>_graph[vertexToRemove]),
+									al => PerformSyncedAction(()=>
 									{
 										OnVertexAdding(vertexToRemove);
 										_graph.Add(vertexToRemove, al);
 										OnVertexAdded(vertexToRemove);
-									}, _cachedCommandDescriptions[GraphCommandType.RemoveVertexFromGraphStructure]));
+									}), _cachedCommandDescriptions[GraphCommandType.RemoveVertexFromGraphStructure]));
 					}
 					else
 					{
-						OnVertexRemoving(vertexToRemove);
-						_graph.Remove(vertexToRemove);
-						OnVertexRemoved(vertexToRemove);
+						PerformSyncedAction(()=>
+											{
+												OnVertexRemoving(vertexToRemove);
+												_graph.Remove(vertexToRemove);
+												OnVertexRemoved(vertexToRemove);
+											});
 					}
 				}
 			}
@@ -1210,19 +1334,21 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(this.Contains(relatedVertex))
 			{
-				if(_graph[relatedVertex].ContainsKey(vertexToRemove))
+				if(PerformSyncedAction(()=>_graph[relatedVertex].ContainsKey(vertexToRemove)))
 				{
 					if(ValidateVertexFromRemovalFromAdjacencyList(vertexToRemove, relatedVertex))
 					{
 						if(_isCommandified)
 						{
 							CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(
-								new Command<HashSet<TEdge>>(() => _graph[relatedVertex].Remove(vertexToRemove), () => _graph[relatedVertex].GetValues(vertexToRemove, true),
-										hs => _graph[relatedVertex].Add(vertexToRemove, hs), _cachedCommandDescriptions[GraphCommandType.RemoveVertexFromAdjacencyList]));
+								new Command<HashSet<TEdge>>(() => PerformSyncedAction(()=>_graph[relatedVertex].Remove(vertexToRemove)), 
+															() => PerformSyncedAction(()=>_graph[relatedVertex].GetValues(vertexToRemove, true)),
+															hs => PerformSyncedAction(()=>_graph[relatedVertex].Add(vertexToRemove, hs)), 
+															_cachedCommandDescriptions[GraphCommandType.RemoveVertexFromAdjacencyList]));
 						}
 						else
 						{
-							_graph[relatedVertex].Remove(vertexToRemove);
+							PerformSyncedAction(()=>_graph[relatedVertex].Remove(vertexToRemove));
 						}
 					}
 				}
@@ -1241,7 +1367,8 @@ namespace SD.Tools.Algorithmia.Graphs
 		}
 
 		/// <summary>
-		/// Returns the vertices in this graph.
+		/// Returns the vertices in this graph. Enumerating this property will enumerate the inner structures of the graph, no copy is made. This requires
+		/// a lock on <see cref="SyncRoot"/> if <see cref="IsSynchronized"/> is set to true to make sure enumeration of this property is thread safe.
 		/// </summary>
 		public IEnumerable<TVertex> Vertices
 		{
@@ -1249,7 +1376,8 @@ namespace SD.Tools.Algorithmia.Graphs
 		}
 
 		/// <summary>
-		/// Returns the edges in this graph.
+		/// Returns the edges in this graph. Enumerating this property will enumerate the inner structures of the graph, no copy is made. This requires
+		/// a lock on <see cref="SyncRoot"/> if <see cref="IsSynchronized"/> is set to true to make sure enumeration of this property is thread safe.
 		/// </summary>
 		public IEnumerable<TEdge> Edges
 		{
@@ -1279,7 +1407,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		public int VertexCount
 		{
-			get { return _graph.Keys.Count; }
+			get { return PerformSyncedAction(()=>_graph.Keys.Count); }
 		}
 
 		/// <summary>
@@ -1289,7 +1417,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		public int EdgeCount
 		{
-			get { return this.Edges.Count(); }
+			get { return PerformSyncedAction(()=>this.Edges.Count()); }
 		}
 		
 		/// <summary>
@@ -1304,10 +1432,20 @@ namespace SD.Tools.Algorithmia.Graphs
 		public bool RemoveOrphanedVerticesOnEdgeRemoval { get; set; }
 
 		/// <summary>
+		/// Gets a value indicating whether access to the <see cref="Vertices"/> and <see cref="Edges"/> is synchronized (thread safe). Default: false. Set to true to in the ctor to
+		/// make sure the operations on this object are using locks. Use <see cref="SyncRoot"/> to lock on the same object as this class' internal operations.
+		/// </summary>
+		public bool IsSynchronized { get; private set; }
+
+		/// <summary>
+		/// Gets an object that can be used to synchronize access to the <see cref="Vertices"/> and <see cref="Edges"/> properties. It's the same object used in locks inside this object. 
+		/// </summary>
+		public object SyncRoot { get; private set; }
+
+		/// <summary>
 		/// Gets or sets a value indicating whether events are blocked from being raised (true) or not (false, default)
 		/// </summary>
 		protected bool SuppressEvents { get; set; }
 		#endregion
 	}
-
 }
