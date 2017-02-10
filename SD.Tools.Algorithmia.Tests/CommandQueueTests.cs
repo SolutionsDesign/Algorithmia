@@ -47,6 +47,7 @@ using SD.Tools.Algorithmia.Graphs;
 using SD.Tools.BCLExtensions.CollectionsRelated;
 using SD.Tools.Algorithmia.GeneralDataStructures.EventArguments;
 using System.ComponentModel;
+using System.Threading;
 
 namespace SD.Tools.Algorithmia.Tests
 {
@@ -56,6 +57,119 @@ namespace SD.Tools.Algorithmia.Tests
 	[TestFixture]
 	public class CommandQueueTests
 	{
+		[Test]
+		public void MultiThreadedSyncedCommandifiedListAccessTest()
+		{
+			// set up our session.
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			var toTest = new CommandifiedList<string>(isSynchronized: true);
+			for(int i = 0; i < 10; i++)
+			{
+				toTest.Add(i.ToString());
+			}
+
+			var waitHandles = new WaitHandle[] {new AutoResetEvent(false), new AutoResetEvent(false)};
+			Exception caughtException = null;
+			Console.WriteLine("Starting threads...");
+			var threadA = new Thread(()=>MultiThreadedSyncedCommandifiedListAccessTest_ThreadA(toTest, waitHandles[0], (e)=> caughtException=e));
+			var threadB = new Thread(()=>MultiThreadedSyncedCommandifiedListAccessTest_ThreadB(toTest, waitHandles[1], (e) => caughtException=e));
+			threadA.Start();
+			threadB.Start();
+			Console.WriteLine("Threads started... waiting for handles");
+			WaitHandle.WaitAll(waitHandles);
+			if(caughtException != null)
+			{
+				throw caughtException;
+			}
+			Console.WriteLine("All completed.");
+		}
+
+
+		private void MultiThreadedSyncedCommandifiedListAccessTest_ThreadA(CommandifiedList<string> list, WaitHandle waitHandle, Action<Exception> handler)
+		{
+			Console.WriteLine("Thread A started");
+			try
+			{
+				var random = new Random((int)DateTime.Now.Ticks);
+				for(int i = 0; i < 500; i++)
+				{
+					//Console.WriteLine("\tThread A: iteration: {0}", i);
+					var countBefore = list.Count;
+					var index = random.Next(0, countBefore);
+					list.RemoveAt(index);
+					Assert.AreEqual(countBefore - 1, list.Count);
+					CQManager.UndoLastCommand();
+					Assert.AreEqual(countBefore, list.Count);
+					Thread.Sleep(1);
+					CQManager.RedoLastCommand();
+					Assert.AreEqual(countBefore - 1, list.Count);
+					Thread.Sleep(2);
+					CQManager.UndoLastCommand();
+					Assert.AreEqual(countBefore, list.Count);
+				}
+			}
+			catch(Exception e)
+			{
+				handler(e);
+			}
+			finally
+			{
+				((AutoResetEvent)waitHandle).Set();
+			}
+			Console.WriteLine("Thread A ended");
+		}
+
+
+		private void MultiThreadedSyncedCommandifiedListAccessTest_ThreadB(CommandifiedList<string> list, WaitHandle waitHandle, Action<Exception> handler)
+		{
+			Console.WriteLine("Thread B started");
+			try
+			{
+				for(int i = 0; i < 500; i++)
+				{
+					//Console.WriteLine("\tThread B: iteration: {0}", i);
+					bool lockTaken = false;
+					object syncRoot = list.SyncRoot;
+					try
+					{
+						if(list.IsSynchronized)
+						{
+							Monitor.Enter(syncRoot);
+							lockTaken = true;
+						}
+						int countBefore = list.Count;
+						int count = 0;
+						foreach(var v in list)
+						{
+							count++;
+						}
+						Assert.AreEqual(countBefore, count, "Count after enumeration differs from initial count of list");
+					}
+					finally
+					{
+						if(lockTaken)
+						{
+							Monitor.Exit(syncRoot);
+						}
+					}
+					Thread.Sleep(7);
+				}
+			}
+			catch(Exception e)
+			{
+				handler(e);
+			}
+			finally
+			{
+				((AutoResetEvent)waitHandle).Set();
+			}
+			Console.WriteLine("Thread B ended");
+		}
+
+
+
 		[Test]
 		public void SingleUndoOfSingleCommandLevelTest()
 		{

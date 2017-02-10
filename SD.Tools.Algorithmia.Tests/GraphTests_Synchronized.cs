@@ -41,6 +41,9 @@ using System.Linq;
 using NUnit.Framework;
 using SD.Tools.Algorithmia.Graphs;
 using System.Collections.Generic;
+using System.Threading;
+using SD.Tools.Algorithmia.Commands;
+using SD.Tools.Algorithmia.GeneralDataStructures;
 using SD.Tools.Algorithmia.Graphs.Algorithms;
 
 namespace SD.Tools.Algorithmia.Tests
@@ -169,6 +172,115 @@ namespace SD.Tools.Algorithmia.Tests
 			_random = new Random(_seed);
 		}
 
+
+		[Test]
+		public void MultiThreadedSyncedGraphAccessTest()
+		{
+			// set up our session.
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			var toTest = new DirectedGraph<int, DirectedEdge<int>>((a, b) => new DirectedEdge<int>(a, b), isCommandified: true, isSynchronized: true);
+			for(int i = 0; i < 30; i++)
+			{
+				toTest.Add(new DirectedEdge<int>(i, i+1));
+				toTest.Add(new DirectedEdge<int>(i+3, i));
+			}
+
+			var waitHandles = new WaitHandle[] { new AutoResetEvent(false), new AutoResetEvent(false) };
+			Exception caughtException = null;
+			Console.WriteLine("Starting threads...");
+			var threadA = new Thread(() => MultiThreadedSyncedGraphAccessTest_ThreadA(toTest, waitHandles[0], (e) => caughtException = e));
+			var threadB = new Thread(() => MultiThreadedSyncedGraphAccessTest_ThreadB(toTest, waitHandles[1], (e) => caughtException = e));
+			threadA.Start();
+			threadB.Start();
+			Console.WriteLine("Threads started... waiting for handles");
+			WaitHandle.WaitAll(waitHandles);
+			if(caughtException != null)
+			{
+				throw caughtException;
+			}
+			Console.WriteLine("All completed.");
+		}
+
+
+		private void MultiThreadedSyncedGraphAccessTest_ThreadA(DirectedGraph<int, DirectedEdge<int>> graph, WaitHandle waitHandle, Action<Exception> handler)
+		{
+			Console.WriteLine("Thread A started");
+			try
+			{
+				for(int i = 0; i < 100; i++)
+				{
+					var vertexCountBefore = graph.VertexCount;
+					var index = _random.Next(0, vertexCountBefore);
+					graph.Remove(index);
+					Assert.AreEqual(vertexCountBefore - 1, graph.VertexCount);
+					CQManager.UndoLastCommand();
+					Assert.AreEqual(vertexCountBefore, graph.VertexCount);
+					Thread.Sleep(1);
+					CQManager.RedoLastCommand();
+					Assert.AreEqual(vertexCountBefore - 1, graph.VertexCount);
+					Thread.Sleep(2);
+					CQManager.UndoLastCommand();
+					Assert.AreEqual(vertexCountBefore, graph.VertexCount);
+				}
+			}
+			catch(Exception e)
+			{
+				handler(e);
+			}
+			finally
+			{
+				((AutoResetEvent)waitHandle).Set();
+			}
+			Console.WriteLine("Thread A ended");
+		}
+
+
+		private void MultiThreadedSyncedGraphAccessTest_ThreadB(DirectedGraph<int, DirectedEdge<int>> graph, WaitHandle waitHandle, Action<Exception> handler)
+		{
+			Console.WriteLine("Thread B started");
+			try
+			{
+				for(int i = 0; i < 100; i++)
+				{
+					bool lockTaken = false;
+					object syncRoot = graph.SyncRoot;
+					try
+					{
+						if(graph.IsSynchronized)
+						{
+							Monitor.Enter(syncRoot);
+							lockTaken = true;
+						}
+						int countBefore = graph.VertexCount;
+						int count = 0;
+						foreach(var v in graph.Vertices)
+						{
+							count++;
+						}
+						Assert.AreEqual(countBefore, count, "Count after enumeration differs from initial count of vertices set");
+					}
+					finally
+					{
+						if(lockTaken)
+						{
+							Monitor.Exit(syncRoot);
+						}
+					}
+					Thread.Sleep(7);
+				}
+			}
+			catch(Exception e)
+			{
+				handler(e);
+			}
+			finally
+			{
+				((AutoResetEvent)waitHandle).Set();
+			}
+			Console.WriteLine("Thread B ended");
+		}
 
 		/// <summary>
 		/// Generates RandomTests (default 50) random graphs containing up to MaxDirectedGraphSize (default 50) edges. Next
@@ -586,5 +698,15 @@ namespace SD.Tools.Algorithmia.Tests
 
 			//Assert.IsTrue(nonDirectedGraph.EdgeCount == 10);
 		}
+
+		#region properties
+		/// <summary>
+		/// Gets the CQ manager.
+		/// </summary>
+		private static CommandQueueManager CQManager
+		{
+			get { return CommandQueueManagerSingleton.GetInstance(); }
+		}
+		#endregion
 	}
 }
