@@ -163,7 +163,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			INotifyAsRemoved itemAsINotifyElementRemoved = item as INotifyAsRemoved;
 			if(itemAsINotifyElementRemoved != null)
 			{
-				itemAsINotifyElementRemoved.HasBeenRemoved -= new EventHandler(element_ElementRemoved);
+				itemAsINotifyElementRemoved.HasBeenRemoved -= element_ElementRemoved;
 			}
 		}
 
@@ -177,7 +177,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			INotifyAsRemoved itemAsINotifyElementRemoved = item as INotifyAsRemoved;
 			if(itemAsINotifyElementRemoved != null)
 			{
-				itemAsINotifyElementRemoved.HasBeenRemoved += new EventHandler(element_ElementRemoved);
+				itemAsINotifyElementRemoved.HasBeenRemoved += element_ElementRemoved;
 			}
 		}
 

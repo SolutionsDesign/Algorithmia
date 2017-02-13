@@ -136,5 +136,56 @@ namespace SD.Tools.Algorithmia.UtilityClasses
 
 			return areEqual;
 		}
+
+
+		/// <summary>
+		/// Performs the specified action, either inside a lock on syncRoot if isSynchronized is true, or normally, if isSynchronized is false.
+		/// </summary>
+		/// <param name="toPerform">To perform.</param>
+		/// <param name="syncRoot">The synchronize root to lock on.</param>
+		/// <param name="isSynchronized">if set to <c>true</c> the caller is synchronized.</param>
+		public static void PerformSyncedAction(Action toPerform, object syncRoot, bool isSynchronized)
+		{
+			if(toPerform == null)
+			{
+				return;
+			}
+			if(isSynchronized)
+			{
+				lock(syncRoot)
+				{
+					toPerform();
+				}
+			}
+			else
+			{
+				toPerform();
+			}
+		}
+
+
+		/// <summary>
+		/// Performs the specified action, either inside a lock on syncRoot if isSynchronized is true, or normally, if isSynchronized is false.
+		/// </summary>
+		/// <typeparam name="T">The type of the element to return</typeparam>
+		/// <param name="toPerform">To perform.</param>
+		/// <param name="syncRoot">The synchronize root to lock on.</param>
+		/// <param name="isSynchronized">if set to <c>true</c> the caller is synchronized.</param>
+		/// <returns>the result of toPerform</returns>
+		public static T PerformSyncedAction<T>(Func<T> toPerform, object syncRoot, bool isSynchronized)
+		{
+			if(toPerform == null)
+			{
+				return default(T);
+			}
+			if(isSynchronized)
+			{
+				lock(syncRoot)
+				{
+					return toPerform();
+				}
+			}
+			return toPerform();
+		}
 	}
 }

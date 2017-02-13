@@ -53,7 +53,17 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// Initializes a new instance of the <see cref="NonDirectedGraph&lt;TVertex, TEdge&gt;"/> class.
 		/// </summary>
 		public NonDirectedGraph()
-			: base(false)
+			: this(isCommandified:false, isSynchronized:false)
+		{
+		}
+		
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="NonDirectedGraph&lt;TVertex, TEdge&gt;"/> class.
+		/// </summary>
+		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
+		/// graph state are undoable.</param>
+		public NonDirectedGraph(bool isCommandified) : this(isCommandified, isSynchronized:false)
 		{
 		}
 
@@ -63,8 +73,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
 		/// graph state are undoable.</param>
-		public NonDirectedGraph(bool isCommandified)
-			: base(false, isCommandified)
+		/// <param name="isSynchronized">if set to <c>true</c> this list is a synchronized collection, using a lock on SyncRoot to synchronize activity in multithreading
+		/// scenarios</param>
+		public NonDirectedGraph(bool isCommandified, bool isSynchronized)
+			: base(false, isCommandified, isSynchronized)
 		{
 		}
 
@@ -75,9 +87,8 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <param name="edgeProducerFunc">The edge producer func which produces edges for this directed graph. Used in some algorithms which 
 		/// have to produce edges.</param>
 		public NonDirectedGraph(Func<TVertex, TVertex, TEdge> edgeProducerFunc)
-			: base(false)
+			: this(edgeProducerFunc, isCommandified:false, isSynchronized:false)
 		{
-			this.EdgeProducerFunc = edgeProducerFunc;
 		}
 
 
@@ -88,8 +99,22 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// have to produce edges.</param>
 		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
 		/// graph state are undoable.</param>
-		public NonDirectedGraph(Func<TVertex, TVertex, TEdge> edgeProducerFunc, bool isCommandified)
-			: base(false, isCommandified)
+		public NonDirectedGraph(Func<TVertex, TVertex, TEdge> edgeProducerFunc, bool isCommandified) 
+			: this(edgeProducerFunc, isCommandified, isSynchronized:false)
+		{
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="NonDirectedGraph&lt;TVertex, TEdge&gt;"/> class.
+		/// </summary>
+		/// <param name="edgeProducerFunc">The edge producer func which produces edges for this directed graph. Used in some algorithms which 
+		/// have to produce edges.</param>
+		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
+		/// graph state are undoable.</param>
+		/// <param name="isSynchronized">if set to <c>true</c> this list is a synchronized collection, using a lock on SyncRoot to synchronize activity in multithreading
+		/// scenarios</param>
+		public NonDirectedGraph(Func<TVertex, TVertex, TEdge> edgeProducerFunc, bool isCommandified, bool isSynchronized)
+			: base(false, isCommandified, isSynchronized)
 		{
 			this.EdgeProducerFunc = edgeProducerFunc;
 		}
@@ -112,7 +137,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
 		/// graph state are undoable.</param>
 		public NonDirectedGraph(NonDirectedGraph<TVertex, TEdge> graph, bool isCommandified)
-			: this(graph, null, isCommandified)
+			: this(graph, null, isCommandified, isSynchronized:false)
 		{
 		}
 
@@ -124,7 +149,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <param name="edgeProducerFunc">The edge producer func which produces edges for this directed graph. Used in some algorithms which 
 		/// have to produce edges.</param>
 		public NonDirectedGraph(NonDirectedGraph<TVertex, TEdge> graph, Func<TVertex, TVertex, TEdge> edgeProducerFunc)
-			: this(graph, edgeProducerFunc, false)
+			: this(graph, edgeProducerFunc, isCommandified:false, isSynchronized:false)
 		{
 		}
 
@@ -138,7 +163,23 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
 		/// graph state are undoable.</param>
 		public NonDirectedGraph(NonDirectedGraph<TVertex, TEdge> graph, Func<TVertex, TVertex, TEdge> edgeProducerFunc, bool isCommandified)
-			: base(graph, false, isCommandified)
+			: this(graph, edgeProducerFunc, isCommandified, isSynchronized:false)
+		{
+		}
+
+
+		/// <summary>
+		/// Copy constructor of the <see cref="NonDirectedGraph&lt;TVertex, TEdge&gt;"/> class.
+		/// </summary>
+		/// <param name="graph">The graph.</param>
+		/// <param name="edgeProducerFunc">The edge producer func which produces edges for this directed graph. Used in some algorithms which 
+		/// have to produce edges.</param>
+		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
+		/// graph state are undoable.</param>
+		/// <param name="isSynchronized">if set to <c>true</c> this list is a synchronized collection, using a lock on SyncRoot to synchronize activity in multithreading
+		/// scenarios</param>
+		public NonDirectedGraph(NonDirectedGraph<TVertex, TEdge> graph, Func<TVertex, TVertex, TEdge> edgeProducerFunc, bool isCommandified, bool isSynchronized)
+			: base(graph, false, isCommandified, isSynchronized)
 		{
 			this.EdgeProducerFunc = edgeProducerFunc;
 		}

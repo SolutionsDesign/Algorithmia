@@ -164,7 +164,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				INotifyAsChanged changeAwareValue = _memberValue as INotifyAsChanged;
 				if(changeAwareValue != null)
 				{
-					changeAwareValue.HasBeenChanged -= new EventHandler(_memberValue_ElementChanged);
+					changeAwareValue.HasBeenChanged -= _memberValue_ElementChanged;
 					_elementChangedBound = false;
 				}
 			}
@@ -181,7 +181,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				INotifyAsRemoved removeAwareValue = _memberValue as INotifyAsRemoved;
 				if(removeAwareValue != null)
 				{
-					removeAwareValue.HasBeenRemoved -= new EventHandler(_memberValue_ElementRemoved);
+					removeAwareValue.HasBeenRemoved -= _memberValue_ElementRemoved;
 					_elementRemovedBound = false;
 				}
 			}
@@ -198,7 +198,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				INotifyAsChanged changeAwareValue = _memberValue as INotifyAsChanged;
 				if(changeAwareValue != null)
 				{
-					changeAwareValue.HasBeenChanged += new EventHandler(_memberValue_ElementChanged);
+					changeAwareValue.HasBeenChanged += _memberValue_ElementChanged;
 					_elementChangedBound = true;
 				}
 			}
@@ -215,7 +215,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				INotifyAsRemoved removeAwareValue = _memberValue as INotifyAsRemoved;
 				if(removeAwareValue != null)
 				{
-					removeAwareValue.HasBeenRemoved += new EventHandler(_memberValue_ElementRemoved);
+					removeAwareValue.HasBeenRemoved += _memberValue_ElementRemoved;
 					_elementRemovedBound = true;
 				}
 			}

@@ -9,11 +9,11 @@ The core design of Algorithmia is about making algorithms and data-structures wh
 
 Although Algorithmia is stable since May 2010, we still update it with new algorithms and data-structures. If you have algorithms or data-structures to contribute, please create a fork and send us a pull request! :)
 
-Algorithmia v1.2 is in development on the master branch, and is the foundation for LLBLGen Pro v5. To obtain the v1.1 source, used in LLGLGen Pro v4 and lower, please see the v1.1 branch/tag. 
+LLBLGen Pro v5.0/5.1 use Algorithmia v1.2, which is available as [v1.2 branch](https://github.com/SolutionsDesign/Algorithmia/tree/v1.2). LLBLGen Pro v5.2 will use Algorithmia v1.3, which is available on the Master branch. 
 
 ### Getting a binary version via NuGet
 
 Algorithmia is also [available on Nuget](https://nuget.org/packages/SD.Tools.Algorithmia/). When you obtained Algorithmia via Nuget, it's recommended you check out the unit tests in this source repository and/or look at the SD.Tools.Algorithmia.chm reference manual included in the source repository, which is generated from the sourcecode.
 
 ### License
-Algorithmia is &copy; 2010-2014 [Solutions Design bv](http://www.sd.nl/) and is released under the [BSD2 license](https://github.com/SolutionsDesign/Algorithmia/blob/master/LICENSE.txt).
+Algorithmia is &copy; 2010-2017 [Solutions Design bv](http://www.sd.nl/) and is released under the [BSD2 license](https://github.com/SolutionsDesign/Algorithmia/blob/master/LICENSE.txt).

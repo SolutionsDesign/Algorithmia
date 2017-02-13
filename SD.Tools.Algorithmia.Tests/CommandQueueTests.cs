@@ -47,6 +47,7 @@ using SD.Tools.Algorithmia.Graphs;
 using SD.Tools.BCLExtensions.CollectionsRelated;
 using SD.Tools.Algorithmia.GeneralDataStructures.EventArguments;
 using System.ComponentModel;
+using System.Threading;
 
 namespace SD.Tools.Algorithmia.Tests
 {
@@ -56,6 +57,119 @@ namespace SD.Tools.Algorithmia.Tests
 	[TestFixture]
 	public class CommandQueueTests
 	{
+		[Test]
+		public void MultiThreadedSyncedCommandifiedListAccessTest()
+		{
+			// set up our session.
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			var toTest = new CommandifiedList<string>(isSynchronized: true);
+			for(int i = 0; i < 10; i++)
+			{
+				toTest.Add(i.ToString());
+			}
+
+			var waitHandles = new WaitHandle[] {new AutoResetEvent(false), new AutoResetEvent(false)};
+			Exception caughtException = null;
+			Console.WriteLine("Starting threads...");
+			var threadA = new Thread(()=>MultiThreadedSyncedCommandifiedListAccessTest_ThreadA(toTest, waitHandles[0], (e)=> caughtException=e));
+			var threadB = new Thread(()=>MultiThreadedSyncedCommandifiedListAccessTest_ThreadB(toTest, waitHandles[1], (e) => caughtException=e));
+			threadA.Start();
+			threadB.Start();
+			Console.WriteLine("Threads started... waiting for handles");
+			WaitHandle.WaitAll(waitHandles);
+			if(caughtException != null)
+			{
+				throw caughtException;
+			}
+			Console.WriteLine("All completed.");
+		}
+
+
+		private void MultiThreadedSyncedCommandifiedListAccessTest_ThreadA(CommandifiedList<string> list, WaitHandle waitHandle, Action<Exception> handler)
+		{
+			Console.WriteLine("Thread A started");
+			try
+			{
+				var random = new Random((int)DateTime.Now.Ticks);
+				for(int i = 0; i < 500; i++)
+				{
+					//Console.WriteLine("\tThread A: iteration: {0}", i);
+					var countBefore = list.Count;
+					var index = random.Next(0, countBefore);
+					list.RemoveAt(index);
+					Assert.AreEqual(countBefore - 1, list.Count);
+					CQManager.UndoLastCommand();
+					Assert.AreEqual(countBefore, list.Count);
+					Thread.Sleep(1);
+					CQManager.RedoLastCommand();
+					Assert.AreEqual(countBefore - 1, list.Count);
+					Thread.Sleep(2);
+					CQManager.UndoLastCommand();
+					Assert.AreEqual(countBefore, list.Count);
+				}
+			}
+			catch(Exception e)
+			{
+				handler(e);
+			}
+			finally
+			{
+				((AutoResetEvent)waitHandle).Set();
+			}
+			Console.WriteLine("Thread A ended");
+		}
+
+
+		private void MultiThreadedSyncedCommandifiedListAccessTest_ThreadB(CommandifiedList<string> list, WaitHandle waitHandle, Action<Exception> handler)
+		{
+			Console.WriteLine("Thread B started");
+			try
+			{
+				for(int i = 0; i < 500; i++)
+				{
+					//Console.WriteLine("\tThread B: iteration: {0}", i);
+					bool lockTaken = false;
+					object syncRoot = list.SyncRoot;
+					try
+					{
+						if(list.IsSynchronized)
+						{
+							Monitor.Enter(syncRoot);
+							lockTaken = true;
+						}
+						int countBefore = list.Count;
+						int count = 0;
+						foreach(var v in list)
+						{
+							count++;
+						}
+						Assert.AreEqual(countBefore, count, "Count after enumeration differs from initial count of list");
+					}
+					finally
+					{
+						if(lockTaken)
+						{
+							Monitor.Exit(syncRoot);
+						}
+					}
+					Thread.Sleep(7);
+				}
+			}
+			catch(Exception e)
+			{
+				handler(e);
+			}
+			finally
+			{
+				((AutoResetEvent)waitHandle).Set();
+			}
+			Console.WriteLine("Thread B ended");
+		}
+
+
+
 		[Test]
 		public void SingleUndoOfSingleCommandLevelTest()
 		{
@@ -365,6 +479,175 @@ namespace SD.Tools.Algorithmia.Tests
 			CQManager.ActivateCommandQueueStack(sessionId);
 
 			CommandifiedList<string> toTest = new CommandifiedList<string>() { "aaa", "aab", "aba", "baa" };
+
+			// use command to sort the list, so it's undoable.
+			CQManager.EnqueueAndRunCommand(new Command<string>(() => toTest.Sort(SortAlgorithm.ShellSort, SortDirection.Descending)));
+			Assert.AreEqual("baa", toTest[0]);
+			Assert.AreEqual("aba", toTest[1]);
+			Assert.AreEqual("aab", toTest[2]);
+			Assert.AreEqual("aaa", toTest[3]);
+
+			// undo the sort
+			CQManager.UndoLastCommand();
+			Assert.AreEqual("aaa", toTest[0]);
+			Assert.AreEqual("aab", toTest[1]);
+			Assert.AreEqual("aba", toTest[2]);
+			Assert.AreEqual("baa", toTest[3]);
+
+			CQManager.ActivateCommandQueueStack(Guid.Empty);
+		}
+
+
+
+
+		[Test]
+		public void CommandifiedListClear_Sync_Test()
+		{
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			CommandifiedList<string> toTest = new CommandifiedList<string>(isSynchronized:true) { "Foo", "Bar", "Blah" };
+			Assert.AreEqual(3, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+			Assert.AreEqual("Blah", toTest[2]);
+
+			// perform a clear operation. We'll undo this later on.
+			toTest.Clear();
+			Assert.AreEqual(0, toTest.Count);
+
+			// undo operation.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(3, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+			Assert.AreEqual("Blah", toTest[2]);
+
+			CQManager.ActivateCommandQueueStack(Guid.Empty);
+		}
+
+
+		[Test]
+		public void CommandifiedListInsert_Sync_Test()
+		{
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			CommandifiedList<string> toTest = new CommandifiedList<string>(isSynchronized: true) { "Foo", "Bar" };
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			// perform an insert operation, this can be triggered by both 'Add' and 'Insert'. We'll undo this later on.
+			toTest.Add("Blah");
+			Assert.AreEqual(3, toTest.Count);
+			Assert.AreEqual("Blah", toTest[2]);
+
+			// undo operation.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			toTest.Insert(1, "Blah");
+			Assert.AreEqual(3, toTest.Count);
+			Assert.AreEqual("Blah", toTest[1]);
+			Assert.AreEqual("Bar", toTest[2]);
+
+			// undo operation.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			CQManager.ActivateCommandQueueStack(Guid.Empty);
+		}
+
+
+		[Test]
+		public void CommandifiedListRemove_Sync_Test()
+		{
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			CommandifiedList<string> toTest = new CommandifiedList<string>(isSynchronized: true) { "Foo", "Bar" };
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			// perform a remove operation. We'll undo this later on.
+			toTest.Remove("Foo");
+			Assert.AreEqual(1, toTest.Count);
+			Assert.AreEqual("Bar", toTest[0]);
+
+			// undo operation.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			toTest.RemoveAt(1);
+			Assert.AreEqual(1, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+
+			// undo operation.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			CQManager.ActivateCommandQueueStack(Guid.Empty);
+		}
+
+
+		[Test]
+		public void CommandifiedListSetItem_Sync_Test()
+		{
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			CommandifiedList<string> toTest = new CommandifiedList<string>(isSynchronized: true) { "Foo", "Bar" };
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			// perform a set index operation. We'll undo this later on.
+			toTest[0] = "Blah";
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Blah", toTest[0]);
+
+			// undo operation.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			// use a library extension method to swap two items. We want to roll back the swap call completely, so the SwapValues call is seen
+			// as an atomic action. We therefore have to create a command to make it undoable as an atomic action. It doesn't have an undo action,
+			// it relies on the actions it executes by itself to undo.
+			CQManager.EnqueueAndRunCommand(new Command<string>(() => toTest.SwapValues(0, 1)));
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Bar", toTest[0]);
+			Assert.AreEqual("Foo", toTest[1]);
+
+			// undo operation. This is undoing the call to SwapValues, which by undoing that, will undo all the actions SwapValues took, i.e. setting 2 items at
+			// 2 indexes.
+			CQManager.UndoLastCommand();
+			Assert.AreEqual(2, toTest.Count);
+			Assert.AreEqual("Foo", toTest[0]);
+			Assert.AreEqual("Bar", toTest[1]);
+
+			CQManager.ActivateCommandQueueStack(Guid.Empty);
+		}
+
+
+		[Test]
+		public void CommandifiedListSortWithUndo_Sync_Test()
+		{
+			Guid sessionId = Guid.NewGuid();
+			CQManager.ActivateCommandQueueStack(sessionId);
+
+			CommandifiedList<string> toTest = new CommandifiedList<string>(isSynchronized: true) { "aaa", "aab", "aba", "baa" };
 
 			// use command to sort the list, so it's undoable.
 			CQManager.EnqueueAndRunCommand(new Command<string>(() => toTest.Sort(SortAlgorithm.ShellSort, SortDirection.Descending)));

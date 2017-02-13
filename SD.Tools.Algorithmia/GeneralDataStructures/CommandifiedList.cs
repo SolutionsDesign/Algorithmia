@@ -52,7 +52,9 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	/// <typeparam name="T">The type of the element inside the list.</typeparam>
 	/// <remarks>This class implements IBindingList and not WPF's INotifyCollectionChanged, because the latter isn't recognized
 	/// by Winforms controls, hence the IBindingList interface implementation. Due to the nature of IBindingList, an extra event has been added
-	/// for retrieving a removed element by an observer</remarks>
+	/// for retrieving a removed element by an observer<br/><br/>
+	/// This class can be a synchronized collection by passing true for isSynchronized in the constructor. To synchronize access to the contents of this class, 
+	/// lock on the <see cref="SyncRoot"/> object.</remarks>
 	public class CommandifiedList<T> : Collection<T>, IBindingList
 	{
 		#region Class Member Declarations
@@ -98,12 +100,23 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		}
 		#endregion
 
+
 		/// <summary>
-		/// Initializes a new instance of the <see cref="CommandifiedList&lt;T&gt;"/> class.
+		/// Initializes a new instance of the <see cref="CommandifiedList{T}"/> class. This instance is not synchronized.
 		/// </summary>
-		public CommandifiedList()
+		public CommandifiedList() : this (false)
+		{ }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CommandifiedList{T}" /> class.
+		/// </summary>
+		/// <param name="isSynchronized">if set to <c>true</c> this list is a synchronized collection, using a lock on <see cref="SyncRoot"/> to synchronize activity in multithreading
+		/// scenarios</param>
+		public CommandifiedList(bool isSynchronized)
 			: base()
 		{
+			this.SyncRoot = new object();
+			this.IsSynchronized = isSynchronized;
 			_listDescription = string.Format("CommandifiedList<{0}>", typeof(T).Name);
 			BuildCachedCommandDescriptions();
 		}
@@ -117,7 +130,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </returns>
 		public override string ToString()
 		{
-			return string.Format("{0}. Count: {1}", _listDescription, this.Count);
+			return PerformSyncedAction(() =>string.Format("{0}. Count: {1}", _listDescription, this.Count));
 		}
 
 
@@ -157,7 +170,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="indexToMoveTo">The index to move to.</param>
 		public void MoveElement(int currentIndex, int indexToMoveTo)
 		{
-			if((currentIndex<0) || (currentIndex>=this.Count))
+			if((currentIndex < 0) || (indexToMoveTo >= this.Count))
 			{
 				throw new IndexOutOfRangeException("currentIndex is located outside the collection");
 			}
@@ -165,29 +178,31 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			{
 				throw new IndexOutOfRangeException("indexToMoveTo is located outside the collection");
 			}
-			if(currentIndex==indexToMoveTo)
+			if(currentIndex == indexToMoveTo)
 			{
 				// nothing to do
 				return;
 			}
 			T item = this[currentIndex];
 			Command<T>.DoNow(() =>
+								PerformSyncedAction(() =>
 			                 	{
 									this.SuppressEvents = true;
 									RemoveItem(currentIndex);
 			                 		InsertItem(indexToMoveTo, item);
 									this.SuppressEvents = false;
 									NotifyChange(ListChangedType.ItemMoved, currentIndex, indexToMoveTo);
-			                 	},
+			                 	}),
 								() =>
+								PerformSyncedAction(()=>
 								{
 									this.SuppressEvents = true;
 									RemoveItem(indexToMoveTo);
 									InsertItem(currentIndex, item);
 									this.SuppressEvents = false;
 									NotifyChange(ListChangedType.ItemMoved, indexToMoveTo, currentIndex);
-								}
-								, string.Format("Move element from index '{0}' to index '{1}'", currentIndex, indexToMoveTo)
+								}), 
+								string.Format("Move element from index '{0}' to index '{1}'", currentIndex, indexToMoveTo)
 				);
 		}
 
@@ -233,8 +248,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				}
 			}
 			// create a command which simply inserts the item at the given index and as undo function removes the item at the index specified.
-			Command<T>.DoNow(() => this.PerformInsertItem(index, item), () => this.PerformRemoveItem(index), 
-							_cachedCommandDescriptions[ListCommandType.InsertItem]);
+			Command<T>.DoNow(() => this.PerformInsertItem(index, item), () => this.PerformRemoveItem(index), _cachedCommandDescriptions[ListCommandType.InsertItem]);
 		}
 
 
@@ -246,8 +260,12 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// 	<paramref name="index"/> is less than zero.-or-<paramref name="index"/> is equal to or greater than <see cref="P:System.Collections.ObjectModel.Collection`1.Count"/>.</exception>
 		protected override void RemoveItem(int index)
 		{
-			VerifyIndex(index);
-			T item = this[index];
+			T item = default(T);
+			PerformSyncedAction(()=>
+								{
+									VerifyIndex(index);
+									item = this[index];
+								});
 			if(!this.SuppressEvents)
 			{
 				CancelableListModificationEventArgs<T> eventArgs = new CancelableListModificationEventArgs<T>(item);
@@ -260,8 +278,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			// create a command which simply removes the item at the given index and as undo function it re-inserts the item at the index specified.
 			// The command created passes the current item at the index specified, but it's not really used, as there's no state to set. The command however has to
 			// keep track of the item removed, so the state inside it has to be of type T.
-			Command<T> removeCmd = new Command<T>(() => this.PerformRemoveItem(index), ()=>this[index], i => this.PerformInsertItem(index, i),
-												_cachedCommandDescriptions[ListCommandType.RemoveItem]);
+			Command<T> removeCmd = new Command<T>(() => this.PerformRemoveItem(index), ()=>this[index], i => this.PerformInsertItem(index, i), _cachedCommandDescriptions[ListCommandType.RemoveItem]);
 			CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(removeCmd);
 		}
 
@@ -291,8 +308,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				}
 			}
 			// Create a command which stores the current item at index and sets item as the new item at index. 
-			Command<T> setCmd = new Command<T>(() => this.PerformSetItem(index, item), () => this[index], i => this.PerformSetItem(index, i),
-												_cachedCommandDescriptions[ListCommandType.SetItem]);
+			Command<T> setCmd = new Command<T>(() => this.PerformSetItem(index, item), () => this[index], i => this.PerformSetItem(index, i), _cachedCommandDescriptions[ListCommandType.SetItem]);
 			CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(setCmd);
 		}
 
@@ -356,7 +372,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="e">The event arguments instance containing the event data.</param>
 		protected virtual void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
-			this.NotifyChange(ListChangedType.ItemChanged, -1, this.IndexOf((T)sender));
+			this.NotifyChange(ListChangedType.ItemChanged, -1, PerformSyncedAction(()=>this.IndexOf((T)sender)));
 		}
 
 
@@ -375,6 +391,28 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 					ListChanged(this, new ListChangedEventArgs(changeType, newIndex, oldIndex));
 				}
 			}
+		}
+
+
+		/// <summary>
+		/// Performs the specified action, either inside a lock on <see cref="SyncRoot"/> if this list is Synchronized, or normally, if this list isn't synchronized.
+		/// </summary>
+		/// <param name="toPerform">To perform.</param>
+		protected void PerformSyncedAction(Action toPerform)
+		{
+			GeneralUtils.PerformSyncedAction(toPerform, this.SyncRoot, this.IsSynchronized);
+		}
+
+
+		/// <summary>
+		/// Performs the specified action, either inside a lock on <see cref="SyncRoot"/> if this list is Synchronized, or normally, if this list isn't synchronized.
+		/// </summary>
+		/// <typeparam name="TFunc">The type of the element to return</typeparam>
+		/// <param name="toPerform">To perform.</param>
+		/// <returns>the result of toPerform</returns>
+		protected TFunc PerformSyncedAction<TFunc>(Func<TFunc> toPerform)
+		{
+			return GeneralUtils.PerformSyncedAction(toPerform, this.SyncRoot, this.IsSynchronized);
 		}
 
 
@@ -412,10 +450,13 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		{
 			// can't use the wrapping CTor as that would reflect the changes we're going to make to this collection.
 			Collection<T> toReturn = new Collection<T>();
-			foreach(T t in this)
-			{
-				toReturn.Add(t);
-			}
+			PerformSyncedAction(()=>
+								{
+									foreach(T t in this)
+									{
+										toReturn.Add(t);
+									}
+								});
 			return toReturn;
 		}
 
@@ -428,16 +469,19 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		{
 			ArgumentVerifier.CantBeNull(state, "state");
 
-			base.ClearItems();
+			PerformSyncedAction(()=>
+								{
+									base.ClearItems();
 
-			// from back to front, insert the items, in the same order.
-			for(int i = state.Count-1; i>=0; i--)
-			{
-				T itemToAdd = state[i];
-				OnAddingItem(itemToAdd);
-				base.InsertItem(0, itemToAdd);
-				OnAddingItemComplete(itemToAdd);
-			}
+									// from back to front, insert the items, in the same order.
+									for(int i = state.Count - 1; i >= 0; i--)
+									{
+										T itemToAdd = state[i];
+										OnAddingItem(itemToAdd);
+										base.InsertItem(0, itemToAdd);
+										OnAddingItemComplete(itemToAdd);
+									}
+								});
 			NotifyChange(ListChangedType.Reset, -1, -1);
 		}
 		
@@ -450,7 +494,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		{
 			if((index < 0) || (index >= this.Count))
 			{
-				throw new ArgumentOutOfRangeException("index", string.Format("index is out of range: the value '{0}' isn't in the range of valid values.", index));
+				throw new ArgumentOutOfRangeException(nameof(index), string.Format("index is out of range: the value '{0}' isn't in the range of valid values.", index));
 			}
 		}
 
@@ -464,7 +508,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			INotifyPropertyChanged itemAsINotifyPropertyChanged = item as INotifyPropertyChanged;
 			if(itemAsINotifyPropertyChanged != null)
 			{
-				itemAsINotifyPropertyChanged.PropertyChanged += new PropertyChangedEventHandler(OnElementPropertyChanged);
+				itemAsINotifyPropertyChanged.PropertyChanged += OnElementPropertyChanged;
 			}
 		}
 
@@ -478,7 +522,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			INotifyPropertyChanged itemAsINotifyPropertyChanged = item as INotifyPropertyChanged;
 			if(itemAsINotifyPropertyChanged != null)
 			{
-				itemAsINotifyPropertyChanged.PropertyChanged -= new PropertyChangedEventHandler(OnElementPropertyChanged);
+				itemAsINotifyPropertyChanged.PropertyChanged -= OnElementPropertyChanged;
 			}
 		}
 
@@ -490,14 +534,17 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		private void PerformClearItems()
 		{
 			OnClearing();
-			if((typeof(T) as INotifyPropertyChanged) != null)
-			{
-				foreach(T item in this)
-				{
-					UnbindFromINotifyPropertyChanged(item);
-				}
-			}
-			base.ClearItems();
+			PerformSyncedAction(()=>
+								{
+									if(typeof(INotifyPropertyChanged).IsAssignableFrom(typeof(T)))
+									{
+										foreach(T item in this)
+										{
+											UnbindFromINotifyPropertyChanged(item);
+										}
+									}
+									base.ClearItems();
+								});
 			OnClearingComplete();
 			NotifyChange(ListChangedType.Reset, -1, -1);
 		}
@@ -510,11 +557,14 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="item">The item.</param>
 		private void PerformInsertItem(int index, T item)
 		{
-			// index isn't verified as index can be invalid (in the case of an append).
-			BindToINotifyPropertyChanged(item);
-			OnAddingItem(item);
-			base.InsertItem(index, item);
-			OnAddingItemComplete(item);
+			PerformSyncedAction(()=>
+								{
+									// index isn't verified as index can be invalid (in the case of an append).
+									BindToINotifyPropertyChanged(item);
+									OnAddingItem(item);
+									base.InsertItem(index, item);
+									OnAddingItemComplete(item);
+								});
 			NotifyChange(ListChangedType.ItemAdded, -1, index);
 		}
 
@@ -529,7 +579,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			T itemToRemove = this[index];
 			OnRemovingItem(itemToRemove);
 			UnbindFromINotifyPropertyChanged(itemToRemove);
-			base.RemoveItem(index);
+			PerformSyncedAction(()=>base.RemoveItem(index));
 			OnRemovingItemComplete(itemToRemove);
 			NotifyElementRemoved(itemToRemove);
 			NotifyChange(ListChangedType.ItemDeleted, -1, index);
@@ -549,7 +599,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			UnbindFromINotifyPropertyChanged(itemToRemove);
 			BindToINotifyPropertyChanged(item);
 			OnAddingItem(item);
-			base.SetItem(index, item);
+			PerformSyncedAction(()=>base.SetItem(index, item));
 			OnRemovingItemComplete(itemToRemove);
 			OnAddingItemComplete(item);
 			NotifyChange(ListChangedType.ItemChanged, -1, index);
@@ -737,6 +787,28 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// Gets or sets a value indicating whether events are blocked from being raised (true) or not (false, default)
 		/// </summary>
 		public bool SuppressEvents { get; set; }
+
+		/// <summary>
+		/// Gets a value indicating whether access to the <see cref="System.Collections.ICollection" /> is synchronized (thread safe). Default: false. Set to true in the ctor to 
+		/// make sure the operations on this object are using locks. Use <see cref="SyncRoot"/> to lock on the same object as this class' internal operations.
+		/// </summary>
+		public bool IsSynchronized { get; }
+
+		/// <summary>
+		/// Gets an object that can be used to synchronize access to the <see cref="System.Collections.ICollection" />. It's the same object used in locks inside this object. 
+		/// </summary>
+		public object SyncRoot { get; }
+
+		/// <summary>
+		/// Gets or sets the instance at the specified index. This is a redefinition, so the get can be synchronized if needed.
+		/// </summary>
+		/// <param name="index">The index.</param>
+		/// <returns></returns>
+		public new T this[int index]
+		{
+			get { return PerformSyncedAction(()=>this.Items[index]); }
+			set { base[index] = value; }
+		}
 		#endregion
 	}
 }

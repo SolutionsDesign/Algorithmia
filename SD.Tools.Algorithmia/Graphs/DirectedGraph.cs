@@ -53,7 +53,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <summary>
 		/// Initializes a new instance of the <see cref="DirectedGraph&lt;TVertex, TEdge&gt;"/> class.
 		/// </summary>
-		public DirectedGraph() : base(true)
+		public DirectedGraph() : this(isCommandified:false, isSynchronized:false)
 		{
 		}
 
@@ -64,7 +64,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
 		/// graph state are undoable.</param>
 		public DirectedGraph(bool isCommandified)
-			: base(true, isCommandified)
+			: this(isCommandified, isSynchronized:false)
 		{
 		}
 
@@ -72,12 +72,23 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <summary>
 		/// Initializes a new instance of the <see cref="DirectedGraph&lt;TVertex, TEdge&gt;"/> class.
 		/// </summary>
+		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
+		/// graph state are undoable.</param>
+		/// <param name="isSynchronized">if set to <c>true</c> this list is a synchronized collection, using a lock on SyncRoot to synchronize activity in multithreading
+		/// scenarios</param>
+		public DirectedGraph(bool isCommandified, bool isSynchronized)
+			: base(true, isCommandified, isSynchronized)
+		{
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="DirectedGraph&lt;TVertex, TEdge&gt;"/> class.
+		/// </summary>
 		/// <param name="edgeProducerFunc">The edge producer func which produces edges for this directed graph. Used in some algorithms which 
 		/// have to produce edges.</param>
 		public DirectedGraph(Func<TVertex, TVertex, TEdge> edgeProducerFunc)
-			: base(true)
+			: this(edgeProducerFunc, isCommandified:false, isSynchronized:false)
 		{
-			this.EdgeProducerFunc = edgeProducerFunc;
 		}
 
 
@@ -88,8 +99,23 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// have to produce edges.</param>
 		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
 		/// graph state are undoable.</param>
-		public DirectedGraph(Func<TVertex, TVertex, TEdge> edgeProducerFunc, bool isCommandified)
-			: base(true, isCommandified)
+		public DirectedGraph(Func<TVertex, TVertex, TEdge> edgeProducerFunc, bool isCommandified) 
+			: this(edgeProducerFunc, isCommandified, isSynchronized:false)
+		{
+		}
+
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="DirectedGraph&lt;TVertex, TEdge&gt;"/> class.
+		/// </summary>
+		/// <param name="edgeProducerFunc">The edge producer func which produces edges for this directed graph. Used in some algorithms which 
+		/// have to produce edges.</param>
+		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
+		/// graph state are undoable.</param>
+		/// <param name="isSynchronized">if set to <c>true</c> this list is a synchronized collection, using a lock on SyncRoot to synchronize activity in multithreading
+		/// scenarios</param>
+		public DirectedGraph(Func<TVertex, TVertex, TEdge> edgeProducerFunc, bool isCommandified, bool isSynchronized)
+			: base(true, isCommandified, isSynchronized)
 		{
 			this.EdgeProducerFunc = edgeProducerFunc;
 		}
@@ -99,7 +125,8 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// Copy constructor of the <see cref="DirectedGraph&lt;TVertex, TEdge&gt;"/> class.
 		/// </summary>
 		/// <param name="graph">The graph.</param>
-		public DirectedGraph(DirectedGraph<TVertex, TEdge> graph) : this(graph, null, false)
+		public DirectedGraph(DirectedGraph<TVertex, TEdge> graph) 
+			: this(graph, null, isCommandified:false, isSynchronized: false)
 		{
 		}
 
@@ -111,7 +138,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
 		/// graph state are undoable.</param>
 		public DirectedGraph(DirectedGraph<TVertex, TEdge> graph, bool isCommandified)
-			: this(graph, null, isCommandified)
+			: this(graph, null, isCommandified, isSynchronized: false)
 		{
 		}
 
@@ -123,11 +150,11 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <param name="edgeProducerFunc">The edge producer func which produces edges for this directed graph. Used in some algorithms which 
 		/// have to produce edges.</param>
 		public DirectedGraph(DirectedGraph<TVertex, TEdge> graph, Func<TVertex, TVertex, TEdge> edgeProducerFunc)
-			: this(graph, edgeProducerFunc, false)
+			: this(graph, edgeProducerFunc, isCommandified:false, isSynchronized: false)
 		{
 		}
 
-		
+
 		/// <summary>
 		/// Copy constructor of the <see cref="DirectedGraph&lt;TVertex, TEdge&gt;"/> class.
 		/// </summary>
@@ -137,7 +164,23 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
 		/// graph state are undoable.</param>
 		public DirectedGraph(DirectedGraph<TVertex, TEdge> graph, Func<TVertex, TVertex, TEdge> edgeProducerFunc, bool isCommandified)
-			: base(graph, true, isCommandified)
+			: this(graph, edgeProducerFunc, isCommandified, isSynchronized:false)
+		{
+		}
+
+
+		/// <summary>
+		/// Copy constructor of the <see cref="DirectedGraph&lt;TVertex, TEdge&gt;"/> class.
+		/// </summary>
+		/// <param name="graph">The graph.</param>
+		/// <param name="edgeProducerFunc">The edge producer func which produces edges for this directed graph. Used in some algorithms which 
+		/// have to produce edges.</param>
+		/// <param name="isCommandified">If set to true, the graph is a commandified graph, which means all actions taken on this graph which mutate 
+		/// graph state are undoable.</param>
+		/// <param name="isSynchronized">if set to <c>true</c> this list is a synchronized collection, using a lock on SyncRoot to synchronize activity in multithreading
+		/// scenarios</param>
+		public DirectedGraph(DirectedGraph<TVertex, TEdge> graph, Func<TVertex, TVertex, TEdge> edgeProducerFunc, bool isCommandified, bool isSynchronized)
+			: base(graph, true, isCommandified, isSynchronized)
 		{
 			this.EdgeProducerFunc = edgeProducerFunc;
 		}
@@ -156,22 +199,25 @@ namespace SD.Tools.Algorithmia.Graphs
 				throw new InvalidOperationException("To be able to produce a Transitive Closure of this graph, the graph has to have its EdgeProducerFunc set to produce new edges. It's currently not set (null).");
 			}
 
-		    foreach(TVertex i in this.Vertices)
-		    {
-		        foreach(TVertex j in this.Vertices)
-		        {
-		            foreach(TVertex k in this.Vertices)
-		            {
-		                if(!j.Equals(i) && !k.Equals(i))
-		                {
-		                    if(result.ContainsEdge(j, i) && result.ContainsEdge(i, k) && !result.ContainsEdge(j, k))
-		                    {
-								result.Add(this.EdgeProducerFunc(j, k));
-		                    }
-		                }
-		            }
-		        }
-		    }
+			PerformSyncedAction(()=>
+								{
+									foreach(TVertex i in this.Vertices)
+									{
+										foreach(TVertex j in this.Vertices)
+										{
+											foreach(TVertex k in this.Vertices)
+											{
+												if(!j.Equals(i) && !k.Equals(i))
+												{
+													if(result.ContainsEdge(j, i) && result.ContainsEdge(i, k) && !result.ContainsEdge(j, k))
+													{
+														result.Add(this.EdgeProducerFunc(j, k));
+													}
+												}
+											}
+										}
+									}
+								});
 		    return result;
 		}
 	}

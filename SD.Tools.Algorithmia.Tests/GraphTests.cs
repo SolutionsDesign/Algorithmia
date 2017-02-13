@@ -57,6 +57,100 @@ namespace SD.Tools.Algorithmia.Tests
 		private Random _random;
 		private int _seed;
 
+
+		#region Private classes
+		/// <summary>
+		/// Simple graph class which is used to test isconnected code with Edge(Of T) instances
+		/// </summary>
+		/// <typeparam name="TVertex"></typeparam>
+		/// <typeparam name="TEdge"></typeparam>
+		public class SimpleGraph<TVertex, TEdge> : GraphBase<TVertex, TEdge>
+			where TEdge : class, IEdge<TVertex>
+		{
+			public SimpleGraph(bool isDirected)
+				: base(isDirected)
+			{
+			}
+		}
+		
+		/// <summary>
+		/// simple tester class to check what the order is the crawler traverses the graph
+		/// </summary>
+		/// <typeparam name="TVertex"></typeparam>
+		/// <typeparam name="TEdge"></typeparam>
+		public class DepthFirstSearchTester<TVertex, TEdge> : DepthFirstSearchCrawler<TVertex, TEdge>
+			where TEdge : class, IEdge<TVertex>
+		{
+			/// <summary>
+			/// Initializes a new instance of the <see cref="DepthFirstSearchLogger&lt;TVertex, TEdge&gt;"/> class.
+			/// </summary>
+			/// <param name="toCrawl">To crawl.</param>
+			public DepthFirstSearchTester(GraphBase<TVertex, TEdge> toCrawl)
+				: base(toCrawl, false)
+			{
+				this.VerticesLoggedInOnVisited = new List<TVertex>();
+				this.VerticesLoggedInOnVisiting = new List<TVertex>();
+			}
+
+
+			/// <summary>
+			/// Called when the vertexVisited was visited over the edge edgeUsed. This method is called right after all vertices related to vertexVisited were visited.
+			/// </summary>
+			/// <param name="vertexVisited">The vertex visited right before this method.</param>
+			/// <param name="edges">The edges usable to visit vertexVisited. Can be null, in which case the vertex was visited without using an edge (which would mean
+			/// the vertex is a tree root, or the start vertex.)</param>
+			protected override void OnVisited(TVertex vertexVisited, HashSet<TEdge> edges)
+			{
+				this.VerticesLoggedInOnVisited.Add(vertexVisited);
+			}
+
+
+			/// <summary>
+			/// Called when the vertexToVisit is about to be visited over the edge edgeUsed. This method is called right before all vertices related to vertexToVisit
+			/// are visited.
+			/// </summary>
+			/// <param name="vertexVisited">The vertex currently visited</param>
+			/// <param name="edges">The edges usable to visit vertexToVisit. Can be null, in which case the vertex was visited without using an edge (which would mean
+			/// the vertex is a tree root, or the start vertex.)</param>
+			protected override void OnVisiting(TVertex vertexVisited, HashSet<TEdge> edges)
+			{
+				this.VerticesLoggedInOnVisiting.Add(vertexVisited);
+			}
+
+
+			/// <summary>
+			/// Starts this instance.
+			/// </summary>
+			public void Start()
+			{
+				this.Crawl();
+			}
+
+
+			/// <summary>
+			/// Starts the specified start vertex.
+			/// </summary>
+			/// <param name="startVertex">The start vertex.</param>
+			public void Start(TVertex startVertex)
+			{
+				this.Crawl(startVertex);
+			}
+
+
+			#region Class Property Declarations
+			/// <summary>
+			/// Gets or sets the vertices logged in OnVisiting.
+			/// </summary>
+			public List<TVertex> VerticesLoggedInOnVisiting { get; private set; }
+
+			/// <summary>
+			/// Gets or sets the vertices logged in OnVisited.
+			/// </summary>
+			public List<TVertex> VerticesLoggedInOnVisited { get; private set; }
+			#endregion
+		}
+		#endregion
+
 		/// <summary>
 		/// Called before any other methods when this TestFixture is to be used.
 		/// </summary>
@@ -245,7 +339,6 @@ namespace SD.Tools.Algorithmia.Tests
 
 
 		[Test]
-		[ExpectedException(typeof(InvalidOperationException))]
 		public void TopologicalSorterOnDirectedGraphWithCycle()
 		{
 			DirectedGraph<string, DirectedEdge<string>> graph = new DirectedGraph<string, DirectedEdge<string>>();
@@ -259,7 +352,7 @@ namespace SD.Tools.Algorithmia.Tests
 			graph.Add(new DirectedEdge<string>("G", "F"));	// G->F
 
 			TopologicalSorter<string, DirectedEdge<string>> sorter = new TopologicalSorter<string, DirectedEdge<string>>(graph);
-			sorter.Sort();
+			Assert.That(()=>sorter.Sort(), Throws.TypeOf<InvalidOperationException>());
 		}
 
 
@@ -496,96 +589,4 @@ namespace SD.Tools.Algorithmia.Tests
 		}
 	}
 
-
-	/// <summary>
-	/// simple tester class to check what the order is the crawler traverses the graph
-	/// </summary>
-	/// <typeparam name="TVertex"></typeparam>
-	/// <typeparam name="TEdge"></typeparam>
-	public class DepthFirstSearchTester<TVertex, TEdge> : DepthFirstSearchCrawler<TVertex, TEdge>
-		where TEdge : class, IEdge<TVertex>
-	{
-		/// <summary>
-		/// Initializes a new instance of the <see cref="DepthFirstSearchLogger&lt;TVertex, TEdge&gt;"/> class.
-		/// </summary>
-		/// <param name="toCrawl">To crawl.</param>
-		public DepthFirstSearchTester(GraphBase<TVertex, TEdge> toCrawl)
-			: base(toCrawl, false)
-		{
-			this.VerticesLoggedInOnVisited = new List<TVertex>();
-			this.VerticesLoggedInOnVisiting = new List<TVertex>();
-		}
-
-
-		/// <summary>
-		/// Called when the vertexVisited was visited over the edge edgeUsed. This method is called right after all vertices related to vertexVisited were visited.
-		/// </summary>
-		/// <param name="vertexVisited">The vertex visited right before this method.</param>
-		/// <param name="edges">The edges usable to visit vertexVisited. Can be null, in which case the vertex was visited without using an edge (which would mean
-		/// the vertex is a tree root, or the start vertex.)</param>
-		protected override void OnVisited(TVertex vertexVisited, HashSet<TEdge> edges)
-		{
-			this.VerticesLoggedInOnVisited.Add(vertexVisited);
-		}
-
-
-		/// <summary>
-		/// Called when the vertexToVisit is about to be visited over the edge edgeUsed. This method is called right before all vertices related to vertexToVisit
-		/// are visited.
-		/// </summary>
-		/// <param name="vertexVisited">The vertex currently visited</param>
-		/// <param name="edges">The edges usable to visit vertexToVisit. Can be null, in which case the vertex was visited without using an edge (which would mean
-		/// the vertex is a tree root, or the start vertex.)</param>
-		protected override void OnVisiting(TVertex vertexVisited, HashSet<TEdge> edges)
-		{
-			this.VerticesLoggedInOnVisiting.Add(vertexVisited);
-		}
-
-
-		/// <summary>
-		/// Starts this instance.
-		/// </summary>
-		public void Start()
-		{
-			this.Crawl();
-		}
-
-
-		/// <summary>
-		/// Starts the specified start vertex.
-		/// </summary>
-		/// <param name="startVertex">The start vertex.</param>
-		public void Start(TVertex startVertex)
-		{
-			this.Crawl(startVertex);
-		}
-
-
-		#region Class Property Declarations
-		/// <summary>
-		/// Gets or sets the vertices logged in OnVisiting.
-		/// </summary>
-		public List<TVertex> VerticesLoggedInOnVisiting { get; private set; }
-
-		/// <summary>
-		/// Gets or sets the vertices logged in OnVisited.
-		/// </summary>
-		public List<TVertex> VerticesLoggedInOnVisited { get; private set; }
-		#endregion
-	}
-
-
-	/// <summary>
-	/// Simple graph class which is used to test isconnected code with Edge(Of T) instances
-	/// </summary>
-	/// <typeparam name="TVertex"></typeparam>
-	/// <typeparam name="TEdge"></typeparam>
-	public class SimpleGraph<TVertex, TEdge> : GraphBase<TVertex, TEdge>
-		where TEdge : class, IEdge<TVertex>
-	{
-		public SimpleGraph(bool isDirected)
-			: base(isDirected)
-		{
-		}
-	}
 }

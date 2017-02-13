@@ -98,6 +98,16 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 
 
 		/// <summary>
+		/// Clones this instance using shallow copy
+		/// </summary>
+		/// <returns></returns>
+		public MultiValueDictionary<TKey, TValue> Clone()
+		{
+			return this.MemberwiseClone() as MultiValueDictionary<TKey, TValue>;
+		}
+
+
+		/// <summary>
 		/// Gets the object data.
 		/// </summary>
 		/// <param name="info">The info.</param>

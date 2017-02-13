@@ -57,7 +57,8 @@ namespace SD.Tools.Algorithmia.Graphs
 	/// by default no criteria are set, so no vertex/edge is added if it's added to the main graph). Removing a vertex/edge from the main graph will remove
 	/// the vertex / edge from this view if it's part of this view. As this view binds to events on the main graph, it's key to call Dispose() on an 
 	/// instance of SubGraphView if it's no longer needed to make sure event handlers are cleaned up.
-	/// This view has no adjacency lists, as they're located in the main graph. 
+	/// This view has no adjacency lists, as they're located in the main graph. <br/><br/>
+	/// If the graph specified is a synchronized graph, this view is also synchronized, and will sync its actions with the graph using the graph's SyncRoot object. 
 	/// </remarks>
 	public class SubGraphView<TVertex, TEdge> : IDisposable, INotifyAsRemoved
 		where TEdge : class, IEdge<TVertex>
@@ -145,25 +146,28 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(this.MainGraph.Contains(vertex))
 			{
-				if(!_vertices.Contains(vertex))
+				if(!PerformSyncedAction(()=>_vertices.Contains(vertex)))
 				{
 					if(_isCommandified)
 					{
-						Command<TVertex>.DoNow(() =>
-												{
-													_vertices.Add(vertex);
-													OnVertexAdded(vertex);
-												},
-											   () =>
-												{
-													_vertices.Remove(vertex);
-													OnVertexRemoved(vertex);
-												}, "Add vertex to SubGraphView");
+						Command<TVertex>.DoNow(()=>PerformSyncedAction(()=>
+																	   {
+																		   _vertices.Add(vertex);
+																		   OnVertexAdded(vertex);
+																	   }),
+											   ()=>PerformSyncedAction(()=>
+																	   {
+																		   _vertices.Remove(vertex);
+																		   OnVertexRemoved(vertex);
+																	   }), "Add vertex to SubGraphView");
 					}
 					else
 					{
-						_vertices.Add(vertex);
-						OnVertexAdded(vertex);
+						PerformSyncedAction(()=>
+											{
+												_vertices.Add(vertex);
+												OnVertexAdded(vertex);
+											});
 					}
 				}
 			}
@@ -178,27 +182,30 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(this.MainGraph.Contains(edge))
 			{
-				if(!_edges.Contains(edge))
+				if(!PerformSyncedAction(()=>_edges.Contains(edge)))
 				{
 					if(_isCommandified)
 					{
-						Command<TEdge>.DoNow(() =>
-												{
-													Add(edge.StartVertex);
-													Add(edge.EndVertex);
-													_edges.Add(edge);
-													OnEdgeAdded(edge);
-												},
-											 () =>
-												{
-													_edges.Remove(edge);
-													OnEdgeRemoved(edge);
-												}, "Add edge to SubGraphView");
+						Command<TEdge>.DoNow(()=>PerformSyncedAction(()=>
+																	 {
+																		 Add(edge.StartVertex);
+																		 Add(edge.EndVertex);
+																		 _edges.Add(edge);
+																		 OnEdgeAdded(edge);
+																	 }),
+											 ()=>PerformSyncedAction(()=>
+																	 {
+																		 _edges.Remove(edge);
+																		 OnEdgeRemoved(edge);
+																	 }), "Add edge to SubGraphView");
 					}
 					else
 					{
-						_edges.Add(edge);
-						OnEdgeAdded(edge);
+						PerformSyncedAction(()=>
+											{
+												_edges.Add(edge);
+												OnEdgeAdded(edge);
+											});
 					}
 				}
 			}
@@ -213,27 +220,30 @@ namespace SD.Tools.Algorithmia.Graphs
 		public void Remove(TVertex toRemove)
 		{
 			ArgumentVerifier.CantBeNull(toRemove, "toRemove");
-			if(_vertices.Contains(toRemove))
+			if(PerformSyncedAction(()=>_vertices.Contains(toRemove)))
 			{
 				if(_isCommandified)
 				{
-					Command<TVertex>.DoNow(() =>
-											{
-												_vertices.Remove(toRemove);
-												OnVertexRemoved(toRemove);
-												CheckIsEmpty();
-											},
-										   () =>
-											{
-												_vertices.Add(toRemove);
-												OnVertexAdded(toRemove);
-											}, "Remove vertex to SubGraphView");
+					Command<TVertex>.DoNow(()=>PerformSyncedAction(()=>
+																   {
+																	   _vertices.Remove(toRemove);
+																	   OnVertexRemoved(toRemove);
+																	   CheckIsEmpty();
+																   }),
+										   ()=>PerformSyncedAction(()=>
+																   {
+																	   _vertices.Add(toRemove);
+																	   OnVertexAdded(toRemove);
+																   }), "Remove vertex to SubGraphView");
 				}
 				else
 				{
-					_vertices.Remove(toRemove);
-					OnVertexRemoved(toRemove);
-					CheckIsEmpty();
+					PerformSyncedAction(()=>
+										{
+											_vertices.Remove(toRemove);
+											OnVertexRemoved(toRemove);
+											CheckIsEmpty();
+										});
 				}
 			}
 		}
@@ -247,27 +257,30 @@ namespace SD.Tools.Algorithmia.Graphs
 		public void Remove(TEdge toRemove)
 		{
 			ArgumentVerifier.CantBeNull(toRemove, "toRemove");
-			if(_edges.Contains(toRemove))
+			if(PerformSyncedAction(()=>_edges.Contains(toRemove)))
 			{
 				if(_isCommandified)
 				{
-					Command<TEdge>.DoNow(() =>
-											{
-												_edges.Remove(toRemove);
-												OnEdgeRemoved(toRemove);
-												CheckIsEmpty();
-											},
-										 () =>
-											{
-												_edges.Add(toRemove);
-												OnEdgeAdded(toRemove);
-											}, "Remove edge to SubGraphView");
+					Command<TEdge>.DoNow(()=>PerformSyncedAction(()=>
+																 {
+																	 _edges.Remove(toRemove);
+																	 OnEdgeRemoved(toRemove);
+																	 CheckIsEmpty();
+																 }),
+										 ()=>PerformSyncedAction(()=>
+																 {
+																	 _edges.Add(toRemove);
+																	 OnEdgeAdded(toRemove);
+																 }), "Remove edge to SubGraphView");
 				}
 				else
 				{
-					_edges.Remove(toRemove);
-					OnEdgeRemoved(toRemove);
-					CheckIsEmpty();
+					PerformSyncedAction(()=>
+										{
+											_edges.Remove(toRemove);
+											OnEdgeRemoved(toRemove);
+											CheckIsEmpty();
+										});
 				}
 			}
 		}
@@ -282,7 +295,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		public bool Contains(TVertex vertex)
 		{
 			ArgumentVerifier.CantBeNull(vertex, "vertex");
-			return _vertices.Contains(vertex);
+			return PerformSyncedAction(()=>_vertices.Contains(vertex));
 		}
 
 
@@ -296,7 +309,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		public bool Contains(TEdge edge)
 		{
 			ArgumentVerifier.CantBeNull(edge, "edge");
-			return _edges.Contains(edge);
+			return PerformSyncedAction(()=>_edges.Contains(edge));
 		}
 
 
@@ -318,10 +331,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(!_eventsBound)
 			{
-				this.MainGraph.EdgeAdded += new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeAdded);
-				this.MainGraph.EdgeRemoved += new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeRemoved);
-				this.MainGraph.VertexAdded += new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexAdded);
-				this.MainGraph.VertexRemoved += new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexRemoved);
+				this.MainGraph.EdgeAdded += MainGraph_EdgeAdded;
+				this.MainGraph.EdgeRemoved += MainGraph_EdgeRemoved;
+				this.MainGraph.VertexAdded += MainGraph_VertexAdded;
+				this.MainGraph.VertexRemoved += MainGraph_VertexRemoved;
 				_eventsBound = true;
 			}
 		}
@@ -336,10 +349,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		{
 			if(_eventsBound)
 			{
-				this.MainGraph.EdgeAdded -= new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeAdded);
-				this.MainGraph.EdgeRemoved -= new EventHandler<GraphChangeEventArgs<TEdge>>(MainGraph_EdgeRemoved);
-				this.MainGraph.VertexAdded -= new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexAdded);
-				this.MainGraph.VertexRemoved -= new EventHandler<GraphChangeEventArgs<TVertex>>(MainGraph_VertexRemoved);
+				this.MainGraph.EdgeAdded -= MainGraph_EdgeAdded;
+				this.MainGraph.EdgeRemoved -= MainGraph_EdgeRemoved;
+				this.MainGraph.VertexAdded -= MainGraph_VertexAdded;
+				this.MainGraph.VertexRemoved -= MainGraph_VertexRemoved;
 				_eventsBound = false;
 			}
 		}
@@ -433,6 +446,28 @@ namespace SD.Tools.Algorithmia.Graphs
 
 
 		/// <summary>
+		/// Performs the specified action, either inside a lock on MainGraph.SyncRoot if thegraph is Synchronized, or normally, if the graph isn't synchronized.
+		/// </summary>
+		/// <param name="toPerform">To perform.</param>
+		protected void PerformSyncedAction(Action toPerform)
+		{
+			GeneralUtils.PerformSyncedAction(toPerform, this.MainGraph.SyncRoot, this.MainGraph.IsSynchronized);
+		}
+
+
+		/// <summary>
+		/// Performs the specified action, either inside a lock on MainGraph.SyncRoot if the graph is Synchronized, or normally, if the graph isn't synchronized.
+		/// </summary>
+		/// <typeparam name="T">The type of the element to return</typeparam>
+		/// <param name="toPerform">To perform.</param>
+		/// <returns>the result of toPerform</returns>
+		protected T PerformSyncedAction<T>(Func<T> toPerform)
+		{
+			return GeneralUtils.PerformSyncedAction(toPerform, this.MainGraph.SyncRoot, this.MainGraph.IsSynchronized);
+		}
+
+
+		/// <summary>
 		/// Called when Disposing
 		/// </summary>
 		protected virtual void OnDisposing()
@@ -446,11 +481,14 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <param name="vertex">The vertex.</param>
 		private void RemoveEdgesWithVertex(TVertex vertex)
 		{
-			var edgesToRemove = _edges.Where(e=>(e.EndVertex!=null && e.EndVertex.Equals(vertex)) || (e.StartVertex!=null && e.StartVertex.Equals(vertex))).ToList();
-			foreach(var edge in edgesToRemove)
-			{
-				this.Remove(edge);
-			}
+			PerformSyncedAction(()=>
+								{
+									var edgesToRemove = _edges.Where(e=>(e.EndVertex != null && e.EndVertex.Equals(vertex)) || (e.StartVertex != null && e.StartVertex.Equals(vertex))).ToList();
+									foreach(var edge in edgesToRemove)
+									{
+										this.Remove(edge);
+									}
+								});
 		}
 
 		
@@ -463,7 +501,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			INotifyPropertyChanged itemAsINotifyPropertyChanged = item as INotifyPropertyChanged;
 			if(itemAsINotifyPropertyChanged != null)
 			{
-				itemAsINotifyPropertyChanged.PropertyChanged += new PropertyChangedEventHandler(OnElementPropertyChanged);
+				itemAsINotifyPropertyChanged.PropertyChanged += OnElementPropertyChanged;
 			}
 		}
 
@@ -477,7 +515,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			INotifyPropertyChanged itemAsINotifyPropertyChanged = item as INotifyPropertyChanged;
 			if(itemAsINotifyPropertyChanged != null)
 			{
-				itemAsINotifyPropertyChanged.PropertyChanged -= new PropertyChangedEventHandler(OnElementPropertyChanged);
+				itemAsINotifyPropertyChanged.PropertyChanged -= OnElementPropertyChanged;
 			}
 		}
 
@@ -508,10 +546,13 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// </summary>
 		private void CheckIsEmpty()
 		{
-			if((_edges.Count <= 0) && (_vertices.Count <= 0))
-			{
-				this.IsEmpty.RaiseEvent(this);
-			}
+			PerformSyncedAction(()=>
+								{
+									if((_edges.Count <= 0) && (_vertices.Count <= 0))
+									{
+										this.IsEmpty.RaiseEvent(this);
+									}
+								});
 		}
 
 
@@ -592,8 +633,10 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// Gets the main graph this SubGraphView is a view on
 		/// </summary>
 		public GraphBase<TVertex, TEdge> MainGraph { get; private set; }
+
 		/// <summary>
-		/// Gets the vertices contained in this SubGraphView. All vertices are part of this.MainGraph
+		/// Gets the vertices contained in this SubGraphView. All vertices are part of this.MainGraph. Enumerating this property will enumerate the inner structures of the SubGraphView, 
+		/// no copy is made. This requires a lock on this.MainGraph.SyncRoot if this.MainGraph.IsSynchronized is set to true to make sure enumeration of this property is thread safe.
 		/// </summary>
 		public IEnumerable<TVertex> Vertices 
 		{
@@ -601,7 +644,9 @@ namespace SD.Tools.Algorithmia.Graphs
 		}
 
 		/// <summary>
-		/// Gets the edges contained in this SubGraphView. All edges are part of this.MainGraph
+		/// Gets the edges contained in this SubGraphView. All edges are part of this.MainGraph. All vertices are part of this.MainGraph. Enumerating this property will enumerate the 
+		/// inner structures of the SubGraphView, no copy is made. This requires a lock on this.MainGraph.SyncRoot if this.MainGraph.IsSynchronized is set to true to make sure enumeration of 
+		/// this property is thread safe.
 		/// </summary>
 		public IEnumerable<TEdge> Edges 
 		{

@@ -131,7 +131,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			_timer = new Timer(intervalToUse);
 			_timer.SynchronizingObject = synchronizingObject;
 			_timer.AutoReset = false;
-			_timer.Elapsed += new ElapsedEventHandler(_timer_Elapsed);
+			_timer.Elapsed += _timer_Elapsed;
 			_eventArgsComparer = eventArgsComparer;
 			this.Enabled = true;
 		}
