@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Solutions Design")]
 [assembly: AssemblyProduct("SD.Tools.Algorithmia.Tests")]
-[assembly: AssemblyCopyright("Copyright © Solutions Design 2007")]
+[assembly: AssemblyCopyright("Copyright © Solutions Design 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

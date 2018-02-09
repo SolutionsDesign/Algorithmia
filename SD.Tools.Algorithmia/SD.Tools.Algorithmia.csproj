@@ -1,200 +1,29 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{46A021F5-5EB9-42B2-9334-724870C4BE45}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SD.Tools.Algorithmia</RootNamespace>
+    <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
     <AssemblyName>SD.Tools.Algorithmia</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <RootNamespace>SD.Tools.Algorithmia</RootNamespace>
+    <Version>1.3.0</Version>
+    <AssemblyVersion>1.3.0.0</AssemblyVersion>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>AlgorithmiaStrongKey.snk</AssemblyOriginatorKeyFile>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation />
-    <PublishUrl>http://localhost/SD.Tools.Algorithmia/</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Web</InstallFrom>
-    <UpdateEnabled>true</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>true</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Authors>Solutions Design bv</Authors>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageLicenseUrl>https://github.com/SolutionsDesign/Algorithmia/blob/master/LICENSE.txt</PackageLicenseUrl>
+    <PackageProjectUrl>https://solutionsdesign.github.io/Algorithmia/</PackageProjectUrl>
+    <PackageTags>Algorithm Data Structure class library graph heap command queue</PackageTags>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\SD.Tools.Algorithmia.xml</DocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\SD.Tools.Algorithmia.XML</DocumentationFile>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <NoWarn>
-    </NoWarn>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <DocumentationFile>bin\Release\SD.Tools.Algorithmia.XML</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ForShipping|AnyCPU' ">
-    <OutputPath>bin\ForShipping\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
-    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <DocumentationFile>bin\ForShipping\SD.Tools.Algorithmia.XML</DocumentationFile>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="SD.Tools.BCLExtensions, Version=1.1.0.0, Culture=neutral, PublicKeyToken=a3f87088dcb994e1, processorArchitecture=MSIL">
-      <HintPath>..\packages\SD.Tools.BCLExtensions.1.1.0\lib\net35\SD.Tools.BCLExtensions.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+     <Compile Remove="PropertyEditing\PropertyBag.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\Command.cs" />
-    <Compile Include="Commands\CommandBase.cs" />
-    <Compile Include="Commands\CommandQueue.cs" />
-    <Compile Include="Commands\CommandQueueActionPerformedEventArgs.cs" />
-    <Compile Include="Commands\CommandQueueManager.cs" />
-    <Compile Include="Commands\CommandQueueStack.cs" />
-    <Compile Include="Commands\UndoablePeriodCommand.cs" />
-    <Compile Include="Commands\DoDuringUndoException.cs" />
-    <Compile Include="ConstantsEnums.cs" />
-    <Compile Include="GeneralDataStructures\CallLimiter.cs" />
-    <Compile Include="GeneralDataStructures\ChangeAwareKeyedCommandifiedList.cs" />
-    <Compile Include="GeneralDataStructures\CommandifiedMember.cs" />
-    <Compile Include="GeneralDataStructures\EqualityComparers\CommandQueueActionPerformedEventArgsEqualityComparer.cs" />
-    <Compile Include="GeneralDataStructures\EqualityComparers\ElementChangedEventArgsEqualityComparer.cs" />
-    <Compile Include="GeneralDataStructures\EventArguments\ContainerEventArgs.cs" />
-    <Compile Include="GeneralDataStructures\EventArguments\CancelableListModificationEventArgs.cs" />
-    <Compile Include="GeneralDataStructures\EventArguments\CollectionElementRemovedEventArgs.cs" />
-    <Compile Include="GeneralDataStructures\CommandifiedList.cs" />
-    <Compile Include="GeneralDataStructures\EditableObjectDataContainer.cs" />
-    <Compile Include="GeneralDataStructures\ErrorContainer.cs" />
-    <Compile Include="GeneralDataStructures\EventArguments\MemberChangedEventArgs.cs" />
-    <Compile Include="GeneralDataStructures\EventArguments\ElementChangedEventArgs.cs" />
-    <Compile Include="GeneralDataStructures\EventArguments\ElementInListChangedEventArgs.cs" />
-    <Compile Include="GeneralDataStructures\EventThrottler.cs" />
-    <Compile Include="GeneralDataStructures\ExtensionMethods.cs" />
-    <Compile Include="GeneralDataStructures\Grouping.cs" />
-    <Compile Include="GeneralDataStructures\KeyedCommandifiedList.cs" />
-    <Compile Include="GeneralDataStructures\ObserverAwareBindingList.cs" />
-    <Compile Include="GeneralDataStructures\PropertyEditing\PropertyBag.cs" />
-    <Compile Include="GeneralDataStructures\PropertyEditing\PropertySpecification.cs" />
-    <Compile Include="GeneralDataStructures\PropertyEditing\PropertySpecificationDescriptor.cs" />
-    <Compile Include="GeneralDataStructures\PropertyEditing\PropertySpecificationEventArgs.cs" />
-    <Compile Include="GeneralDataStructures\PropertyEditing\PropertySpecificationValuesListTypeConverter.cs" />
-    <Compile Include="GeneralDataStructures\PropertyEditing\PropertyTable.cs" />
-    <Compile Include="GeneralDataStructures\ReadOnlyPair.cs" />
-    <Compile Include="GeneralDataStructures\LinkedBucketList.cs" />
-    <Compile Include="GeneralDataStructures\ListBucket.cs" />
-    <Compile Include="GeneralDataStructures\MultiValueDictionary.cs" />
-    <Compile Include="GeneralDataStructures\Pair.cs" />
-    <Compile Include="GeneralInterfaces\IDetailedNotifyElementChanged.cs" />
-    <Compile Include="GeneralInterfaces\IEventBasedObserver.cs" />
-    <Compile Include="GeneralInterfaces\INotifyAsRemoved.cs" />
-    <Compile Include="GeneralInterfaces\INotifyAsChanged.cs" />
-    <Compile Include="Graphs\Algorithms\DisconnectedGraphsFinder.cs" />
-    <Compile Include="Graphs\Algorithms\RootDetector.cs" />
-    <Compile Include="Graphs\Algorithms\TopologicalSorter.cs" />
-    <Compile Include="Graphs\DepthFirstSearchCrawler.cs" />
-    <Compile Include="Graphs\GraphChangeEventArgs.cs" />
-    <Compile Include="Graphs\IRootDetector.cs" />
-    <Compile Include="Graphs\NonDirectedEdge.cs" />
-    <Compile Include="Graphs\NonDirectedGraph.cs" />
-    <Compile Include="Graphs\SubGraphView.cs" />
-    <Compile Include="UtilityClasses\GeneralUtils.cs" />
-    <Compile Include="Graphs\DirectedEdge.cs" />
-    <Compile Include="Graphs\DirectedGraph.cs" />
-    <Compile Include="Graphs\GraphBase.cs" />
-    <Compile Include="Graphs\Edge.cs" />
-    <Compile Include="Graphs\IEdge.cs" />
-    <Compile Include="Heaps\BinaryHeap.cs" />
-    <Compile Include="Heaps\FibonacciHeap.cs" />
-    <Compile Include="Heaps\HeapBase.cs" />
-    <Compile Include="PriorityQueues\BinaryHeapPriorityQueue.cs" />
-    <Compile Include="PriorityQueues\SortedPriorityQueue.cs" />
-    <Compile Include="PriorityQueues\SimplePriorityQueue.cs" />
-    <Compile Include="PriorityQueues\PriorityQueueBase.cs" />
-    <Compile Include="Sorting\QuickSorter.cs" />
-    <Compile Include="Sorting\ShellSorter.cs" />
-    <Compile Include="Sorting\SortingExtensionMethods.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Sorting\ISortAlgorithm.cs" />
-    <Compile Include="Sorting\SelectionSorter.cs" />
-    <Compile Include="Sorting\SortAlgorithmFactory.cs" />
-    <Compile Include="UtilityClasses\ComparisonBasedComparer.cs" />
-    <Compile Include="UtilityClasses\ArgumentVerifier.cs" />
+    <Compile Remove="obj" />
+    <Compile Remove="bin" />
+    <PackageReference Include="SD.Tools.BCLExtensions" Version="1.2.0" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="AlgorithmiaStrongKey.snk" />
-    <None Include="packages.config" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'net452'">
+    <Reference Include="System.Drawing.Design" />
   </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

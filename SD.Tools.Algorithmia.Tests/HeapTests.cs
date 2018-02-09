@@ -1,9 +1,9 @@
 ﻿//////////////////////////////////////////////////////////////////////
-// Algorithmia is (c) 2014 Solutions Design. All rights reserved.
+// Algorithmia is (c) 2018 Solutions Design. All rights reserved.
 // https://github.com/SolutionsDesign/Algorithmia
 //////////////////////////////////////////////////////////////////////
 // COPYRIGHTS:
-// Copyright (c) 2014 Solutions Design. All rights reserved.
+// Copyright (c) 2018 Solutions Design. All rights reserved.
 // 
 // The Algorithmia library sourcecode and its accompanying tools, tests and support code
 // are released under the following license: (BSD2)
@@ -54,7 +54,6 @@ namespace SD.Tools.Algorithmia.Tests
 	[TestFixture]
 	public class HeapTests
 	{
-		#region Local classes
 		/// <summary>
 		/// Simple class which is used to test the heaps functionality.
 		/// </summary>
@@ -97,9 +96,8 @@ namespace SD.Tools.Algorithmia.Tests
 			/// </summary>
 			public string ElementValue { get; set; }
 		}
-		#endregion
 
-		#region BinaryHeap tests
+
 		/// <summary>
 		/// Tests a merge between two binary max heaps.
 		/// </summary>
@@ -232,10 +230,8 @@ namespace SD.Tools.Algorithmia.Tests
 			// heap should be empty 
 			Assert.AreEqual(0, heap.Count);
 		}
-		#endregion
 		
 
-		#region FibonacciHeap tests
 		/// <summary>
 		/// Tests a merge between two Fibonacci max heaps.
 		/// </summary>
@@ -368,7 +364,6 @@ namespace SD.Tools.Algorithmia.Tests
 			// heap should be empty 
 			Assert.AreEqual(0, heap.Count);
 		}
-		#endregion
 
 	
 		/// <summary>
