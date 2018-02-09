@@ -216,6 +216,26 @@ namespace SD.Tools.Algorithmia.Graphs
 
 
 		/// <summary>
+		/// Gets the vertices as list, and perform this operation synced with the SyncRoot, to avoid threading issues.
+		/// </summary>
+		/// <returns></returns>
+		public List<TVertex> GetVerticesSyncedAsList()
+		{
+			return PerformSyncedAction(()=>this.Vertices.ToList());
+		}
+
+
+		/// <summary>
+		/// Gets the edges as list, and perform this operation synced with the SyncRoot, to avoid threading issues.
+		/// </summary>
+		/// <returns></returns>
+		public List<TEdge> GetEdgesSyncedAsList()
+		{
+			return PerformSyncedAction(() => this.Edges.ToList());
+		}
+
+
+		/// <summary>
 		/// Adds all elements (i.e. vertices and edges) from the provided graph to this graph.
 		/// </summary>
 		/// <param name="graph">The graph to add all elements (i.e. vertices and edges) from to this graph.</param>

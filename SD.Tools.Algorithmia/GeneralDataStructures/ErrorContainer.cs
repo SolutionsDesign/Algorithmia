@@ -47,8 +47,10 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	/// Simple class which is used as a container for error information for IDataErrorInfo implementations. 
 	/// </summary>
 	/// <remarks>Instead of doing housekeeping of error info in every class which implements IDataErrorInfo, you can use an instance of
-	/// this class to do it for you. Simply set the errors in this class and retrieve the error info in the IDataErrorInfo implementation of your
-	/// own class.</remarks>
+	/// this class to do it for you. Simply set the errors in this class and retrieve the error info in the IDataErrorInfo implementation of your own class.
+	/// <br/><br/>
+	/// This class is thread safe.
+	/// </remarks>
 	public class ErrorContainer : IDataErrorInfo
 	{
 		#region Class Member Declarations
@@ -67,6 +69,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			_dataErrorString = string.Empty;
 			_errorPerProperty = new Dictionary<string, Pair<string, bool>>();
 			_defaultError = defaultError;
+			this.SyncRoot = new Object();
 		}
 
 
@@ -76,7 +79,10 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		public void ClearErrors()
 		{
 			_dataErrorString = string.Empty;
-			_errorPerProperty.Clear();
+			lock(this.SyncRoot)
+			{
+				_errorPerProperty.Clear();
+			}
 		}
 
 
@@ -85,6 +91,8 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// property. Properties with an empty string as error are ignored.
 		/// </summary>
 		/// <returns></returns>
+		/// <remarks>This method traverses the inner structures with a filter without locking. To make sure a call to this method is thread safe, lock on 
+		/// <see cref="SyncRoot"/> </remarks>
 		public IEnumerable<string> GetAllPropertyNamesWithErrors()
 		{
 			foreach(KeyValuePair<string, Pair<string, bool>> pair in _errorPerProperty)
@@ -106,7 +114,12 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		{
 			StringBuilder builder = new StringBuilder();
 			bool first = true;
-			foreach(string propertyName in GetAllPropertyNamesWithErrors())
+			List<string> namesToTraverse = null;
+			lock(this.SyncRoot)
+			{
+				namesToTraverse = GetAllPropertyNamesWithErrors().ToList();
+			}
+			foreach(string propertyName in namesToTraverse)
 			{
 				string error = this[propertyName];
 				if(!first)
@@ -143,18 +156,21 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="isSoftError">if set to <see langword="true"/> the error is considered 'soft', which means it's cleared after it's been read.</param>
 		public void SetPropertyError(string propertyName, string errorDescription, bool isSoftError)
 		{
-			if(errorDescription.Length <= 0)
+			lock(this.SyncRoot)
 			{
-				_errorPerProperty.Remove(propertyName);
-			}
-			else
-			{
-				_errorPerProperty[propertyName] = new Pair<string, bool>(errorDescription, isSoftError);
-				_dataErrorString = _defaultError;
-			}
-			if(_errorPerProperty.Count <= 0)
-			{
-				_dataErrorString = string.Empty;
+				if(errorDescription.Length <= 0)
+				{
+					_errorPerProperty.Remove(propertyName);
+				}
+				else
+				{
+					_errorPerProperty[propertyName] = new Pair<string, bool>(errorDescription, isSoftError);
+					_dataErrorString = _defaultError;
+				}
+				if(_errorPerProperty.Count <= 0)
+				{
+					_dataErrorString = string.Empty;
+				}
 			}
 		}
 
@@ -247,20 +263,30 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		{
 			get
 			{
-				Pair<string, bool> loggedErrorInfo = _errorPerProperty.GetValue(columnName);
-				if(loggedErrorInfo==null)
+				lock(this.SyncRoot)
 				{
-					return string.Empty;
+					Pair<string, bool> loggedErrorInfo = _errorPerProperty.GetValue(columnName);
+					if(loggedErrorInfo == null)
+					{
+						return string.Empty;
+					}
+					if(loggedErrorInfo.Value2)
+					{
+						// soft error, so reset it
+						SetPropertyError(columnName, string.Empty);
+					}
+					return loggedErrorInfo.Value1;
 				}
-				if(loggedErrorInfo.Value2)
-				{
-					// soft error, so reset it
-					SetPropertyError(columnName, string.Empty);
-				}
-				return loggedErrorInfo.Value1;
 			}
 		}
 
+		#endregion
+
+		#region Properties
+		/// <summary>
+		/// Gets an object that can be used to synchronize access to the <see cref="System.Collections.ICollection" />. It's the same object used in locks inside this object. 
+		/// </summary>
+		public object SyncRoot { get; }
 		#endregion
 	}
 }
