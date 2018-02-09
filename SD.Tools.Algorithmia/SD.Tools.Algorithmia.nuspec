@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>SD.Tools.Algorithmia</id>
-        <version>1.3.0</version>
+        <version>1.3.1</version>
         <title>Algorithmia</title>
         <authors>Frans Bouma</authors>
         <owners>Solutions Design bv</owners>
@@ -19,7 +19,7 @@ The core design of Algorithmia is about making algorithms and data-structures wh
         <language>en-US</language>
         <tags>Algorithm Data Structure class library graph heap command queue</tags>
         <dependencies>
-            <dependency id="SD.Tools.BCLExtensions" version="1.2.0" />
+            <dependency id="SD.Tools.BCLExtensions" version="[1.2.1, 1.3.0)" />
         </dependencies>
     </metadata>
 	<files>
