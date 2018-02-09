@@ -14,9 +14,11 @@
     <PackageTags>Algorithm Data Structure class library graph heap command queue</PackageTags>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\SD.Tools.Algorithmia.xml</DocumentationFile>
+    <AssemblyOriginatorKeyFile>AlgorithmiaStrongKey.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-     <Compile Remove="PropertyEditing\PropertyBag.cs" />
+    <Compile Remove="PropertyEditing\PropertyBag.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="obj" />
