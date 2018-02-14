@@ -1,5 +1,4 @@
-﻿#if !NETSTANDARD2_0 // Idiotic requirement, but otherwise dumbass msbuild still compiles this file for netstandard, even though we have excluded it in the csproj
-//////////////////////////////////////////////////////////////////////
+﻿//////////////////////////////////////////////////////////////////////
 // Algorithmia is (c) 2018 Solutions Design. All rights reserved.
 // https://github.com/SolutionsDesign/Algorithmia
 //////////////////////////////////////////////////////////////////////
@@ -130,5 +129,3 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures.PropertyEditing
 		}
 	}
 }
-
-#endif

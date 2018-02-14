@@ -18,7 +18,7 @@
     <DelaySign>false</DelaySign>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <Compile Remove="PropertyEditing\PropertyBag.cs" />
+    <Compile Remove="GeneralDataStructures\PropertyEditing\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="obj" />
