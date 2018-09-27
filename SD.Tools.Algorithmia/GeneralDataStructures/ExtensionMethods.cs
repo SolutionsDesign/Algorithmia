@@ -101,5 +101,66 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				values2.Add((TValue4)pair.Value2);
 			}
 		}
+
+		/// <summary>
+		/// Raises the event on the handler passed in with default empty arguments
+		/// </summary>
+		/// <param name="handler">The handler.</param>
+		/// <param name="sender">The sender.</param>
+		public static void RaiseEvent(this MemberValueElementChangedHandler handler, object sender)
+		{
+			if(handler != null)
+			{
+				handler(sender, EventArgs.Empty);
+			}
+		}
+		
+		
+		/// <summary>
+		/// Raises the event which is represented by the handler specified. 
+		/// </summary>
+		/// <typeparam name="T">type of the event args</typeparam>
+		/// <param name="handler">The handler of the event to raise.</param>
+		/// <param name="sender">The sender of the event.</param>
+		/// <param name="arguments">The arguments to pass to the handler.</param>
+		public static void RaiseEvent<T>(this MemberValueElementChangedHandler handler, object sender, T arguments)
+			where T : System.EventArgs
+		{
+			if(handler != null)
+			{
+				handler(sender, arguments);
+			}
+		}
+		
+		
+		/// <summary>
+		/// Raises the event on the handler passed in with default empty arguments
+		/// </summary>
+		/// <param name="handler">The handler.</param>
+		/// <param name="sender">The sender.</param>
+		public static void RaiseEvent(this MemberValueElementRemovedHandler handler, object sender)
+		{
+			if(handler != null)
+			{
+				handler(sender, EventArgs.Empty);
+			}
+		}
+		
+		
+		/// <summary>
+		/// Raises the event which is represented by the handler specified. 
+		/// </summary>
+		/// <typeparam name="T">type of the event args</typeparam>
+		/// <param name="handler">The handler of the event to raise.</param>
+		/// <param name="sender">The sender of the event.</param>
+		/// <param name="arguments">The arguments to pass to the handler.</param>
+		public static void RaiseEvent<T>(this MemberValueElementRemovedHandler handler, object sender, T arguments)
+			where T : System.EventArgs
+		{
+			if(handler != null)
+			{
+				handler(sender, arguments);
+			}
+		}
 	}
 }

@@ -43,6 +43,7 @@ using SD.Tools.Algorithmia.UtilityClasses;
 using SD.Tools.BCLExtensions.SystemRelated;
 using SD.Tools.Algorithmia.GeneralInterfaces;
 using SD.Tools.Algorithmia.Commands;
+using SD.Tools.Algorithmia.GeneralDataStructures;
 
 namespace SD.Tools.Algorithmia.Graphs
 {
@@ -106,7 +107,7 @@ namespace SD.Tools.Algorithmia.Graphs
 		/// <summary>
 		/// Raised when the implementing element has been removed from its container
 		/// </summary>
-		public event EventHandler HasBeenRemoved;
+		public event MemberValueElementRemovedHandler HasBeenRemoved;
 		#endregion
 
 

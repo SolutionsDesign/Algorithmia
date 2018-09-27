@@ -61,6 +61,8 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		private readonly string _setValueDescription;
 		private readonly ErrorContainer _loggedErrors;
 		private bool _elementChangedBound, _elementRemovedBound;
+		private MemberValueElementChangedHandler _sharedValueChangedHandler;
+		private MemberValueElementRemovedHandler _sharedValueRemovedHandler;
 		#endregion
 
 		#region Events
@@ -129,13 +131,18 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <param name="initialValue">The initial value.</param>
 		public CommandifiedMember(string memberName, TChangeType changeTypeValueToUse, ErrorContainer loggedErrors, TValue initialValue)
 		{
-			ArgumentVerifier.ShouldBeTrue((s) => !String.IsNullOrEmpty(memberName), memberName, "memberName has to have a value");
+			if(string.IsNullOrEmpty(memberName))
+			{
+				throw new ArgumentException("memberName has to have a value");
+			}
 			_loggedErrors = loggedErrors;
 			_changeTypeValueToUse = changeTypeValueToUse;
 			_memberName = memberName;
 			_memberValue = initialValue;
 			this.ThrowExceptionOnValidationError=true;
 			_setValueDescription = "Set a new value to '" + _memberName + "'";
+			_sharedValueChangedHandler = _memberValue_ElementChanged;
+			_sharedValueRemovedHandler = _memberValue_ElementRemoved;
 
 			BindToElementChanged();
 			BindToElementRemoved();
@@ -164,7 +171,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				INotifyAsChanged changeAwareValue = _memberValue as INotifyAsChanged;
 				if(changeAwareValue != null)
 				{
-					changeAwareValue.HasBeenChanged -= _memberValue_ElementChanged;
+					changeAwareValue.HasBeenChanged -= _sharedValueChangedHandler;
 					_elementChangedBound = false;
 				}
 			}
@@ -181,7 +188,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				INotifyAsRemoved removeAwareValue = _memberValue as INotifyAsRemoved;
 				if(removeAwareValue != null)
 				{
-					removeAwareValue.HasBeenRemoved -= _memberValue_ElementRemoved;
+					removeAwareValue.HasBeenRemoved -= _sharedValueRemovedHandler;
 					_elementRemovedBound = false;
 				}
 			}
@@ -198,7 +205,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				INotifyAsChanged changeAwareValue = _memberValue as INotifyAsChanged;
 				if(changeAwareValue != null)
 				{
-					changeAwareValue.HasBeenChanged += _memberValue_ElementChanged;
+					changeAwareValue.HasBeenChanged += _sharedValueChangedHandler;
 					_elementChangedBound = true;
 				}
 			}
@@ -215,7 +222,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				INotifyAsRemoved removeAwareValue = _memberValue as INotifyAsRemoved;
 				if(removeAwareValue != null)
 				{
-					removeAwareValue.HasBeenRemoved += _memberValue_ElementRemoved;
+					removeAwareValue.HasBeenRemoved += _sharedValueRemovedHandler;
 					_elementRemovedBound = true;
 				}
 			}

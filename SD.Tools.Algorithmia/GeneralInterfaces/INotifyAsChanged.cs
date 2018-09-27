@@ -35,6 +35,7 @@
 //		- Frans Bouma [FB]
 //////////////////////////////////////////////////////////////////////
 using System;
+using SD.Tools.Algorithmia.GeneralDataStructures;
 
 namespace SD.Tools.Algorithmia.GeneralInterfaces
 {
@@ -48,6 +49,6 @@ namespace SD.Tools.Algorithmia.GeneralInterfaces
 		/// <summary>
 		/// Raised when the implementing element has been changed
 		/// </summary>
-		event EventHandler HasBeenChanged;
+		event MemberValueElementChangedHandler HasBeenChanged;
 	}
 }

@@ -38,6 +38,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SD.Tools.Algorithmia.GeneralDataStructures;
 
 namespace SD.Tools.Algorithmia.GeneralInterfaces
 {
@@ -49,6 +50,6 @@ namespace SD.Tools.Algorithmia.GeneralInterfaces
 		/// <summary>
 		/// Raised when the implementing element has been removed from its container
 		/// </summary>
-		event EventHandler HasBeenRemoved;
+		event MemberValueElementRemovedHandler HasBeenRemoved;
 	}
 }
