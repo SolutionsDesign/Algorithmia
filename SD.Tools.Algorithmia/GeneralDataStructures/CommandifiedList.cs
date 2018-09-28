@@ -247,8 +247,16 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 					return;
 				}
 			}
-			// create a command which simply inserts the item at the given index and as undo function removes the item at the index specified.
-			Command<T>.DoNow(() => this.PerformInsertItem(index, item), () => this.PerformRemoveItem(index), _cachedCommandDescriptions[ListCommandType.InsertItem]);
+			// we can skip the ceremony of going through the command structure if that's disabled. 
+			if(CommandQueueManagerSingleton.GetInstance().IsInNonUndoablePeriod)
+			{
+				this.PerformInsertItem(index, item);
+			}
+			else
+			{
+				// create a command which simply inserts the item at the given index and as undo function removes the item at the index specified.
+				Command<T>.DoNow(() => this.PerformInsertItem(index, item), () => this.PerformRemoveItem(index), _cachedCommandDescriptions[ListCommandType.InsertItem]);
+			}
 		}
 
 

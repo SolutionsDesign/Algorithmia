@@ -140,7 +140,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			_memberName = memberName;
 			_memberValue = initialValue;
 			this.ThrowExceptionOnValidationError=true;
-			_setValueDescription = "Set a new value to '" + _memberName + "'";
+			_setValueDescription = "Set a new value to: " + _memberName;
 			_sharedValueChangedHandler = _memberValue_ElementChanged;
 			_sharedValueRemovedHandler = _memberValue_ElementRemoved;
 
@@ -386,12 +386,18 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 					}
 					else
 					{
-						CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(
-																		new Command<TValue>(
-																			() => this.SetMemberValue(correctValue),
-																			() => _memberValue,
-																			v => this.SetMemberValue(v),
-																			_setValueDescription));
+						if(CommandQueueManagerSingleton.GetInstance().IsInNonUndoablePeriod)
+						{
+							// skip ceremony as commands aren't undoable anyway.
+							SetMemberValue(correctValue);
+						}
+						else
+						{
+							CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<TValue>(() => this.SetMemberValue(correctValue),
+																											    () => _memberValue,
+																											    v => this.SetMemberValue(v),
+																											    _setValueDescription));
+						}
 					}
 				}
 			}
