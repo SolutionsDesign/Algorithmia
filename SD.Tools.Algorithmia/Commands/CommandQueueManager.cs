@@ -286,12 +286,21 @@ namespace SD.Tools.Algorithmia.Commands
 		/// <param name="codeToExecuteInPeriodFunc">The code to execute in period func.</param>
 		public void PerformUndoablePeriod(UndoablePeriodCommand cmd, Action codeToExecuteInPeriodFunc)
 		{
+			ArgumentVerifier.CantBeNull(cmd, "cmd");
+			ArgumentVerifier.CantBeNull(codeToExecuteInPeriodFunc, "codeToExecuteInPeriod");
+			// reset before/after do action as BeginUndoablePeriod will execute the command (which is empty) but will still perform the before/after actions
+			// resetting them to null will avoid that
+			Action beforeDoActionSafe = cmd.BeforeDoAction;
+			Action afterDoActionSafe = cmd.AfterDoAction;
+			cmd.BeforeDoAction = null;
+			cmd.AfterDoAction = null;
 			try
 			{
 				ThreadEnter();
-				ArgumentVerifier.CantBeNull(cmd, "cmd");
-				ArgumentVerifier.CantBeNull(codeToExecuteInPeriodFunc, "codeToExecuteInPeriod");
 				BeginUndoablePeriod(cmd);
+				// set them back.
+				cmd.BeforeDoAction = beforeDoActionSafe;
+				cmd.AfterDoAction = afterDoActionSafe;
 				if(cmd.BeforeDoAction!=null)
 				{
 					cmd.BeforeDoAction();
