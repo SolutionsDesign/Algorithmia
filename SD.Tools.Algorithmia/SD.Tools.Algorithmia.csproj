@@ -23,7 +23,7 @@
   <ItemGroup>
     <Compile Remove="obj" />
     <Compile Remove="bin" />
-    <PackageReference Include="SD.Tools.BCLExtensions" Version="1.2.1" />
+    <PackageReference Include="SD.Tools.BCLExtensions" Version="1.2.2" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net452'">
     <Reference Include="System.Drawing.Design" />
