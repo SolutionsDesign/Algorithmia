@@ -55,7 +55,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	{
 		#region Class Member Declarations
 		private string _dataErrorString;
-		private readonly Dictionary<string, Pair<string, bool>> _errorPerProperty;		// value: Pair.Value1 = errorcode, Pair.Value2 = flag if error is soft (true) or not (false). Soft errors are removed after they're read.
+		private Dictionary<string, Pair<string, bool>> _errorPerProperty;		// value: Pair.Value1 = errorcode, Pair.Value2 = flag if error is soft (true) or not (false). Soft errors are removed after they're read.
 		private readonly string _defaultError;
 		#endregion
 
@@ -67,7 +67,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		public ErrorContainer(string defaultError)
 		{
 			_dataErrorString = string.Empty;
-			_errorPerProperty = new Dictionary<string, Pair<string, bool>>();
 			_defaultError = defaultError;
 			this.SyncRoot = new Object();
 		}
@@ -81,7 +80,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			_dataErrorString = string.Empty;
 			lock(this.SyncRoot)
 			{
-				_errorPerProperty.Clear();
+				this.ErrorPerProperty.Clear();
 			}
 		}
 
@@ -95,7 +94,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <see cref="SyncRoot"/> </remarks>
 		public IEnumerable<string> GetAllPropertyNamesWithErrors()
 		{
-			foreach(KeyValuePair<string, Pair<string, bool>> pair in _errorPerProperty)
+			foreach(KeyValuePair<string, Pair<string, bool>> pair in this.ErrorPerProperty)
 			{
 				if(!string.IsNullOrEmpty(pair.Value.Value1))
 				{
@@ -160,14 +159,14 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			{
 				if(errorDescription.Length <= 0)
 				{
-					_errorPerProperty.Remove(propertyName);
+					this.ErrorPerProperty.Remove(propertyName);
 				}
 				else
 				{
-					_errorPerProperty[propertyName] = new Pair<string, bool>(errorDescription, isSoftError);
+					this.ErrorPerProperty[propertyName] = new Pair<string, bool>(errorDescription, isSoftError);
 					_dataErrorString = _defaultError;
 				}
-				if(_errorPerProperty.Count <= 0)
+				if(this.ErrorPerProperty.Count <= 0)
 				{
 					_dataErrorString = string.Empty;
 				}
@@ -265,7 +264,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			{
 				lock(this.SyncRoot)
 				{
-					Pair<string, bool> loggedErrorInfo = _errorPerProperty.GetValue(columnName);
+					Pair<string, bool> loggedErrorInfo = this.ErrorPerProperty.GetValue(columnName);
 					if(loggedErrorInfo == null)
 					{
 						return string.Empty;
@@ -287,6 +286,11 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// Gets an object that can be used to synchronize access to the <see cref="System.Collections.ICollection" />. It's the same object used in locks inside this object. 
 		/// </summary>
 		public object SyncRoot { get; }
+
+		private Dictionary<string, Pair<string, bool>> ErrorPerProperty
+		{
+			get { return _errorPerProperty ?? (_errorPerProperty = new Dictionary<string, Pair<string, bool>>()); }
+		}
 		#endregion
 	}
 }

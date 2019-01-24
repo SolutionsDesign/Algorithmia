@@ -57,11 +57,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 	/// lock on the <see cref="SyncRoot"/> object.</remarks>
 	public class CommandifiedList<T> : Collection<T>, IBindingList
 	{
-		#region Class Member Declarations
-		private readonly string _listDescription;
-		private Dictionary<ListCommandType, string> _cachedCommandDescriptions;
-		#endregion
-
 		#region Events
 		/// <summary>
 		/// Occurs when the list changes or an item in the list changes.
@@ -99,13 +94,17 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			SetItem
 		}
 		#endregion
-
+		
+		#region Members
+		private PropertyChangedEventHandler _sharedPropertyChangedHandler; 
+		#endregion
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CommandifiedList{T}"/> class. This instance is not synchronized.
 		/// </summary>
 		public CommandifiedList() : this (false)
 		{ }
+		
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CommandifiedList{T}" /> class.
@@ -117,8 +116,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		{
 			this.SyncRoot = new object();
 			this.IsSynchronized = isSynchronized;
-			_listDescription = string.Format("CommandifiedList<{0}>", typeof(T).Name);
-			BuildCachedCommandDescriptions();
 		}
 
 
@@ -130,7 +127,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </returns>
 		public override string ToString()
 		{
-			return PerformSyncedAction(() =>string.Format("{0}. Count: {1}", _listDescription, this.Count));
+			return PerformSyncedAction(() =>string.Format("CommandifiedList<{0}>. Count: {1}", typeof(T).Name, this.Count));
 		}
 
 
@@ -202,8 +199,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 									this.SuppressEvents = false;
 									NotifyChange(ListChangedType.ItemMoved, indexToMoveTo, currentIndex);
 								}), 
-								string.Format("Move element from index '{0}' to index '{1}'", currentIndex, indexToMoveTo)
-				);
+								"Move element to different index");
 		}
 
 
@@ -222,8 +218,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				}
 			}
 			// create a command which stores the current state into a temp collection and then clears this collection.
-			Command<Collection<T>> clearCmd = new Command<Collection<T>>(() => this.PerformClearItems(), () => this.GetCurrentState(), c=>this.SetCurrentState(c), 
-													_cachedCommandDescriptions[ListCommandType.ClearItems]);
+			Command<Collection<T>> clearCmd = new Command<Collection<T>>(() => this.PerformClearItems(), () => this.GetCurrentState(), c=>this.SetCurrentState(c), "Clear this instance");
 			CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(clearCmd);
 		}
 
@@ -255,7 +250,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			else
 			{
 				// create a command which simply inserts the item at the given index and as undo function removes the item at the index specified.
-				Command<T>.DoNow(() => this.PerformInsertItem(index, item), () => this.PerformRemoveItem(index), _cachedCommandDescriptions[ListCommandType.InsertItem]);
+				Command<T>.DoNow(() => this.PerformInsertItem(index, item), () => this.PerformRemoveItem(index), "Insert an item");
 			}
 		}
 
@@ -286,7 +281,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			// create a command which simply removes the item at the given index and as undo function it re-inserts the item at the index specified.
 			// The command created passes the current item at the index specified, but it's not really used, as there's no state to set. The command however has to
 			// keep track of the item removed, so the state inside it has to be of type T.
-			Command<T> removeCmd = new Command<T>(() => this.PerformRemoveItem(index), ()=>this[index], i => this.PerformInsertItem(index, i), _cachedCommandDescriptions[ListCommandType.RemoveItem]);
+			Command<T> removeCmd = new Command<T>(() => this.PerformRemoveItem(index), () => this[index], i => this.PerformInsertItem(index, i), "Remove an item");
 			CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(removeCmd);
 		}
 
@@ -316,7 +311,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 				}
 			}
 			// Create a command which stores the current item at index and sets item as the new item at index. 
-			Command<T> setCmd = new Command<T>(() => this.PerformSetItem(index, item), () => this[index], i => this.PerformSetItem(index, i), _cachedCommandDescriptions[ListCommandType.SetItem]);
+			Command<T> setCmd = new Command<T>(() => this.PerformSetItem(index, item), () => this[index], i => this.PerformSetItem(index, i), "Set an item at a given index");
 			CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(setCmd);
 		}
 
@@ -438,19 +433,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 
 
 		/// <summary>
-		/// Builds the cached command descriptions.
-		/// </summary>
-		private void BuildCachedCommandDescriptions()
-		{
-			_cachedCommandDescriptions = new Dictionary<ListCommandType, string>();
-			_cachedCommandDescriptions.Add(ListCommandType.ClearItems, string.Format("Clear the {0} instance", _listDescription));
-			_cachedCommandDescriptions.Add(ListCommandType.InsertItem, string.Format("Insert a new item in the {0} instance", _listDescription));
-			_cachedCommandDescriptions.Add(ListCommandType.RemoveItem, string.Format("Remove an item from the {0} instance", _listDescription));
-			_cachedCommandDescriptions.Add(ListCommandType.SetItem, string.Format("Set a new item at a given index in the {0} instance", _listDescription));
-		}
-
-
-		/// <summary>
 		/// Gets the current state of this collection, which is simply a copy of the items into another collection.
 		/// </summary>
 		/// <returns>a collection with all items in this collection in the same order. </returns>
@@ -516,7 +498,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			INotifyPropertyChanged itemAsINotifyPropertyChanged = item as INotifyPropertyChanged;
 			if(itemAsINotifyPropertyChanged != null)
 			{
-				itemAsINotifyPropertyChanged.PropertyChanged += OnElementPropertyChanged;
+				itemAsINotifyPropertyChanged.PropertyChanged += this.SharedPropertyChangedHandler;
 			}
 		}
 
@@ -530,7 +512,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			INotifyPropertyChanged itemAsINotifyPropertyChanged = item as INotifyPropertyChanged;
 			if(itemAsINotifyPropertyChanged != null)
 			{
-				itemAsINotifyPropertyChanged.PropertyChanged -= OnElementPropertyChanged;
+				itemAsINotifyPropertyChanged.PropertyChanged -= this.SharedPropertyChangedHandler;
 			}
 		}
 
@@ -791,6 +773,14 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		#endregion
 
 		#region Class Property Declarations
+		/// <summary>
+		/// Gets the shared property changed event handler and creates one the first time it's invoked.
+		/// </summary>
+		private PropertyChangedEventHandler SharedPropertyChangedHandler
+		{
+			get { return _sharedPropertyChangedHandler ?? (_sharedPropertyChangedHandler = OnElementPropertyChanged); }
+		}
+				
 		/// <summary>
 		/// Gets or sets a value indicating whether events are blocked from being raised (true) or not (false, default)
 		/// </summary>

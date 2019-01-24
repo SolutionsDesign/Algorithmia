@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>SD.Tools.Algorithmia</id>
-        <version>1.3.6</version>
+        <version>1.4.0-20190124-2</version>
         <title>Algorithmia</title>
         <authors>Frans Bouma</authors>
         <owners>Solutions Design bv</owners>
@@ -15,7 +15,7 @@ Algorithmia is one of the pillars of LLBLGen Pro and is used in production succe
 
 The core design of Algorithmia is about making algorithms and data-structures which are known for many years available to the .NET developer in easy to use and properly documented classes and methods. No class or method implemented in Algorithmia re-implements a .NET BCL (base class library) class or method unless it was necessary to do so (e.g. the linked list in .NET is re-implemented as it doesn't have an O(1) concat operation, which is necessary for the Fibonacci heap).</description>
         <summary>Advanced algorithm and data-structure library for .NET 3.5 and up. Algorithmia contains sophisticated algorithms and data-structures like graphs, priority queues, command, undo-redo and more.</summary>
-        <copyright>(c)2010-2018 Solutions Design bv</copyright>
+        <copyright>(c)2010-2019 Solutions Design bv</copyright>
         <language>en-US</language>
         <tags>Algorithm Data Structure class library graph heap command queue</tags>
         <dependencies>

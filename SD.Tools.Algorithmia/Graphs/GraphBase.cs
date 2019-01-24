@@ -245,8 +245,8 @@ namespace SD.Tools.Algorithmia.Graphs
 			if(_isCommandified)
 			{
 				// use a command to call the method so all the commands spawned by the method called are undoable with a single undo.
-				CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<GraphBase<TVertex, TEdge>>(() => PerformAddGraph(graph), null, 
-										_cachedCommandDescriptions[GraphCommandType.AddGraph]));
+				CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<GraphBase<TVertex, TEdge>>(() => PerformAddGraph(graph), null,
+																													   _cachedCommandDescriptions[GraphCommandType.AddGraph]));
 			}
 			else
 			{
@@ -757,6 +757,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			return true;
 		}
 
+		
 		/// <summary>
 		/// Validates if the vertex passed in is removable from this graph structure. 
 		/// </summary>
@@ -858,6 +859,7 @@ namespace SD.Tools.Algorithmia.Graphs
 			}
 		}
 
+		
 		/// <summary>
 		/// Called when a vertex is about to be added
 		/// </summary>
@@ -946,18 +948,18 @@ namespace SD.Tools.Algorithmia.Graphs
 		private void BuildCachedCommandDescriptions()
 		{
 			_cachedCommandDescriptions = new Dictionary<GraphCommandType, string>();
-			_cachedCommandDescriptions.Add(GraphCommandType.AddGraph, string.Format("Add graph to {0} instance", _graphDescription));
-			_cachedCommandDescriptions.Add(GraphCommandType.AddEdge, string.Format("Add new edge to {0} instance", _graphDescription));
-			_cachedCommandDescriptions.Add(GraphCommandType.AddVertex, string.Format("Add new vertex to {0} instance", _graphDescription));
-			_cachedCommandDescriptions.Add(GraphCommandType.RemoveGraph, string.Format("Remove sub-graph from {0} instance", _graphDescription));
-			_cachedCommandDescriptions.Add(GraphCommandType.RemoveEdge, string.Format("Remove edge from {0} instance", _graphDescription));
-			_cachedCommandDescriptions.Add(GraphCommandType.RemoveVertex, string.Format("Remove vertex from {0} instance", _graphDescription));
-			_cachedCommandDescriptions.Add(GraphCommandType.DisconnectVertices, string.Format("Disconnect two vertices in {0} instance", _graphDescription));
-			_cachedCommandDescriptions.Add(GraphCommandType.AddVertexToGraphStructure, string.Format("Add a new vertex physically to the {0} structure", _graphDescription));
-			_cachedCommandDescriptions.Add(GraphCommandType.AddEdgeToGraphStructure, string.Format("Add a new edge physically to the {0} structure", _graphDescription));
-			_cachedCommandDescriptions.Add(GraphCommandType.RemoveEdgeFromGraphStructure, string.Format("Remove an edge physically from the {0} structure", _graphDescription));
-			_cachedCommandDescriptions.Add(GraphCommandType.RemoveVertexFromGraphStructure, string.Format("Remove a vertex physically from the {0} structure", _graphDescription));
-			_cachedCommandDescriptions.Add(GraphCommandType.RemoveVertexFromAdjacencyList, string.Format("Remove a vertex physically from an adjacencylist in the {0} structure", _graphDescription));
+			_cachedCommandDescriptions.Add(GraphCommandType.AddGraph, "Add graph");
+			_cachedCommandDescriptions.Add(GraphCommandType.AddEdge, "Add new edge");
+			_cachedCommandDescriptions.Add(GraphCommandType.AddVertex, "Add new vertex");
+			_cachedCommandDescriptions.Add(GraphCommandType.RemoveGraph, "Remove sub-graph");
+			_cachedCommandDescriptions.Add(GraphCommandType.RemoveEdge, "Remove edge");
+			_cachedCommandDescriptions.Add(GraphCommandType.RemoveVertex, "Remove vertex");
+			_cachedCommandDescriptions.Add(GraphCommandType.DisconnectVertices, "Disconnect two vertices");
+			_cachedCommandDescriptions.Add(GraphCommandType.AddVertexToGraphStructure, "Add a new vertex physically");
+			_cachedCommandDescriptions.Add(GraphCommandType.AddEdgeToGraphStructure, "Add a new edge physically");
+			_cachedCommandDescriptions.Add(GraphCommandType.RemoveEdgeFromGraphStructure, "Remove an edge physically");
+			_cachedCommandDescriptions.Add(GraphCommandType.RemoveVertexFromGraphStructure, "Remove a vertex physically");
+			_cachedCommandDescriptions.Add(GraphCommandType.RemoveVertexFromAdjacencyList, "Remove a vertex physically from an adjacencylist");
 		}
 		
 

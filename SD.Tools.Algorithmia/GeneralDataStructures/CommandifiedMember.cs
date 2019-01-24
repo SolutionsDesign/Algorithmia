@@ -58,7 +58,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		private TValue _memberValue;
 		private readonly TChangeType _changeTypeValueToUse;
 		private readonly string _memberName;
-		private readonly string _setValueDescription;
 		private readonly ErrorContainer _loggedErrors;
 		private bool _elementChangedBound, _elementRemovedBound;
 		private MemberValueElementChangedHandler _sharedValueChangedHandler;
@@ -140,10 +139,6 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 			_memberName = memberName;
 			_memberValue = initialValue;
 			this.ThrowExceptionOnValidationError=true;
-			_setValueDescription = "Set a new value to: " + _memberName;
-			_sharedValueChangedHandler = _memberValue_ElementChanged;
-			_sharedValueRemovedHandler = _memberValue_ElementRemoved;
-
 			BindToElementChanged();
 			BindToElementRemoved();
 		}
@@ -166,12 +161,12 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		public void UnbindFromElementChanged()
 		{
-			if(_elementChangedBound)
+			if(_elementChangedBound && typeof(INotifyAsChanged).IsAssignableFrom(typeof(TValue)))
 			{
-				INotifyAsChanged changeAwareValue = _memberValue as INotifyAsChanged;
+				INotifyAsChanged changeAwareValue = (INotifyAsChanged)_memberValue;
 				if(changeAwareValue != null)
 				{
-					changeAwareValue.HasBeenChanged -= _sharedValueChangedHandler;
+					changeAwareValue.HasBeenChanged -= this.SharedValueChangedHandler;
 					_elementChangedBound = false;
 				}
 			}
@@ -183,12 +178,12 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		public void UnbindFromElementRemoved()
 		{
-			if(_elementRemovedBound)
+			if(_elementRemovedBound && typeof(INotifyAsRemoved).IsAssignableFrom(typeof(TValue)))
 			{
-				INotifyAsRemoved removeAwareValue = _memberValue as INotifyAsRemoved;
+				INotifyAsRemoved removeAwareValue = (INotifyAsRemoved)_memberValue;
 				if(removeAwareValue != null)
 				{
-					removeAwareValue.HasBeenRemoved -= _sharedValueRemovedHandler;
+					removeAwareValue.HasBeenRemoved -= this.SharedValueRemovedHandler;
 					_elementRemovedBound = false;
 				}
 			}
@@ -200,12 +195,12 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		public void BindToElementChanged()
 		{
-			if(!_elementChangedBound)
+			if(!_elementChangedBound && typeof(INotifyAsChanged).IsAssignableFrom(typeof(TValue)))
 			{
-				INotifyAsChanged changeAwareValue = _memberValue as INotifyAsChanged;
+				INotifyAsChanged changeAwareValue = (INotifyAsChanged)_memberValue;
 				if(changeAwareValue != null)
 				{
-					changeAwareValue.HasBeenChanged += _sharedValueChangedHandler;
+					changeAwareValue.HasBeenChanged += this.SharedValueChangedHandler;
 					_elementChangedBound = true;
 				}
 			}
@@ -217,12 +212,12 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		public void BindToElementRemoved()
 		{
-			if(!_elementRemovedBound)
+			if(!_elementRemovedBound && typeof(INotifyAsRemoved).IsAssignableFrom(typeof(TValue)))
 			{
-				INotifyAsRemoved removeAwareValue = _memberValue as INotifyAsRemoved;
+				INotifyAsRemoved removeAwareValue = (INotifyAsRemoved)_memberValue;
 				if(removeAwareValue != null)
 				{
-					removeAwareValue.HasBeenRemoved += _sharedValueRemovedHandler;
+					removeAwareValue.HasBeenRemoved += this.SharedValueRemovedHandler;
 					_elementRemovedBound = true;
 				}
 			}
@@ -346,6 +341,22 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 
 		#region Class Property Declarations
 		/// <summary>
+		/// Gets the shared valuechanged handler, and creates one if it's not already created.
+		/// </summary>
+		private MemberValueElementChangedHandler SharedValueChangedHandler
+		{
+			get { return _sharedValueChangedHandler ?? (_sharedValueChangedHandler = _memberValue_ElementChanged); }
+		}
+
+		/// <summary>
+		/// Gets the shared valueremoved handler, and creates one if it's not already created.
+		/// </summary>
+		private MemberValueElementRemovedHandler SharedValueRemovedHandler
+		{
+			get { return _sharedValueRemovedHandler ?? (_sharedValueRemovedHandler = _memberValue_ElementRemoved); }
+		}
+		
+		/// <summary>
 		/// Gets or sets a value indicating whether an exception should be thrown if validation fails (true, default) or not (false)
 		/// </summary>
 		public bool ThrowExceptionOnValidationError { get; set; }
@@ -396,7 +407,7 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 							CommandQueueManagerSingleton.GetInstance().EnqueueAndRunCommand(new Command<TValue>(() => this.SetMemberValue(correctValue),
 																											    () => _memberValue,
 																											    v => this.SetMemberValue(v),
-																											    _setValueDescription));
+																											    _memberName));
 						}
 					}
 				}
