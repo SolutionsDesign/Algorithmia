@@ -372,7 +372,7 @@ namespace SD.Tools.Algorithmia.Commands
 				bool enqueueSucceeded = _activeCommandQueueStack.Peek().EnqueueCommand(toEnqueue);
 				if(enqueueSucceeded)
 				{
-					RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandEnqueued, _activeCommandQueueStack.StackId));
+					RaiseCommandQueueActionPerformed(CommandQueueActionType.CommandEnqueued, _activeCommandQueueStack.StackId);
 				}
 				return enqueueSucceeded;
 			}
@@ -399,13 +399,13 @@ namespace SD.Tools.Algorithmia.Commands
 				bool enqueueResult = _activeCommandQueueStack.Peek().EnqueueCommand(toEnqueueAndRun);
 				if(enqueueResult)
 				{
-					RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandEnqueued, _activeCommandQueueStack.StackId));
+					RaiseCommandQueueActionPerformed(CommandQueueActionType.CommandEnqueued, _activeCommandQueueStack.StackId);
 					_activeCommandQueueStack.Peek().DoCurrentCommand();
-					RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandExecuted, _activeCommandQueueStack.StackId));
+					RaiseCommandQueueActionPerformed(CommandQueueActionType.CommandExecuted, _activeCommandQueueStack.StackId);
 					if(this.IsInNonUndoablePeriod)
 					{
 						_activeCommandQueueStack.Peek().DequeueLastExecutedCommand();
-						RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandDequeued, _activeCommandQueueStack.StackId));
+						RaiseCommandQueueActionPerformed(CommandQueueActionType.CommandDequeued, _activeCommandQueueStack.StackId);
 					}
 				}
 				return enqueueResult;
@@ -430,7 +430,7 @@ namespace SD.Tools.Algorithmia.Commands
 				// are always added to the command queue at the top of the active stack.
 				_activeCommandQueueStack.Peek().UndoInProgress = true;
 				_activeCommandQueueStack.Peek().UndoPreviousCommand();
-				RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.UndoPerformed, _activeCommandQueueStack.StackId));
+				RaiseCommandQueueActionPerformed(CommandQueueActionType.UndoPerformed, _activeCommandQueueStack.StackId);
 			}
 			finally
 			{
@@ -449,7 +449,7 @@ namespace SD.Tools.Algorithmia.Commands
 			{
 				ThreadEnter();
 				_activeCommandQueueStack.Peek().RedoCurrentCommand();
-				RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.RedoPerformed, _activeCommandQueueStack.StackId));
+				RaiseCommandQueueActionPerformed(CommandQueueActionType.RedoPerformed, _activeCommandQueueStack.StackId);
 			}
 			finally
 			{
@@ -515,7 +515,7 @@ namespace SD.Tools.Algorithmia.Commands
 			{
 				ThreadEnter();
 				_activeCommandQueueStack.Push(toPush);
-				RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.CommandQueuePushed, _activeCommandQueueStack.StackId));
+				RaiseCommandQueueActionPerformed(CommandQueueActionType.CommandQueuePushed, _activeCommandQueueStack.StackId);
 			}
 			finally
 			{
@@ -534,7 +534,7 @@ namespace SD.Tools.Algorithmia.Commands
 			{
 				ThreadEnter();
 				CommandQueue toReturn = _activeCommandQueueStack.Pop();
-				RaiseCommandQueueActionPerformed(new CommandQueueActionPerformedEventArgs(CommandQueueActionType.RedoPerformed, _activeCommandQueueStack.StackId));
+				RaiseCommandQueueActionPerformed(CommandQueueActionType.RedoPerformed, _activeCommandQueueStack.StackId);
 				return toReturn;
 			}
 			finally
@@ -565,11 +565,13 @@ namespace SD.Tools.Algorithmia.Commands
 		/// <summary>
 		/// Raises the CommandQueueActionPerformed event.
 		/// </summary>
-		/// <param name="eventArgs">The <see cref="SD.Tools.Algorithmia.Commands.CommandQueueActionPerformedEventArgs"/> instance containing the event data.</param>
-		private void RaiseCommandQueueActionPerformed(CommandQueueActionPerformedEventArgs eventArgs)
+		/// <param name="actionType">the type of the action</param>
+		/// <param name="actionId">The id of the action</param>
+		private void RaiseCommandQueueActionPerformed(CommandQueueActionType actionType, Guid actionId)
 		{
-			if(_raiseEvents)
+			if(_raiseEvents && this.CommandQueueActionPerformed!=null)
 			{
+				var eventArgs = new CommandQueueActionPerformedEventArgs(actionType, actionId);
 				this.CommandQueueActionPerformed.RaiseEvent(this, eventArgs);
 			}
 		}
