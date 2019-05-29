@@ -161,14 +161,10 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		public void UnbindFromElementChanged()
 		{
-			if(_elementChangedBound && typeof(INotifyAsChanged).IsAssignableFrom(typeof(TValue)))
+			if(_elementChangedBound && _memberValue is INotifyAsChanged changeAwareValue)
 			{
-				INotifyAsChanged changeAwareValue = (INotifyAsChanged)_memberValue;
-				if(changeAwareValue != null)
-				{
-					changeAwareValue.HasBeenChanged -= this.SharedValueChangedHandler;
-					_elementChangedBound = false;
-				}
+				changeAwareValue.HasBeenChanged -= this.SharedValueChangedHandler;
+				_elementChangedBound = false;
 			}
 		}
 
@@ -178,14 +174,10 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		public void UnbindFromElementRemoved()
 		{
-			if(_elementRemovedBound && typeof(INotifyAsRemoved).IsAssignableFrom(typeof(TValue)))
+			if(_elementRemovedBound && _memberValue is INotifyAsRemoved removeAwareValue)
 			{
-				INotifyAsRemoved removeAwareValue = (INotifyAsRemoved)_memberValue;
-				if(removeAwareValue != null)
-				{
-					removeAwareValue.HasBeenRemoved -= this.SharedValueRemovedHandler;
-					_elementRemovedBound = false;
-				}
+				removeAwareValue.HasBeenRemoved -= this.SharedValueRemovedHandler;
+				_elementRemovedBound = false;
 			}
 		}
 
@@ -195,14 +187,10 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		public void BindToElementChanged()
 		{
-			if(!_elementChangedBound && typeof(INotifyAsChanged).IsAssignableFrom(typeof(TValue)))
+			if(!_elementChangedBound && _memberValue is INotifyAsChanged changeAwareValue)
 			{
-				INotifyAsChanged changeAwareValue = (INotifyAsChanged)_memberValue;
-				if(changeAwareValue != null)
-				{
-					changeAwareValue.HasBeenChanged += this.SharedValueChangedHandler;
-					_elementChangedBound = true;
-				}
+				changeAwareValue.HasBeenChanged += this.SharedValueChangedHandler;
+				_elementChangedBound = true;
 			}
 		}
 
@@ -212,14 +200,10 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// </summary>
 		public void BindToElementRemoved()
 		{
-			if(!_elementRemovedBound && typeof(INotifyAsRemoved).IsAssignableFrom(typeof(TValue)))
+			if(!_elementRemovedBound && _memberValue is INotifyAsRemoved removeAwareValue)
 			{
-				INotifyAsRemoved removeAwareValue = (INotifyAsRemoved)_memberValue;
-				if(removeAwareValue != null)
-				{
-					removeAwareValue.HasBeenRemoved += this.SharedValueRemovedHandler;
-					_elementRemovedBound = true;
-				}
+				removeAwareValue.HasBeenRemoved += this.SharedValueRemovedHandler;
+				_elementRemovedBound = true;
 			}
 		}
 
