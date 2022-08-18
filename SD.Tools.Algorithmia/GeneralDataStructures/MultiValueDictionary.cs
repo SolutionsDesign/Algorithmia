@@ -82,6 +82,18 @@ namespace SD.Tools.Algorithmia.GeneralDataStructures
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MultiValueDictionary&lt;TKey, TValue&gt;"/> class.
 		/// </summary>
+		/// <param name="keyComparer">The IEqualityComparer&lt;TKey&gt; which is used for the keys.</param>
+		/// <param name="valueComparer">The IEqualityComparer&lt;TValue&gt; which is used for the HashSet objects created for each TKey instance. 
+		/// Can be null, in which case the default EqualityComparer is used.</param>
+		public MultiValueDictionary(IEqualityComparer<TKey> keyComparer, IEqualityComparer<TValue> valueComparer) : base(keyComparer)
+		{
+			_valueComparer = valueComparer;
+		}
+
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="MultiValueDictionary&lt;TKey, TValue&gt;"/> class.
+		/// </summary>
 		/// <param name="info">The info.</param>
 		/// <param name="context">The context.</param>
 		protected MultiValueDictionary(SerializationInfo info, StreamingContext context) : base(info, context)
